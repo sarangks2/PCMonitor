@@ -1,0 +1,15 @@
+# 실행 기록·접근 열쇠·격리 파일 (개인 정보 — 절대 올리지 않음)
+data/
+*.db
+*.db-wal
+*.db-shm
+*.log
+access.token
+
+# 빌드 결과 (exe 는 GitHub Releases 로 배포)
+*.exe
+build/
+dist/
+*.spec
+__pycache__/
+*.pyc

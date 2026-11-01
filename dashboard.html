@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PC 모니터</title>
+<link rel="icon" href="/favicon.ico">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--fg:#1d2330;--mut:#667085;--line:#e4e7ec;--cpu:#2f6fde;--mem:#c2410c;--commit:#9a6700;--disk:#0f8a6c;--rx:#7c3aed;--tx:#64748b;--ok:#15803d;--warn:#b45309;--crit:#c81e1e;--chip:#eef1f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1218;--card:#171b23;--fg:#e6e9ef;--mut:#98a2b3;--line:#2a303b;--cpu:#6ea0ff;--mem:#fb8c4a;--commit:#e0b341;--disk:#34c79f;--rx:#a78bfa;--tx:#94a3b8;--ok:#4ade80;--warn:#fbbf24;--crit:#f87171;--chip:#222833}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 "Segoe UI","Malgun Gothic",sans-serif}
+header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+h1{font-size:17px;margin:0}
+nav button{background:none;border:0;color:var(--mut);padding:6px 10px;border-radius:6px;cursor:pointer;font:inherit}
+nav button.on{background:var(--chip);color:var(--fg);font-weight:600}
+#upd{margin-left:auto;color:var(--mut);font-size:12px}
+main{padding:16px 20px;max-width:1300px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.tile .k{color:var(--mut);font-size:12px}.tile .v{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
+.tile .s{color:var(--mut);font-size:12px}
+.row2{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
+.row2.eq{grid-template-columns:1fr 1fr}
+@media (max-width:900px){.row2,.row2.eq{grid-template-columns:1fr}}
+h2{font-size:14px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.legend{font-weight:400;color:var(--mut);font-size:12px;display:flex;gap:10px;margin-left:auto}
+.legend i{display:inline-block;width:10px;height:3px;vertical-align:middle;margin-right:4px}
+canvas{width:100%;height:190px;display:block}
+.ranges button{background:var(--chip);border:0;color:var(--fg);padding:3px 9px;border-radius:5px;margin-right:4px;cursor:pointer;font:inherit;font-size:12px}
+.ranges button.on{background:var(--cpu);color:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mut);font-weight:500;font-size:12px}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.sev{display:inline-block;padding:0 7px;border-radius:9px;font-size:11px;font-weight:600}
+.sev.crit{background:rgba(200,30,30,.14);color:var(--crit)}
+.sev.warn{background:rgba(180,83,9,.14);color:var(--warn)}
+.pdesc{font-size:11.5px;color:var(--mut);line-height:1.3}
+.cat{display:inline-block;font-size:10.5px;padding:0 5px;border-radius:4px;background:var(--chip);color:var(--mut);margin-right:4px}
+.cat.보안{color:var(--ok)}.cat.사용자.폴더{color:var(--warn)}.cat.원격{color:var(--warn)}
+.osb{font-size:12px;color:var(--mut)}
+.sev.info{background:var(--chip);color:var(--mut)}
+.ok{color:var(--ok)}.bad{color:var(--crit)}.wn{color:var(--warn)}
+.mut{color:var(--mut)}
+details summary{cursor:pointer}
+pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--chip);padding:8px;border-radius:6px;max-height:260px;overflow:auto}
+.hide{display:none}
+#tip{position:fixed;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.15);display:none;z-index:9}
+.filters label{margin-right:10px;font-size:13px}
+.banner{margin-bottom:12px;display:flex;align-items:center;gap:14px;border-width:2px}
+.banner .big{font-size:20px;font-weight:700}
+.banner.ok{border-color:var(--ok)}.banner.warn{border-color:var(--warn)}.banner.crit{border-color:var(--crit)}
+.banner ul{margin:4px 0 0;padding-left:18px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:3px;vertical-align:middle}
+.dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.crit{background:var(--crit)}
+.btn{background:var(--cpu);color:#fff;border:0;border-radius:7px;padding:8px 16px;font:inherit;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.find{border-left:4px solid var(--line);padding:8px 12px;margin:6px 0;background:var(--card);border-radius:6px}
+.find.crit{border-left-color:var(--crit)}.find.warn{border-left-color:var(--warn)}.find.ok{border-left-color:var(--ok)}.find.info{border-left-color:var(--mut)}
+.find ul{margin:4px 0 0;padding-left:18px;color:var(--mut);font-size:12.5px;word-break:break-all}
+.tag{font-size:11px;color:var(--mut);margin-right:6px}
+.pulse{animation:p 1.2s infinite}@keyframes p{50%{opacity:.35}}
+.acts{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.abtn{border:1px solid var(--crit);color:var(--crit);background:transparent;border-radius:6px;padding:4px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.abtn:hover{background:rgba(200,30,30,.08)}
+.abtn.q{border-color:var(--warn);color:var(--warn)}.abtn.s{border-color:var(--cpu);color:var(--cpu)}
+.abtn:disabled{opacity:.45;cursor:default}
+.jmsg{font-size:12px}
+.tile.click{cursor:pointer;transition:box-shadow .15s}.tile.click:hover{box-shadow:0 0 0 2px var(--cpu)}
+.tile.click .s:after{content:' · 눌러서 보기 ›';color:var(--cpu)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.modal.hide{display:none}
+.mbox{background:var(--bg);border-radius:12px;max-width:900px;width:100%;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.mhead{display:flex;align-items:center;gap:10px;margin-bottom:10px}.mhead h2{flex:1}
+.mclose{background:none;border:0;font-size:20px;color:var(--mut);cursor:pointer}
+.howto{margin-top:6px;font-size:13px}.howto b{color:var(--fg)}
+.bar{height:10px;background:var(--chip);border-radius:6px;overflow:hidden;margin:6px 0}
+.bar>i{display:block;height:100%;background:var(--cpu);border-radius:6px;transition:width .5s}
+.bar.ind>i{width:35%;animation:ind 1.6s infinite ease-in-out}@keyframes ind{0%{margin-left:-35%}100%{margin-left:100%}}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13px;margin:6px 0}.kv span:nth-child(odd){color:var(--mut)}
+.adv{display:inline-block;font-size:11px;padding:0 6px;border-radius:4px;margin-top:2px;font-weight:600}
+.adv.must,.adv.keep{background:var(--chip);color:var(--mut)}
+.adv.close{background:rgba(47,111,222,.12);color:var(--cpu)}
+.adv.remove,.adv.check{background:rgba(180,83,9,.14);color:var(--warn)}
+.adv.remove_rec{background:rgba(200,30,30,.14);color:var(--crit)}
+.pacts{display:flex;gap:4px;margin-top:3px;flex-wrap:wrap}.pacts .abtn{padding:1px 8px;font-size:11.5px}
+.ul{margin:4px 0 0;padding-left:18px;font-size:12.5px}
+</style>
+</head>
+<body>
+<header>
+  <h1>PC 모니터</h1>
+  <nav>
+    <button data-t="ov" class="on">개요</button>
+    <button data-t="live">침입 감시 <span id="liveDot" class="dot"></span></button>
+    <button data-t="trace">흔적 점검</button>
+    <button data-t="inc">장애 기록</button>
+    <button data-t="sec">보안</button>
+    <button data-t="ev">전체 이벤트</button>
+    <button data-t="about">정보</button>
+  </nav>
+  <span id="upd"></span>
+</header>
+<main>
+<section id="ov">
+  <div class="grid" id="tiles"></div>
+  <div class="row2 eq" id="maintRow">
+    <div class="card" id="wuCard"><h2>Windows 업데이트</h2><div id="wu" class="mut">확인 중…</div></div>
+    <div class="card" id="defCard"><h2>Windows 보안 백신 검사</h2><div id="defscan" class="mut">확인 중…</div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <h2>CPU · 메모리 <span class="ranges" id="ranges"></span>
+      <span class="legend"><span><i style="background:var(--cpu)"></i>CPU</span><span><i style="background:var(--mem)"></i>메모리</span><span><i style="background:var(--commit)"></i>커밋</span></span></h2>
+    <canvas id="c1"></canvas>
+    <div class="mut" style="font-size:12px">그래프를 클릭하면 그 시점에 자원을 많이 쓴 프로세스를 보여 줍니다.</div>
+    <div id="atTime"></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <h2>디스크 · 네트워크 <span class="legend"><span><i style="background:var(--disk)"></i>디스크 사용률 %</span><span><i style="background:var(--rx)"></i>수신 KB/s</span><span><i style="background:var(--tx)"></i>송신 KB/s</span></span></h2>
+    <canvas id="c2" style="height:130px"></canvas>
+  </div>
+  <div class="row2">
+    <div class="card"><h2>최근 알림</h2><table id="alerts"></table></div>
+    <div class="card"><h2>지금 CPU 상위</h2><table id="topcpu"></table><h2 style="margin-top:12px">지금 메모리 상위</h2><table id="topmem"></table></div>
+  </div>
+</section>
+
+<section id="live" class="hide">
+  <div class="card banner" id="verdict"></div>
+  <div class="grid" id="liveTiles"></div>
+  <div class="card" style="margin-bottom:12px">
+    <h2>방화벽이 막은 접속 시도 (24시간, 10분 단위)<span class="legend" id="fwStatus"></span></h2>
+    <canvas id="cfw" style="height:110px"></canvas>
+    <table id="fwSrc" style="margin-top:8px"></table>
+  </div>
+  <div class="row2">
+    <div class="card"><h2>지금 내 PC로 들어온 연결</h2><table id="inbound"></table>
+      <h2 style="margin-top:14px">로그인 시도 (24시간 실패 · 7일 원격 성공)</h2><table id="logins"></table></div>
+    <div class="card"><h2>원격 세션 · 원격 제어 프로그램</h2><table id="sessions"></table>
+      <h2 style="margin-top:14px">외부에서 접속 가능한 열린 포트</h2><table id="listen"></table></div>
+  </div>
+  <div class="card"><h2>지금 인터넷과 통신 중인 프로그램</h2><table id="outbound"></table></div>
+</section>
+
+<section id="trace" class="hide">
+  <div class="card" style="margin-bottom:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div><b>침입 흔적 점검</b><div class="mut" style="font-size:12px">백도어 계정, 원격 제어 프로그램, 숨은 자동실행, 로그인 화면 백도어, 백신 예외, hosts/프록시 변조, 서명 없는 프로그램, 로그 삭제·원격 로그인 이력을 확인합니다. 하루 한 번 자동 점검합니다.</div></div>
+    <button id="runTrace" class="btn">지금 점검</button>
+    <span id="traceInfo" class="mut"></span>
+  </div>
+  <div id="traceOut"></div>
+  <div class="card" style="margin-top:12px"><h2>격리 보관함 <span class="mut" style="font-weight:400;font-size:12px">격리한 파일은 여기서 원래 위치로 되돌릴 수 있습니다</span></h2><table id="quar"></table></div>
+</section>
+
+<section id="inc" class="hide"><div class="card"><h2>비정상 종료 · 멈춤 기록</h2><div id="incs"></div></div></section>
+
+<section id="sec" class="hide">
+  <div class="grid" id="secTiles"></div>
+  <div class="card"><h2>보안 이벤트 (30일)</h2><table id="secEv"></table></div>
+</section>
+
+<section id="about" class="hide">
+  <div class="card" style="margin-bottom:12px"><h2>PC 모니터가 지금 쓰는 자원 <span class="mut" style="font-weight:400;font-size:12px">10초마다 갱신</span></h2>
+    <div class="grid" id="selfTiles" style="margin:0"></div><div id="selfMore" class="mut" style="font-size:12.5px;margin-top:6px"></div></div>
+  <div class="row2 eq">
+    <div class="card"><h2>작동 원리</h2>
+      <ol class="ul" style="font-size:13.5px;line-height:1.7">
+        <li><b>수집</b> — 10초마다 CPU·메모리·디스크·네트워크 사용량과 상위 프로세스를 기록합니다. Windows가 이미 제공하는 정보(성능 카운터)를 읽기만 합니다.</li>
+        <li><b>멈춤 추적</b> — 기록할 때마다 "살아 있음" 표시를 남깁니다. 재부팅 뒤 이 표시가 끊긴 시각과 Windows 종료 기록(Kernel-Power 41 등)을 맞춰 보고, 멈추기 직전 5분을 장애 기록으로 남깁니다.</li>
+        <li><b>보안 감시</b> — Windows 이벤트 로그(로그인, 백신, 서비스 설치)와 방화벽 차단 기록을 읽고, 자동실행 목록·열린 포트의 변화를 비교합니다.</li>
+        <li><b>흔적 점검</b> — 하루 한 번 계정·원격 접속·백신 예외·숨은 자동실행·서명 없는 프로그램을 확인합니다.</li>
+        <li><b>조치</b> — 사용자가 버튼을 누르고 확인했을 때만 제거·격리·차단을 실행합니다. 자동으로 무언가를 지우지 않습니다.</li>
+        <li><b>정리</b> — 오래된 기록은 스스로 지워서 저장 공간이 일정 크기 이상 늘지 않습니다.</li>
+      </ol></div>
+    <div class="card"><h2>안전한 이유</h2>
+      <ul class="ul" style="font-size:13.5px;line-height:1.7">
+        <li><b>인터넷으로 아무것도 보내지 않습니다.</b> 외부 서버 접속·자동 업데이트·사용 통계 전송이 없습니다. 아래 "외부 통신"이 실제 연결 수를 보여 줍니다.</li>
+        <li><b>이 PC 안에서만 열립니다.</b> 화면은 127.0.0.1(자기 자신) 주소로만 열려 다른 기기에서 접속할 수 없습니다.</li>
+        <li><b>설치한 계정만 볼 수 있습니다.</b> 접근 열쇠가 있어야 화면을 볼 수 있고, 다른 사이트가 몰래 조치 버튼을 누를 수 없게 막았습니다.</li>
+        <li><b>임의 명령을 실행하지 않습니다.</b> 화면은 점검에서 만든 조치 번호만 보낼 수 있고, Windows 시스템 파일·Microsoft 서명 파일은 지우지 않습니다.</li>
+        <li><b>되돌릴 수 있습니다.</b> 격리는 되돌리기가, 삭제는 휴지통 복원이 가능합니다.</li>
+        <li><b>소스가 공개돼 있습니다.</b> 모든 동작을 코드로 확인할 수 있습니다. <span id="ghLink"></span></li>
+      </ul></div>
+  </div>
+  <div class="card" style="margin-top:12px"><h2>Windows 설정에 하는 일</h2>
+    <ul class="ul" style="font-size:13px"><li>로그인 성공/실패 감사 켜기 (침입 시도 기록용)</li><li>Windows 방화벽 "차단 기록" 켜기 (최대 4MB, 접속 시도 감시용)</li>
+      <li>자동 실행 작업 'PCMonitor' 등록</li><li>그 밖의 설정은 버튼을 눌러 확인한 경우에만 바꿉니다</li></ul></div>
+</section>
+
+<section id="ev" class="hide">
+  <div class="card">
+    <h2>전체 이벤트</h2>
+    <div class="filters" id="filters"></div>
+    <table id="allEv"></table>
+  </div>
+</section>
+</main>
+<div id="tip"></div>
+<div id="riskModal" class="modal hide" role="dialog" aria-modal="true">
+  <div class="mbox">
+    <div class="mhead"><h2 style="margin:0" id="riskTitle">위험 · 주의 항목</h2>
+      <button class="abtn s" id="ackAll" title="이벤트 항목을 모두 확인함 처리">모두 확인함</button>
+      <button class="mclose" id="riskClose" aria-label="닫기">✕</button></div>
+    <div id="riskList"></div>
+  </div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmtT=(t,full)=>{const d=new Date(t*1000);const p=x=>String(x).padStart(2,'0');return (full?`${d.getMonth()+1}/${d.getDate()} `:'')+`${p(d.getHours())}:${p(d.getMinutes())}`+(full==='s'?':'+p(d.getSeconds()):'')};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sev=s=>`<span class="sev ${s}">${{crit:'위험',warn:'주의',info:'정보'}[s]||s}</span>`;
+const CAT={action:'조치',intrusion:'침입',crash:'장애',hardware:'하드웨어',security:'보안',defender:'백신',persistence:'자동실행',network:'네트워크',process:'프로그램',app:'앱',system:'시스템',resource:'자원',stall:'멈춤'};
+async function j(u){const r=await fetch(u);if(r.status===401){document.body.innerHTML='<div style="padding:40px"><h2>접근 권한이 없습니다</h2><p>PC 모니터 아이콘으로 다시 열어 주세요.</p></div>';throw new Error('401')}return r.json()}
+/* 프로세스 이름 + 무엇인지 설명 */
+function pcell(r){const tip=[r.path,r.company].filter(Boolean).join('\n');
+  return `<td title="${esc(tip)}"><b style="font-weight:600">${esc(r.name)}</b>${r.desc?`<div class="pdesc">${r.cat?`<span class="cat ${esc(r.cat)}">${esc(r.cat)}</span>`:''}${esc(r.desc)}</div>`:''}</td>`}
+
+/* ---------- 탭 ---------- */
+let tab='ov';
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hide',s.id!==b.dataset.t));
+  tab=b.dataset.t;refresh();
+});
+
+/* ---------- 차트 ---------- */
+function chart(cv,data,series,opt){
+  const dpr=devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
+  cv.width=W*dpr;cv.height=H*dpr;const g=cv.getContext('2d');g.scale(dpr,dpr);
+  const L=40,R=10,T=8,B=20,w=W-L-R,h=H-T-B;
+  g.clearRect(0,0,W,H);g.font='11px Segoe UI, Malgun Gothic';
+  if(!data.length){g.fillStyle=css('--mut');g.fillText('데이터 수집 중…',L+10,T+20);return}
+  const t0=data[0].ts,t1=data[data.length-1].ts||t0+1;
+  let ymax=opt.ymax;if(!ymax){ymax=1;for(const d of data)for(const s of series)ymax=Math.max(ymax,d[s.k]||0);ymax*=1.1}
+  const X=t=>L+(t-t0)/Math.max(1,t1-t0)*w,Y=v=>T+h-(v/ymax)*h;
+  g.strokeStyle=css('--line');g.fillStyle=css('--mut');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=ymax*i/4,y=Y(v);g.beginPath();g.moveTo(L,y);g.lineTo(W-R,y);g.stroke();g.fillText(opt.ymax?Math.round(v)+'%':(v>=1000?(v/1000).toFixed(1)+'k':Math.round(v)),4,y+4)}
+  const span=t1-t0;for(let i=0;i<=5;i++){const t=t0+span*i/5;g.fillText(fmtT(t,span>86400),X(t)-(i===5?30:i?15:0),H-4)}
+  if(opt.marks)for(const m of opt.marks){if(m<t0||m>t1)continue;g.strokeStyle=css('--crit');g.setLineDash([3,3]);g.beginPath();g.moveTo(X(m),T);g.lineTo(X(m),T+h);g.stroke();g.setLineDash([])}
+  for(const s of series){
+    if(s.band){g.fillStyle=css(s.c)+'26';g.beginPath();data.forEach((d,i)=>{const x=X(d.ts),y=Y(d[s.band]);i?g.lineTo(x,y):g.moveTo(x,y)});for(let i=data.length-1;i>=0;i--)g.lineTo(X(data[i].ts),Y(data[i][s.k]));g.fill()}
+    g.strokeStyle=css(s.c);g.lineWidth=1.6;g.beginPath();
+    let prev=null;data.forEach(d=>{const x=X(d.ts),y=Y(d[s.k]||0);if(prev!==null&&d.ts-prev>opt.gap)g.moveTo(x,y);else if(prev===null)g.moveTo(x,y);else g.lineTo(x,y);prev=d.ts});g.stroke();
+  }
+  cv._hit=(px)=>{const t=t0+(px-L)/w*(t1-t0);let best=data[0];for(const d of data)if(Math.abs(d.ts-t)<Math.abs(best.ts-t))best=d;return best};
+  cv.onmousemove=e=>{const r=cv.getBoundingClientRect(),d=cv._hit(e.clientX-r.left);const tip=$('#tip');tip.style.display='block';tip.style.left=(e.clientX+12)+'px';tip.style.top=(e.clientY+12)+'px';
+    tip.innerHTML=`<b>${fmtT(d.ts,'s')}</b><br>`+series.map(s=>`<span style="color:${css(s.c)}">●</span> ${s.n}: ${(d[s.k]??0).toFixed(1)}${s.u||''}`+(s.band?` (최대 ${d[s.band].toFixed(0)})`:'')).join('<br>')};
+  cv.onmouseleave=()=>$('#tip').style.display='none';
+  if(opt.click)cv.onclick=e=>{const r=cv.getBoundingClientRect();opt.click(cv._hit(e.clientX-r.left))};
+}
+
+let hours=6;
+const RANGES=[[1,'1시간'],[6,'6시간'],[24,'24시간'],[72,'3일'],[168,'7일'],[720,'30일']];
+$('#ranges').innerHTML=RANGES.map(([h,n])=>`<button data-h="${h}" class="${h===hours?'on':''}">${n}</button>`).join('');
+$('#ranges').onclick=e=>{if(!e.target.dataset.h)return;hours=+e.target.dataset.h;document.querySelectorAll('#ranges button').forEach(b=>b.classList.toggle('on',+b.dataset.h===hours));loadCharts()};
+
+let incMarks=[];
+async function loadCharts(){
+  const d=await j('/api/metrics?hours='+hours);
+  const gap=hours<=24?120:900;
+  chart($('#c1'),d,[{k:'cpu',band:'cpu_max',c:'--cpu',n:'CPU',u:'%'},{k:'mem',c:'--mem',n:'메모리',u:'%'},{k:'commit',c:'--commit',n:'커밋',u:'%'}],{ymax:100,gap,marks:incMarks,click:showAt});
+  chart($('#c2'),d,[{k:'disk',c:'--disk',n:'디스크',u:'%'},{k:'net_rx',c:'--rx',n:'수신',u:' KB/s'},{k:'net_tx',c:'--tx',n:'송신',u:' KB/s'}],{gap});
+}
+async function showAt(d){
+  const p=await j('/api/procs?ts='+d.ts);if(!p.length){$('#atTime').innerHTML='';return}
+  const t=k=>p.filter(x=>x.kind===k).map(x=>`<tr>${pcell(x)}<td class="n">${x.cpu.toFixed(1)}%</td><td class="n">${x.mem_mb.toFixed(0)} MB</td></tr>`).join('');
+  $('#atTime').innerHTML=`<div class="row2" style="margin-top:10px"><div><h2>${fmtT(p[0].ts,'s')} CPU 상위 (1분 평균)</h2><table><tr><th>프로세스</th><th class="n">CPU</th><th class="n">메모리</th></tr>${t('cpu')}</table></div><div><h2>메모리 상위</h2><table><tr><th>프로세스</th><th class="n">CPU</th><th class="n">메모리</th></tr>${t('mem')}</table></div></div>`;
+}
+
+/* ---------- 개요 ---------- */
+async function loadSummary(){
+  const s=await j('/api/summary');const m=s.latest||{};
+  const st=s.status||{},df=st.defender;
+  const cls=(v,w,c)=>v>=c?'bad':v>=w?'wn':'';
+  const li=s.last_incident;
+  const rk=s.risks||{crit:0,warn:0},secBad=rk.crit;
+  $('#tiles').innerHTML=[
+    ['CPU',`<span class="${cls(m.cpu,70,90)}">${(m.cpu??0).toFixed(0)}%</span>`,`프로세스 ${m.procs??'-'}개 · 스레드 ${m.threads??'-'}`],
+    ['메모리',`<span class="${cls(m.mem,80,90)}">${(m.mem??0).toFixed(0)}%</span>`,`${((m.mem_used_mb||0)/1024).toFixed(1)} GB 사용 · 커밋 ${m.commit_pct??'-'}%`],
+    [`디스크 ${s.drive||'C:'} 여유`,`<span class="${s.disk_free_gb<10?'bad':''}">${s.disk_free_gb} GB</span>`,`사용률 ${m.disk_busy??0}% · 핸들 ${m.handles??'-'}`],
+    ['마지막 장애',li?`<span class="bad" style="font-size:16px">${esc(li.kind)} ${esc(li.bugcheck)}</span>`:'<span class="ok" style="font-size:18px">없음</span>',li?fmtT(li.last_heartbeat,true):'모니터 시작 이후'],
+    ['보안',secBad?`<span class="bad">위험 ${secBad}건</span>${rk.warn?` <span class="wn" style="font-size:16px">주의 ${rk.warn}</span>`:''}`:rk.warn?`<span class="wn">주의 ${rk.warn}건</span>`:'<span class="ok" style="font-size:18px">이상 없음</span>',df?`Defender ${df.rtp?'켜짐':'<b class="bad">꺼짐</b>'} · 정의 ${df.sigdays}일 전`:'확인 중…','risks'],
+    ['모니터 DB',`${s.db_mb} MB`,`최대 50MB · 오래된 기록 자동 삭제`],
+  ].map(([k,v,x,open])=>`<div class="card tile${open&&(secBad||rk.warn)?' click':''}" ${open?`data-open="${open}"`:''}><div class="k">${k}</div><div class="v">${v}</div><div class="s">${x}</div></div>`).join('');
+  $('#alerts').innerHTML=s.alerts.length?'<tr><th>시각</th><th></th><th>내용</th></tr>'+s.alerts.map(a=>`<tr><td class="mut" style="white-space:nowrap">${fmtT(a.ts,true)}</td><td>${sev(a.severity)}</td><td><b>${esc(a.title)}</b><br><span class="mut">${esc(a.body)}</span></td></tr>`).join(''):'<tr><td class="mut">알림 없음</td></tr>';
+  const ADV={must:'필수',keep:'그대로 두세요',close:'종료 가능',remove:'삭제 가능',remove_rec:'삭제 권장',check:'확인 필요'};
+  const pt=(rows,k)=>'<tr><th>프로세스</th><th class="n">CPU</th><th class="n">메모리</th></tr>'+rows.map(r=>{
+    const adv=r.advice?`<div><span class="adv ${r.advice}" title="${esc(r.advice_text)}">${ADV[r.advice]||''}</span> <span class="pdesc">${r.advice==='must'||r.advice==='keep'?'':esc(r.advice_text)}</span></div>`:'';
+    const acts=(r.actions||[]).length?`<div class="pacts">${actBtns(r.actions,true)}</div>`:'';
+    return `<tr>${pcell(r).replace('</td>',adv+acts+'</td>')}<td class="n">${r.cpu.toFixed(1)}%</td><td class="n">${r.mem_mb.toFixed(0)} MB</td></tr>`}).join('');
+  $('#topcpu').innerHTML=pt(s.top_cpu);$('#topmem').innerHTML=pt(s.top_mem);
+  $('#upd').innerHTML=`<span class="osb">${esc(s.os&&s.os.name||'')}${s.os&&s.os.server?' · 서버 모드':''}</span> · 갱신 ${fmtT(s.now,'s')}`;
+  window._status=s.status;
+}
+
+/* ---------- 장애 ---------- */
+async function loadInc(){
+  const rows=await j('/api/incidents');incMarks=rows.map(r=>r.last_heartbeat);
+  $('#incs').innerHTML=rows.length?rows.map(r=>{
+    const sn=r.snapshot||{},ms=sn.metrics||[];
+    const procs=(sn.procs||[]).map(p=>`<tr><td>${p.kind==='cpu'?'CPU':'메모리'}</td>${pcell(p)}<td class="n">${p.cpu.toFixed(1)}%</td><td class="n">${p.mem_mb.toFixed(0)} MB</td></tr>`).join('');
+    const evs=(sn.events||[]).map(e=>`<tr><td class="mut">${fmtT(e.ts,'s')}</td><td>${sev(e.severity)}</td><td>${esc(e.title)}</td></tr>`).join('');
+    return `<div class="card" style="margin-bottom:10px"><h2><span class="sev crit">${esc(r.kind)} ${esc(r.bugcheck)}</span> 마지막 기록 ${fmtT(r.last_heartbeat,'s')} → 재부팅 ${fmtT(r.boot_time,'s')}</h2>
+    <div>${esc(r.summary)}</div>
+    <canvas id="ic${r.id}" style="height:120px;margin-top:8px"></canvas>
+    <details><summary>직전 상위 프로세스 · 관련 이벤트</summary><table><tr><th>구분</th><th>프로세스</th><th class="n">CPU</th><th class="n">메모리</th></tr>${procs||'<tr><td class="mut" colspan=4>기록 없음</td></tr>'}</table>
+    <table style="margin-top:8px">${evs||'<tr><td class="mut">이벤트 없음</td></tr>'}</table></details></div>`}).join(''):'<p class="mut">모니터 설치 이후 비정상 종료가 없습니다. 생기면 멈추기 직전 5분 기록이 여기에 저장됩니다.</p>';
+  rows.forEach(r=>{const ms=(r.snapshot.metrics||[]).map(m=>({...m,commit:m.commit_pct}));const cv=document.getElementById('ic'+r.id);if(cv)chart(cv,ms,[{k:'cpu',c:'--cpu',n:'CPU',u:'%'},{k:'mem',c:'--mem',n:'메모리',u:'%'},{k:'commit',c:'--commit',n:'커밋',u:'%'},{k:'disk_busy',c:'--disk',n:'디스크',u:'%'}],{ymax:100,gap:60})});
+}
+
+/* ---------- 보안 ---------- */
+async function loadSec(){
+  const s=await j('/api/summary');const st=s.status||{},df=st.defender||{};
+  const fw=(st.firewall||[]);const evl=st.eventlog||{};
+  const secReadable=evl.Security==='ok';
+  $('#secTiles').innerHTML=[
+    ...((df.other||[]).length||df.passive?[['백신',`<span class="ok">${esc((df.other||[]).join(', ')||'다른 백신')}</span>`,'Windows 보안은 보조(수동) 모드']]:
+      df.installed===false?[['백신','<span class="bad">확인 안 됨</span>','Windows 보안(Defender)이 설치되어 있지 않습니다']]:
+      [['실시간 바이러스 보호',df.rtp===undefined?'확인 중':df.rtp?'<span class="ok">켜짐</span>':'<span class="bad">꺼짐</span>',''],
+       ['바이러스 정의',df.sigdays===undefined||df.sigdays===null?'-':`<span class="${df.sigdays>3?'bad':'ok'}">${df.sigdays}일 전</span>`,df.sigdate||'']]),
+    ['방화벽',fw.length?(fw.every(f=>f.e)?'<span class="ok">모두 켜짐</span>':'<span class="bad">꺼진 프로필 있음</span>'):'확인 중',fw.map(f=>f.n+(f.e?' ✓':' ✗')).join(' · ')],
+    ['로그인 기록 감시',secReadable?'<span class="ok">작동 중</span>':'<span class="wn">권한 없음</span>',secReadable?('감사 설정: '+(st.audit||'-')):'관리자 권한으로 설치해야 침입 시도를 볼 수 있습니다'],
+  ].map(([k,v,x])=>`<div class="card tile"><div class="k">${k}</div><div class="v" style="font-size:20px">${v}</div><div class="s">${esc(x)}</div></div>`).join('');
+  const ev=await j('/api/events?days=30&cat=intrusion,security,defender,network,process,persistence');
+  $('#secEv').innerHTML=ev.length?'<tr><th>시각</th><th></th><th>구분</th><th>내용</th></tr>'+ev.map(evRow).join(''):'<tr><td class="mut">기록된 보안 이벤트가 없습니다.</td></tr>';
+}
+function evRow(e){let d=e.detail;try{d=JSON.stringify(JSON.parse(d),null,1)}catch{}
+  return `<tr><td class="mut" style="white-space:nowrap">${fmtT(e.ts,'s').replace(/^/,new Date(e.ts*1000).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})+' ')}</td><td>${sev(e.severity)}</td><td>${CAT[e.category]||e.category}</td><td>${d&&d!=='""'?`<details><summary>${esc(e.title)}</summary><pre>${esc(d)}</pre></details>`:esc(e.title)}</td></tr>`}
+
+/* ---------- 전체 이벤트 ---------- */
+const sel=new Set(Object.keys(CAT));
+$('#filters').innerHTML=Object.entries(CAT).map(([k,n])=>`<label><input type="checkbox" value="${k}" checked> ${n}</label>`).join('');
+$('#filters').onchange=e=>{e.target.checked?sel.add(e.target.value):sel.delete(e.target.value);loadEv()};
+async function loadEv(){const ev=await j('/api/events?days=30&cat='+[...sel].join(','));$('#allEv').innerHTML=ev.length?'<tr><th>시각</th><th></th><th>구분</th><th>내용</th></tr>'+ev.map(evRow).join(''):'<tr><td class="mut">없음</td></tr>'}
+
+/* ---------- 침입 감시 (실시간) ---------- */
+const KIND={ext:'<b class="bad">인터넷</b>',lan:'내부망',local:'내 PC',mcast:'방송'};
+const tbl=(head,rows,empty)=>rows.length?`<tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr>`+rows.join(''):`<tr><td class="mut">${empty}</td></tr>`;
+async function loadLive(){
+  const L=await j('/api/live');
+  const lv=L.level,txt={ok:'현재 침입 시도 없음',warn:'주의가 필요한 항목 있음',crit:'침입 시도 감지'}[lv];
+  $('#liveDot').className='dot '+lv;
+  $('#verdict').className='card banner '+lv;
+  $('#verdict').innerHTML=`<div><div class="big ${lv==='ok'?'ok':lv==='crit'?'bad':'wn'}">${lv==='crit'?'⚠ ':lv==='ok'?'✓ ':''}${txt}</div>
+    ${L.reasons.length?'<ul>'+L.reasons.map(r=>`<li>${esc(r)}</li>`).join('')+'</ul>':'<div class="mut">들어온 외부 연결, 차단된 인터넷 접속 시도, 로그인 실패, 원격 세션이 없습니다.</div>'}</div>
+    <div class="mut" style="margin-left:auto;font-size:12px"><span class="pulse">●</span> 3초마다 갱신 · ${fmtT(L.now,'s')}</div>`;
+  const ext1h=L.fw.sources.filter(s=>s.kind==='ext'&&s.n1h).length;
+  $('#liveTiles').innerHTML=[
+    ['들어온 외부 연결',L.inbound.length,L.inbound.filter(i=>i.kind==='ext').length?'<span class="bad">인터넷 연결 포함</span>':'인터넷 연결 없음',L.inbound.some(i=>i.kind==='ext')?'bad':''],
+    ['막은 접속 시도 (1시간)',L.fw.total1h,`24시간 ${L.fw.total24h}회 · 인터넷 출처 ${ext1h}곳`,ext1h?'bad':L.fw.total1h?'wn':''],
+    ['로그인 실패 (24시간)',L.failed.reduce((a,f)=>a+f.n,0),L.seclog==='ok'?'보안 로그 감시 중':'<span class="wn">보안 로그 권한 없음</span>',L.failed.length?'wn':''],
+    ['원격 세션',L.sessions.filter(s=>s.remote).length,L.remote_tools.length?'<span class="wn">원격제어: '+esc(L.remote_tools.join(', '))+'</span>':'원격 제어 프로그램 없음',L.sessions.some(s=>s.remote)?'wn':''],
+  ].map(([k,v,x,c])=>`<div class="card tile"><div class="k">${k}</div><div class="v ${c}">${v}</div><div class="s">${x}</div></div>`).join('');
+  $('#fwStatus').innerHTML=L.fw.status==='ok'?'<span class="ok">방화벽 차단 기록 감시 중</span>':'<span class="wn">'+esc(L.fw.status)+'</span>';
+  chart($('#cfw'),L.fw.series,[{k:'n',c:'--crit',n:'차단',u:'회'}],{gap:1e9});
+  $('#fwSrc').innerHTML=tbl(['출처 IP','구분','대상 포트','24시간','마지막'],L.fw.sources.map(s=>`<tr><td>${esc(s.src)}</td><td>${KIND[s.kind]||s.kind}</td><td>${esc(s.ports.join(', '))}${s.nports>12?` 외 ${s.nports-12}개`:''}${s.nports>=10?' <span class="sev crit">포트 스캔</span>':''}</td><td class="n">${s.n}</td><td class="mut">${fmtT(s.last,true)}</td></tr>`),'방화벽이 막은 접속 시도가 없습니다');
+  $('#inbound').innerHTML=tbl(['출발지','구분','내 포트','프로그램','상태'],L.inbound.map(i=>`<tr><td>${esc(i.rip)}:${i.rport}</td><td>${KIND[i.kind]}</td><td>${i.lport} ${esc(i.svc)}</td>${pcell({name:i.proc,desc:i.desc})}<td class="mut">${i.state==='SYN_RECV'?'<span class="wn">연결 시도 중</span>':'연결됨'}</td></tr>`),'외부에서 들어온 연결 없음');
+  $('#logins').innerHTML=tbl(['출발지','계정','횟수','마지막'],[
+    ...L.failed.map(f=>`<tr><td>${esc(f.ip)} ${f.kind==='ext'?KIND.ext:''}</td><td>${esc(f.user)} <span class="mut">${esc(f.how)}</span></td><td class="n"><span class="wn">실패 ${f.n}</span></td><td class="mut">${fmtT(f.last,true)}</td></tr>`),
+    ...L.remote_ok.map(r=>`<tr><td>${esc(r.ip)}</td><td colspan=2><span class="bad">성공</span> ${esc(r.title)}</td><td class="mut">${fmtT(r.ts,true)}</td></tr>`)],
+    L.seclog==='ok'?'로그인 실패·원격 로그인 없음':'관리자 권한이 없어 로그인 기록을 볼 수 없습니다');
+  $('#sessions').innerHTML=tbl(['사용자','접속 위치','시작'],L.sessions.map(s=>`<tr><td>${esc(s.name)}</td><td>${s.remote?`<span class="wn">원격 ${esc(s.host)}</span>`:'이 PC 앞(콘솔)'}</td><td class="mut">${fmtT(s.started,true)}</td></tr>`).concat(L.remote_tools.map(t=>`<tr><td colspan=3><span class="sev warn">원격 제어</span> ${esc(t)} 실행 중 — 직접 설치한 게 아니면 <a href="#" onclick="goTrace();return false">흔적 점검에서 바로 제거 →</a></td></tr>`)),'세션 없음');
+  $('#listen').innerHTML=tbl(['포트','프로그램','주소'],L.listening.map(l=>`<tr><td>${l.port} ${l.svc?`<span class="tag">${esc(l.svc)}</span>`:''}</td>${pcell({name:l.proc,desc:l.desc})}<td class="mut">${esc(l.addr)}</td></tr>`),'없음');
+  $('#outbound').innerHTML=tbl(['프로그램','연결 수','상대 주소'],L.outbound.map(o=>`<tr>${pcell({name:o.proc+'  (pid '+o.pid+')',desc:o.desc})}<td class="n">${o.n}</td><td class="mut" style="font-size:12px">${esc(o.ips.join('  '))}</td></tr>`),'없음');
+}
+
+/* ---------- 흔적 점검 ---------- */
+let tracePoll=null;
+async function loadTrace(){
+  const r=await j('/api/trace');
+  $('#runTrace').disabled=r.running;
+  $('#runTrace').textContent=r.running?'점검 중…':'지금 점검';
+  $('#traceInfo').innerHTML=r.running?'<span class="pulse">점검 중입니다 (30초~2분)</span>':r.ts?`마지막 점검 ${fmtT(r.ts,true)} · ${r.secs}초 · <b class="${r.crit?'bad':''}">위험 ${r.crit}</b> · <b class="${r.warn?'wn':''}">주의 ${r.warn}</b>`:'아직 점검 기록이 없습니다';
+  if(!r.admin)$('#traceInfo').innerHTML+=' · <span class="wn">관리자 권한이 아니라 일부 항목을 못 봅니다</span>';
+  const SEVN={crit:'위험',warn:'주의',info:'정보',ok:'정상'};
+  let busy=false;
+  $('#traceOut').innerHTML=(r.findings||[]).map(f=>{const d=Array.isArray(f.detail)?f.detail:(f.detail?[f.detail]:[]);
+    const acts=(f.actions||[]).map(a=>{const jb=a.job||{};if(jb.state==='running')busy=true;
+      const cls=(a.kind==='uninstall'||a.kind==='delete')?'':a.kind==='quarantine'?'q':'s';
+      const st=jb.state==='running'?`<span class="jmsg pulse">${esc(jb.msg)}</span>`:jb.state==='ok'?`<span class="jmsg ok">✓ ${esc(jb.msg)}</span>`:jb.state==='fail'?`<span class="jmsg bad">✗ ${esc(jb.msg)}</span>`:'';
+      return `<button class="abtn ${cls}" data-act="${esc(a.id)}" data-confirm="${esc(a.confirm)}" ${jb.state==='running'||jb.state==='ok'||!r.admin?'disabled':''}>${esc(a.label)}</button>${st}`}).join('');
+    return `<div class="find ${f.sev}"><span class="sev ${f.sev==='ok'?'info':f.sev}" ${f.sev==='ok'?'style="color:var(--ok)"':''}>${SEVN[f.sev]}</span> <span class="tag">${esc(f.check)}</span><b>${esc(f.title)}</b>${d.length?'<ul>'+d.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>':''}${acts?`<div class="acts">${acts}</div>`:''}</div>`}).join('');
+  loadQuar();
+  clearTimeout(tracePoll);if(r.running||busy)tracePoll=setTimeout(()=>tab==='trace'&&loadTrace(),3000);
+}
+async function post(u,body){const r=await fetch(u,{method:'POST',headers:{'X-PCMon':'1','Content-Type':'application/json'},body:JSON.stringify(body||{})});return r.json()}
+/* 조치 버튼 (어느 화면에서든 같은 방식) */
+function actBtns(acts,small){return (acts||[]).map(a=>{const jb=a.job||{};
+  const cls=(a.kind==='uninstall'||a.kind==='delete')?'':a.kind==='quarantine'?'q':'s';
+  const st=jb.state==='running'?`<span class="jmsg pulse">${esc(jb.msg)}</span>`:jb.state==='ok'?`<span class="jmsg ok">✓ ${esc(jb.msg)}</span>`:jb.state==='fail'?`<span class="jmsg bad">✗ ${esc(jb.msg)}</span>`:'';
+  return `<button class="abtn ${cls}" data-act="${esc(a.id)}" data-confirm="${esc(a.confirm)}" ${jb.state==='running'||jb.state==='ok'?'disabled':''}>${esc(a.label)}</button>${small&&jb.state!=='running'?'':st}`}).join('')}
+let actPoll=null;
+function afterAction(){clearTimeout(actPoll);let n=0;const tick=()=>{refresh();if(!$('#riskModal').classList.contains('hide'))openRisks(true);if(++n<20)actPoll=setTimeout(tick,3000)};actPoll=setTimeout(tick,1500)}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]');
+  if(b&&!b.disabled){if(!confirm(b.dataset.confirm+'\n\n진행할까요?'))return;
+    b.disabled=true;const res=await post('/api/action/run',{id:b.dataset.act});
+    if(!res.ok&&res.msg)alert(res.msg);afterAction();return}
+  const k=e.target.closest('[data-ack]');
+  if(k){await post('/api/risks/ack',{id:+k.dataset.ack});openRisks(true);refresh();return}
+  const o=e.target.closest('[data-open="risks"]');if(o){openRisks();return}
+  const c=e.target.closest('[data-cmd]');
+  if(c&&!c.disabled){if(c.dataset.confirm&&!confirm(c.dataset.confirm))return;c.disabled=true;
+    const res=await post(c.dataset.cmd,c.dataset.kind?{kind:c.dataset.kind}:{});if(res.msg)alert(res.msg);setTimeout(loadMaint,2000);return}
+});
+
+/* ---------- 위험 목록 (보안 칸을 누르면) ---------- */
+async function openRisks(quiet){const r=await j('/api/risks');
+  $('#riskTitle').textContent=`위험 ${r.crit}건 · 주의 ${r.warn}건`;
+  $('#ackAll').classList.toggle('hide',!r.items.some(i=>i.type==='event'));
+  $('#riskList').innerHTML=r.items.length?r.items.map(i=>`<div class="find ${i.sev}">
+    <span class="sev ${i.sev}">${i.sev==='crit'?'위험':'주의'}</span> <span class="tag">${esc(i.check)}</span><b>${esc(i.title)}</b>
+    <span class="mut" style="font-size:12px;float:right">${i.ts?fmtT(i.ts,true):''}</span>
+    <div class="howto"><b>무슨 일?</b> ${esc(i.what)}<br><b>어떻게?</b> ${esc(i.how)}</div>
+    ${i.detail.length?`<details><summary class="mut" style="font-size:12px">자세히</summary><ul class="ul">${i.detail.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`:''}
+    <div class="acts">${actBtns(i.actions)}${i.type==='event'?`<button class="abtn s" data-ack="${i.eid}">확인함 (문제 없음)</button>`:''}
+      ${i.type==='finding'?'<a href="#" class="mut" style="font-size:12px" onclick="closeRisks();goTrace();return false">흔적 점검에서 보기 →</a>':''}</div></div>`).join('')
+    :'<p class="ok" style="font-size:15px">✓ 해결되지 않은 위험·주의 항목이 없습니다.</p>';
+  if(!quiet)$('#riskModal').classList.remove('hide')}
+function closeRisks(){$('#riskModal').classList.add('hide')}
+$('#riskClose').onclick=closeRisks;
+$('#riskModal').onclick=e=>{if(e.target.id==='riskModal')closeRisks()};
+addEventListener('keydown',e=>{if(e.key==='Escape')closeRisks()});
+$('#ackAll').onclick=async()=>{const r=await j('/api/risks');const ids=r.items.filter(i=>i.type==='event').map(i=>i.eid);
+  if(!ids.length||!confirm(`이벤트 ${ids.length}건을 모두 '확인함'으로 처리할까요?\n(흔적 점검 항목은 조치하거나 다시 점검해야 사라집니다)`))return;
+  await post('/api/risks/ack',{ids});openRisks(true);refresh()};
+
+/* ---------- 정보 ---------- */
+async function loadAbout(){const a=await j('/api/about');
+  $('#selfTiles').innerHTML=[
+    ['CPU',`${a.cpu.toFixed(1)}%`,'전체 CPU 대비'],
+    ['메모리',`${a.mem_mb} MB`,`작업 세트 ${a.rss_mb} MB`],
+    ['저장 공간',`${a.data_mb} MB`,`DB ${a.db_mb} MB · 상한 ${a.db_max_mb} MB`],
+    ['외부 통신',a.external_conns?`<span class="bad">${a.external_conns}개</span>`:'<span class="ok">없음</span>',`화면용 ${esc(a.listen.join(', ')||'-')} 만 열림`],
+  ].map(([k,v,x])=>`<div class="card tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${x}</div></div>`).join('');
+  $('#selfMore').innerHTML=`버전 ${esc(a.version)} · ${a.system?'SYSTEM 계정':a.admin?'관리자 권한':'일반 권한'}으로 실행 중 · 스레드 ${a.threads}개${a.handles!=null?` · 핸들 ${a.handles}개`:''}
+    · 실행 시작 ${fmtT(a.started,true)}${a.children.length?` · 점검용 보조 프로세스 ${a.children.length}개 (${esc([...new Set(a.children)].join(', '))})`:''}<br>
+    기록 위치 ${esc(a.data_dir)} · 보관: 10초 기록 ${a.keep.raw}일, 5분 요약 ${a.keep.agg}일, 이벤트 ${a.keep.events}일 (지나면 자동 삭제)`;
+  $('#ghLink').innerHTML=a.github?`<a href="${esc(a.github)}" target="_blank" rel="noopener">${esc(a.github)}</a>`:'';
+}
+
+/* ---------- Windows 업데이트 · 백신 검사 ---------- */
+const dur=s=>{if(s==null)return '-';s=Math.max(0,s|0);const h=s/3600|0,m=(s%3600)/60|0;return h?`${h}시간 ${m}분`:m?`${m}분`:`${s}초`};
+async function loadMaint(){let M;try{M=await j('/api/maint')}catch(e){return}
+  const w=M.wu||{},d=M.defender||{};
+  // 업데이트
+  const pend=w.pending||[],sec=w.pending_security||[],dl=pend.filter(p=>p.dl).length;
+  let h='';
+  if(w.active){const pg=w.progress;
+    h+=`<div class="wn" style="font-weight:600">● 업데이트 ${w.installing_now?'설치':'다운로드'} 진행 중</div>`+
+      (pg&&pg.total?`<div class="bar"><i style="width:${Math.round(100*pg.done/pg.total)}%"></i></div><div class="mut" style="font-size:12px">${pg.done}/${pg.total}개 완료</div>`:'<div class="bar ind"><i></i></div>')+
+      `<ul class="ul">${(w.activity||[]).slice(-5).map(a=>`<li>${esc(a.state)} · ${esc(a.t)}</li>`).join('')}</ul>`}
+  else if(w.reboot)h+='<div class="wn" style="font-weight:600">⟳ 재부팅하면 업데이트 설치가 끝납니다</div>';
+  else if(sec.length)h+=`<div class="bad" style="font-weight:600">⚠ 설치 안 된 보안 업데이트 ${sec.length}개</div>`;
+  else if(pend.length)h+=`<div class="wn" style="font-weight:600">설치 대기 업데이트 ${pend.length}개</div>`;
+  else if(w.checked)h+='<div class="ok" style="font-weight:600">✓ 최신 상태</div>';
+  h+=`<div class="kv"><span>마지막 확인</span><span>${esc(w.lastsearch||'-')}</span><span>마지막 설치</span><span>${esc(w.lastinstall||'-')}${w.last_os_update?' · '+esc(w.last_os_update.t).slice(0,40):''}</span>
+    <span>대기</span><span>${pend.length}개 (다운로드됨 ${dl}개)${w.paused?' · <b class="wn">일시중지됨</b>':''}</span></div>`;
+  if(pend.length)h+=`<details><summary class="mut" style="font-size:12px">대기 목록 보기</summary><ul class="ul">${pend.map(p=>`<li>${p.dl?'⬇ ':''}${esc(p.t)}</li>`).join('')}</ul></details>`;
+  h+=`<div class="acts"><button class="abtn s" data-cmd="/api/wu/start" ${!M.admin||w.active?'disabled':''} data-confirm="Windows 업데이트 확인·다운로드·설치를 시작합니다.\n설치 중 PC가 느려질 수 있고, 끝나면 재부팅이 필요할 수 있습니다.">업데이트 시작</button>
+    <button class="abtn s" data-cmd="/api/wu/refresh" ${w.refreshing?'disabled':''}>${w.refreshing?'목록 확인 중…':'목록 새로 고침'}</button>
+    <a href="ms-settings:windowsupdate" class="mut" style="font-size:12px">설정에서 열기</a></div>`;
+  $('#wu').className='';$('#wu').innerHTML=h;
+  // 백신 검사
+  let g='';
+  if(!d.available)g='<div class="mut">Windows 보안 검사 정보를 읽을 수 없습니다 (다른 백신 사용 중일 수 있음)</div>';
+  else if(d.current){const c=d.current;
+    g+=`<div class="wn" style="font-weight:600">● ${esc(c.kind)} 진행 중</div>`+
+      (c.pct!=null?`<div class="bar"><i style="width:${c.pct}%"></i></div><div style="font-size:13px"><b>${c.pct}%</b> <span class="mut">(추정)</span>${c.eta!=null?` · 남은 시간 약 ${dur(c.eta)}`:''}</div>`:'<div class="bar ind"><i></i></div><div class="mut" style="font-size:12px">진행률은 Windows가 알려 주지 않아 경과 시간만 표시합니다</div>')+
+      `<div class="kv"><span>시작</span><span>${fmtT(c.start,true)} (${esc(c.trigger||'')})</span><span>경과</span><span>${dur(c.elapsed)}</span>
+       ${c.read_gb!=null?`<span>검사한 양</span><span>${c.read_gb} GB / 전체 디스크 사용량 ${c.total_gb} GB</span>`:''}</div>`+
+      (c.pct==null&&c.observed!=null?`<div class="mut" style="font-size:12px">진행률 계산 중 — 검사 속도를 ${dur(600-c.observed)} 더 지켜본 뒤 표시합니다</div>`:'')+
+      (c.slow?'<div class="mut" style="font-size:12px">검사가 매우 느려 남은 시간을 예측하기 어렵습니다.</div>':'')+
+      (c.idle_only?'<div class="wn" style="font-size:12px">「PC를 안 쓸 때만 검사」 설정이 켜져 있어, PC를 쓰는 동안에는 검사가 거의 멈춥니다.</div>':'')+
+      (c.method==='bytes'&&c.total_gb>1000?'<div class="mut" style="font-size:12px">디스크에 데이터가 많아 전체 검사가 오래 걸립니다. 급하면 중지하고 빠른 검사를 하세요.</div>':'')+
+      `<div class="acts"><button class="abtn" data-cmd="/api/defender/cancel" ${!M.admin?'disabled':''} data-confirm="진행 중인 검사를 중지할까요?">검사 중지</button></div>`}
+  else g+='<div class="ok" style="font-weight:600">✓ 진행 중인 검사 없음</div>';
+  if(d.recent&&d.recent.length)g+=`<div class="mut" style="font-size:12px;margin-top:8px">최근 검사</div><ul class="ul">${d.recent.map(r=>`<li>${fmtT(r.start,true)} ${esc(r.kind)} · <span class="${r.result==='완료'?'ok':'wn'}">${esc(r.result)}</span>${r.secs?` · ${dur(r.secs)}`:''}</li>`).join('')}</ul>`;
+  if(d.available&&!d.current)g+=`<div class="acts"><button class="abtn s" data-cmd="/api/defender/start" data-kind="quick" ${!M.admin?'disabled':''}>빠른 검사 시작</button>
+    <button class="abtn s" data-cmd="/api/defender/start" data-kind="full" ${!M.admin?'disabled':''} data-confirm="전체 검사는 디스크 전체를 검사해서 몇 시간~수십 시간 걸릴 수 있습니다. 시작할까요?">전체 검사 시작</button></div>`;
+  $('#defscan').className='';$('#defscan').innerHTML=g;
+}
+async function loadQuar(){const q=await j('/api/quarantine');
+  $('#quar').innerHTML=q.length?'<tr><th>격리 시각</th><th>원래 위치</th><th>함께 지운 것</th><th></th></tr>'+q.map(x=>`<tr><td class="mut">${fmtT(x.ts,true)}</td><td style="word-break:break-all">${esc(x.orig)}</td><td class="mut">방화벽 규칙 ${x.fw} · 자동실행 ${x.run}</td><td><button class="abtn s" data-qid="${esc(x.qid)}">되돌리기</button></td></tr>`).join(''):'<tr><td class="mut">격리한 파일이 없습니다</td></tr>'}
+$('#quar').onclick=async e=>{const b=e.target.closest('[data-qid]');if(!b)return;
+  if(!confirm('이 파일을 원래 위치로 되돌리고, 지웠던 방화벽 규칙·자동실행 등록도 복구합니다.\n진행할까요?'))return;
+  b.disabled=true;const res=await post('/api/quarantine/restore',{qid:b.dataset.qid});alert(res.msg);loadTrace()};
+$('#runTrace').onclick=async()=>{await post('/api/trace/run');loadTrace()};
+function goTrace(){document.querySelector('nav button[data-t="trace"]').click()}
+
+async function refresh(){
+  try{
+    if(tab==='ov'){await loadSummary();await loadCharts();loadMaint()}
+    else if(tab==='live')await loadLive();
+    else if(tab==='trace')await loadTrace();
+    else if(tab==='about')await loadAbout();
+    else if(tab==='inc')await loadInc();
+    else if(tab==='sec')await loadSec();
+    else await loadEv();
+  }catch(e){$('#upd').textContent='모니터에 연결할 수 없음 (실행 중인지 확인)'}
+}
+j('/api/incidents').then(r=>{incMarks=r.map(x=>x.last_heartbeat)}).finally(refresh);
+setInterval(()=>{if(tab==='ov'||tab==='about')refresh()},10000);
+setInterval(()=>{if(tab==='live')refresh()},3000);
+setInterval(()=>{if(tab!=='live')j('/api/live').then(L=>$('#liveDot').className='dot '+L.level).catch(()=>{})},15000);
+j('/api/live').then(L=>$('#liveDot').className='dot '+L.level).catch(()=>{});
+addEventListener('resize',()=>tab==='ov'&&loadCharts());
+</script>
+</body>
+</html>

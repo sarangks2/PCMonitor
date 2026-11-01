@@ -1,0 +1,423 @@
+"""PC 모니터 본체. pythonw monitor.py 로 백그라운드 실행.
+
+- 10초마다 CPU/메모리/디스크/네트워크 기록 + 생존신호(heartbeat)
+- 재부팅 후 직전 비정상 종료를 찾아 '멈추기 직전 5분' 기록을 장애 보고서로 남김
+- 보안 감시 (security.py)
+- 대시보드 http://127.0.0.1:8765
+"""
+import logging
+import logging.handlers
+import os
+import sys
+import threading
+import time
+import traceback
+
+import psutil
+
+import config
+import winutil
+from db import DB
+from intrusion import FirewallWatcher, TraceScanner
+from procinfo import PROCINFO
+from remediate import Remediator
+from sysupdate import SysUpdate
+from security import SecurityMonitor
+
+os.makedirs(config.DATA_DIR, exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    handlers=[logging.handlers.RotatingFileHandler(config.LOG_PATH, maxBytes=config.LOG_MAX_BYTES,
+                                                   backupCount=1, encoding="utf-8")])
+log = logging.getLogger("pcmon")
+
+
+class Monitor:
+    def __init__(self):
+        self.db = DB()
+        self.cooldown = {}
+        self.sec = SecurityMonitor(self.db, self.alert)
+        self.fw = FirewallWatcher(self.db, self.alert)
+        self.trace = TraceScanner(self.db, self)
+        self.rem = Remediator(self.db, self)
+        self.upd = SysUpdate(self.db)
+        self.latest = {}          # 현재 값 (대시보드용)
+        self.top_now = []         # 현재 상위 프로세스
+        self.proc_cache = {}      # pid -> psutil.Process
+        self.cpu_acc = {}         # pid -> [cpu합, 횟수, 이름]
+        self.high = {"cpu": 0, "mem": 0, "commit": 0}
+        self.started = time.time()
+        self.ncpu = psutil.cpu_count() or 1
+        self.os = winutil.os_info()
+        self.me = psutil.Process()
+        self.me.cpu_percent(None)
+        self.self_cpu = 0.0
+        self.token = ""
+        self.stop = threading.Event()
+
+    # ------------------------------------------------------------------ 알림
+    def alert(self, key, severity, title, body):
+        now = time.time()
+        if now - self.cooldown.get(key, 0) < config.ALERT_COOLDOWN_SECS:
+            return
+        self.cooldown[key] = now
+        self.db.execute("INSERT INTO alerts(ts,key,severity,title,body) VALUES(?,?,?,?,?)",
+                        (int(now), key, severity, title, body))
+        log.warning("ALERT [%s] %s - %s", severity, title, body.replace("\n", " "))
+        winutil.toast(("⚠ " if severity == "crit" else "") + title, body)
+
+    # ------------------------------------------------------------------ 장애 감지
+    def detect_incident(self):
+        """이전 실행의 마지막 생존신호 이후 재부팅됐고, 그 사이 비정상 종료 이벤트가 있으면 기록."""
+        last_hb = self.db.get("heartbeat")
+        boot = psutil.boot_time()
+        self.db.set("boot_time", boot)
+        if not last_hb or last_hb >= boot:
+            return
+        if self.db.query("SELECT 1 FROM incidents WHERE boot_time=?", (int(boot),)):
+            return
+        since_ms = int((time.time() - last_hb + 600) * 1000)
+        try:
+            evs = winutil.query_events(
+                "System", f"*[System[(EventID=41 or EventID=6008 or EventID=1001 or EventID=1074 or EventID=13) "
+                          f"and TimeCreated[timediff(@SystemTime) <= {since_ms}]]]")
+        except Exception:
+            evs = []
+        evs = [e for e in evs if e["ts"] >= last_hb - 120]
+        k41 = [e for e in evs if e["id"] == 41]
+        if not k41 and not any(e["id"] == 6008 for e in evs):
+            return  # 정상 종료/재시작
+        bc, kind = "", "갑작스런 꺼짐"
+        if k41:
+            d = k41[-1]["data"]
+            code = int(d.get("BugcheckCode", "0") or 0)
+            if code:
+                bc, kind = f"0x{code:X}", "블루스크린"
+            elif d.get("PowerButtonTimestamp", "0") not in ("0", ""):
+                kind = "멈춤 → 전원 버튼 강제 종료"
+            else:
+                kind = "갑작스런 전원 차단/리셋"
+        hb = int(last_hb)
+        metrics = self.db.query("SELECT * FROM metrics WHERE ts BETWEEN ? AND ? ORDER BY ts", (hb - 300, hb))
+        procs = self.db.query("SELECT * FROM procs WHERE ts=(SELECT MAX(ts) FROM procs WHERE ts<=?)", (hb,))
+        events = self.db.query("SELECT ts,category,severity,title FROM events WHERE ts BETWEEN ? AND ? ORDER BY ts",
+                               (hb - 1800, hb + 600))
+        summary = self._summarize(metrics, procs)
+        import json
+        self.db.execute(
+            "INSERT INTO incidents(ts,last_heartbeat,boot_time,kind,bugcheck,summary,snapshot) VALUES(?,?,?,?,?,?,?)",
+            (int(time.time()), hb, int(boot), kind, bc, summary,
+             json.dumps({"metrics": metrics, "procs": procs, "events": events}, ensure_ascii=False)))
+        when = time.strftime("%m/%d %H:%M:%S", time.localtime(hb))
+        self.alert(f"incident:{int(boot)}", "crit", f"직전 비정상 종료 감지: {kind} {bc}".strip(),
+                   f"마지막 기록 {when}. {summary}")
+        log.warning("incident: %s %s / %s", kind, bc, summary)
+
+    @staticmethod
+    def _summarize(metrics, procs):
+        if not metrics:
+            return "직전 기록 없음 (모니터가 실행 중이 아니었음)"
+        mx = lambda k: max((m[k] or 0) for m in metrics)
+        parts = [f"직전 5분 최대 CPU {mx('cpu'):.0f}%", f"메모리 {mx('mem'):.0f}%", f"커밋 {mx('commit_pct'):.0f}%",
+                 f"디스크 사용률 {mx('disk_busy'):.0f}%"]
+        top = [p for p in procs if p["kind"] == "cpu"][:2] + [p for p in procs if p["kind"] == "mem"][:1]
+        if top:
+            parts.append("상위: " + ", ".join(f"{p['name']}({p['cpu']:.0f}%/{p['mem_mb']:.0f}MB)" for p in top))
+        hint = []
+        if mx("mem") >= 90 or mx("commit_pct") >= 90:
+            hint.append("메모리 부족 의심")
+        if mx("cpu") >= 95:
+            hint.append("CPU 과부하")
+        if mx("disk_busy") >= 95:
+            hint.append("디스크 과부하")
+        if not hint:
+            hint.append("자원 사용은 정상 → 드라이버/하드웨어 쪽 의심")
+        return ", ".join(parts) + " → " + ", ".join(hint)
+
+    # ------------------------------------------------------------------ 수집
+    def sample_processes(self):
+        seen, new_exes = set(), []
+        rows = []
+        for p in psutil.process_iter(["pid", "name"]):
+            pid = p.info["pid"]
+            if pid in (0, 4):
+                continue
+            seen.add(pid)
+            proc = self.proc_cache.get(pid)
+            if proc is None:
+                self.proc_cache[pid] = proc = p
+                try:
+                    proc.cpu_percent(None)
+                    if self.started + 30 < time.time():
+                        new_exes.append((pid, p.info["name"], proc.exe()))
+                except Exception:
+                    pass
+                continue
+            try:
+                with proc.oneshot():
+                    cpu = proc.cpu_percent(None) / self.ncpu
+                    mi = proc.memory_info()
+                    mem = getattr(mi, "private", mi.rss) / 1048576
+                rows.append({"pid": pid, "name": p.info["name"], "cpu": cpu, "mem_mb": mem})
+                a = self.cpu_acc.setdefault(pid, [0.0, 0, p.info["name"]])
+                a[0] += cpu
+                a[1] += 1
+            except Exception:
+                pass
+        for pid in list(self.proc_cache):
+            if pid not in seen:
+                self.proc_cache.pop(pid, None)
+                self.cpu_acc.pop(pid, None)
+        self.top_now = sorted(rows, key=lambda r: -r["cpu"])[:8]
+        self.mem_top = sorted(rows, key=lambda r: -r["mem_mb"])[:8]
+        for r in {id(r): r for r in self.top_now + self.mem_top}.values():
+            try:
+                r.update(PROCINFO.describe(r["pid"], r["name"]))
+            except Exception:
+                pass
+        for r in self.mem_top[:1]:
+            if r["mem_mb"] > config.PROC_MEM_ALERT_MB:
+                self.alert(f"procmem:{r['name']}", "warn", "프로세스 메모리 과다",
+                           f"{r['name']} 가 {r['mem_mb']:.0f}MB 사용 중")
+        return new_exes
+
+    def snapshot_top(self, ts):
+        cpu_avg = sorted(((a[0] / a[1], pid, a[2]) for pid, a in self.cpu_acc.items() if a[1]), reverse=True)[:5]
+        memd = {r["pid"]: r["mem_mb"] for r in getattr(self, "mem_top", [])}
+        rows = [{"kind": "cpu", "rank": i, "pid": pid, "name": n, "cpu": c, "mem_mb": memd.get(pid, 0)}
+                for i, (c, pid, n) in enumerate(cpu_avg)]
+        cpud = {pid: a[0] / a[1] for pid, a in self.cpu_acc.items() if a[1]}
+        rows += [{"kind": "mem", "rank": i, "pid": r["pid"], "name": r["name"], "cpu": cpud.get(r["pid"], 0),
+                  "mem_mb": r["mem_mb"]} for i, r in enumerate(getattr(self, "mem_top", [])[:5])]
+        self.db.add_procs(ts, rows)
+        self.cpu_acc.clear()
+
+    def check_thresholds(self, m):
+        dt = config.SAMPLE_INTERVAL
+        for key, val, lim, secs, title in (
+                ("cpu", m["cpu"], config.CPU_ALERT_PCT, config.CPU_ALERT_SECS, "CPU 사용률 높음"),
+                ("mem", m["mem"], config.MEM_ALERT_PCT, config.MEM_ALERT_SECS, "메모리 부족"),
+                ("commit", m["commit_pct"], config.COMMIT_ALERT_PCT, config.MEM_ALERT_SECS, "가상 메모리(커밋) 부족")):
+            self.high[key] = self.high[key] + dt if val >= lim else 0
+            if self.high[key] >= secs:
+                top = (self.top_now if key == "cpu" else getattr(self, "mem_top", []))[:3]
+                who = ", ".join(f"{t['name']}({t['cpu']:.0f}%)" if key == "cpu" else f"{t['name']}({t['mem_mb']:.0f}MB)"
+                                for t in top)
+                self.alert(f"thr:{key}", "warn", title, f"{val:.0f}% 상태가 {self.high[key]}초 지속. 상위: {who}")
+                self.db.add_event(m["ts"], "resource", "warn", "pcmon", 0, f"{title} {val:.0f}%", {"상위": who})
+                self.high[key] = -config.ALERT_COOLDOWN_SECS  # 바로 다시 기록하지 않도록
+
+    def run_sampler(self):
+        psutil.cpu_percent(None)
+        io0, net0, t0 = psutil.disk_io_counters(), psutil.net_io_counters(), time.time()
+        last_tick = time.time()
+        last_snap = 0
+        last_disk = 0
+        self.sample_processes()
+        while not self.stop.wait(config.SAMPLE_INTERVAL - (time.time() - last_tick) % config.SAMPLE_INTERVAL):
+            try:
+                now = time.time()
+                gap = now - last_tick
+                if gap > config.STALL_SECS:
+                    self.db.add_event(now, "stall", "warn", "pcmon", 0, f"수집 {gap:.0f}초 끊김 (응답 없음 또는 절전)",
+                                      {"from": last_tick})
+                last_tick = now
+                vm = psutil.virtual_memory()
+                pi = winutil.perf_info()
+                io, net = psutil.disk_io_counters(), psutil.net_io_counters()
+                dt = max(now - t0, 1)
+                busy = 0.0
+                if io and io0:
+                    busy = min(100.0, ((io.read_time - io0.read_time) + (io.write_time - io0.write_time)) / (dt * 10))
+                m = {
+                    "ts": int(now), "cpu": psutil.cpu_percent(None), "mem": vm.percent,
+                    "mem_used_mb": int((vm.total - vm.available) / 1048576), "commit_pct": round(pi["commit_pct"], 1),
+                    "disk_busy": round(busy, 1),
+                    "disk_r": round((io.read_bytes - io0.read_bytes) / dt / 1048576, 2) if io else 0,
+                    "disk_w": round((io.write_bytes - io0.write_bytes) / dt / 1048576, 2) if io else 0,
+                    "net_rx": round((net.bytes_recv - net0.bytes_recv) / dt / 1024, 1),
+                    "net_tx": round((net.bytes_sent - net0.bytes_sent) / dt / 1024, 1),
+                    "procs": pi["procs"], "handles": pi["handles"], "threads": pi["threads"],
+                }
+                io0, net0, t0 = io, net, now
+                new_exes = self.sample_processes()
+                try:  # PC 모니터 자신이 쓰는 자원 (정보 화면)
+                    self.self_cpu = self.me.cpu_percent(None) / self.ncpu
+                except Exception:
+                    pass
+                self.db.add_metric(m, int(now))
+                self.latest = m
+                self.check_thresholds(m)
+                if new_exes:
+                    self.new_exe_queue.extend(new_exes)
+                if now - last_snap >= config.PROC_SNAPSHOT_INTERVAL:
+                    last_snap = now
+                    self.snapshot_top(int(now))
+                if now - last_disk >= 600:
+                    last_disk = now
+                    free = psutil.disk_usage(config.SYSTEM_DRIVE).free / 1e9
+                    self.latest_disk = free
+                    if free < config.DISK_FREE_ALERT_GB:
+                        self.alert("diskfree", "warn", f"{config.SYSTEM_DRIVE[:2]} 드라이브 공간 부족", f"남은 공간 {free:.1f}GB")
+            except Exception:
+                log.exception("sampler")
+
+    def _loop(self, tasks, extra=None):
+        """tasks = [(이름, 주기초, 함수)] 를 5초마다 확인해서 주기가 된 것만 실행."""
+        while not self.stop.wait(5):
+            now = time.time()
+            for k, every, fn in tasks:
+                if now - self._last.get(k, 0) >= every:
+                    self._last[k] = now
+                    try:
+                        fn()
+                    except Exception:
+                        log.exception(k)
+            if extra:
+                extra()
+
+    def run_background(self):
+        """빠른 작업(이벤트 로그·네트워크·방화벽 기록·정리)과 느린 작업(PowerShell 점검)을
+        두 스레드로 나눠, PC가 바빠 PowerShell이 늦어져도 감시가 멈추지 않게 한다."""
+        self._last = {}
+
+        def auto_trace():
+            prev = (self.db.get("trace_scan") or {}).get("ts", 0)
+            if time.time() - prev >= config.TRACE_SCAN_HOURS * 3600 and time.time() - self.started > 120:
+                self.trace.start()
+
+        def newproc():
+            if self.new_exe_queue:
+                batch, self.new_exe_queue = self.new_exe_queue[:], []
+                try:
+                    self.sec.check_new_processes(batch)
+                except Exception:
+                    log.exception("newproc")
+
+        slow = [("fwinit", 300, lambda: self.fw.status != "ok" and self.fw.ensure_logging()),
+                ("def", config.DEFENDER_INTERVAL, self._defender),
+                ("persist", config.PERSISTENCE_INTERVAL, self.sec.check_persistence),
+                ("trace", 600, auto_trace),
+                ("wu", 1800, self.upd.refresh_wu)]
+        fast = [("evt", config.EVENTLOG_INTERVAL, self.sec.poll_eventlogs),
+                ("net", 30, self.sec.check_network),
+                ("fw", 5, self.fw.poll),
+                ("mpsample", 30, self.upd.sample),
+                ("agg", 300, self.db.aggregate),
+                ("clean", 3600, self.db.cleanup)]
+        threading.Thread(target=self._loop, args=(slow, newproc), daemon=True).start()
+        self._loop(fast)
+
+    def _ensure_token(self):
+        """대시보드 접근 열쇠. data 폴더 권한(설치한 사용자·관리자)으로 보호되므로
+        다른 사용자(서버의 원격 접속 사용자 등)는 대시보드를 볼 수 없다."""
+        import secrets
+        try:
+            with open(config.TOKEN_PATH, encoding="ascii") as f:
+                self.token = f.read().strip()
+        except OSError:
+            self.token = ""
+        if len(self.token) < 32:
+            self.token = secrets.token_urlsafe(32)
+            with open(config.TOKEN_PATH, "w", encoding="ascii") as f:
+                f.write(self.token)
+
+    def _defender(self):
+        if self.sec.check_defender() is False:
+            # Defender가 재시작 중이면 응답이 없다 → 2분 뒤 다시 시도
+            self._last["def"] = time.time() - config.DEFENDER_INTERVAL + 120
+        self.sec.check_firewall_profiles()
+        self.sec.check_audit()
+
+    def main(self):
+        log.info("시작 (관리자=%s)", winutil.is_admin())
+        self.new_exe_queue = []
+        self.latest_disk = psutil.disk_usage(config.SYSTEM_DRIVE).free / 1e9
+        log.info("OS: %s", self.os)
+        self._ensure_token()
+        try:
+            self.detect_incident()
+        except Exception:
+            log.exception("incident")
+        import dashboard
+        threading.Thread(target=dashboard.serve, args=(self,), daemon=True).start()
+        threading.Thread(target=self.run_background, daemon=True).start()
+        self.run_sampler()
+
+
+URL = f"http://127.0.0.1:{config.HTTP_PORT}/"
+
+
+def _monitor_up():
+    import urllib.request
+    try:
+        with urllib.request.urlopen(URL + "api/ping", timeout=5) as r:
+            return b"pcmon" in r.read()
+    except Exception:
+        return False
+
+
+def open_app_window():
+    """주소창 없는 독립 앱 창으로 대시보드를 연다 (Edge/Chrome 앱 모드, 없으면 기본 브라우저)."""
+    import subprocess
+    import webbrowser
+    pf86 = os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")
+    pf = os.environ.get("ProgramFiles", r"C:\Program Files")
+    la = os.environ.get("LOCALAPPDATA", "")
+    cands = [os.path.join(pf86, r"Microsoft\Edge\Application\msedge.exe"), os.path.join(pf, r"Microsoft\Edge\Application\msedge.exe"),
+             os.path.join(pf, r"Google\Chrome\Application\chrome.exe"), os.path.join(pf86, r"Google\Chrome\Application\chrome.exe"),
+             os.path.join(la, r"Google\Chrome\Application\chrome.exe")]
+    try:  # 접근 열쇠 (설치한 사용자·관리자만 읽을 수 있음)
+        with open(config.TOKEN_PATH, encoding="ascii") as f:
+            url = URL + "?t=" + f.read().strip()
+    except OSError:
+        url = URL
+    profile = os.path.join(la or os.environ.get("TEMP", "."), "PCMonitor", "appwindow")  # 평소 브라우저와 분리된 전용 프로필
+    for c in cands:
+        if c and os.path.exists(c):
+            subprocess.Popen([c, f"--app={url}", f"--user-data-dir={profile}", "--window-size=1320,900",
+                              "--no-first-run", "--no-default-browser-check", "--disable-sync"],
+                             creationflags=winutil.CREATE_NO_WINDOW)
+            return
+    webbrowser.open(url)
+
+
+def launcher():
+    """사용자가 실행했을 때: 모니터가 돌고 있으면 창만 띄우고, 아니면 자동실행 작업(관리자)을 깨운 뒤 창을 띄운다."""
+    import subprocess
+    if not _monitor_up():
+        subprocess.run(["schtasks", "/run", "/tn", "PCMonitor"], capture_output=True, creationflags=winutil.CREATE_NO_WINDOW)
+        for _ in range(30):
+            if _monitor_up():
+                break
+            time.sleep(0.5)
+    if _monitor_up():
+        open_app_window()
+        return True
+    return False
+
+
+def _single_instance():
+    import ctypes
+    h = ctypes.windll.kernel32.CreateMutexW(None, False, "Global\\pcmon_single_instance")
+    if ctypes.windll.kernel32.GetLastError() in (183, 5):  # 이미 실행 중
+        sys.exit(0)
+    return h
+
+
+if __name__ == "__main__":
+    import multiprocessing
+    multiprocessing.freeze_support()
+    # 관리자 권한(자동 실행 작업) 또는 --background → 모니터 본체
+    # 일반 실행(더블클릭/바로가기) → 앱 창 띄우기
+    if not winutil.is_admin() and "--background" not in sys.argv:
+        if launcher():
+            sys.exit(0)
+        # 자동 실행 작업이 없으면 이 프로세스가 직접 모니터 실행 (일부 보안 기록은 못 읽음)
+        threading.Timer(5, open_app_window).start()
+    _mutex = _single_instance()
+    try:
+        Monitor().main()
+    except Exception:
+        log.error("치명적 오류\n%s", traceback.format_exc())
+        raise
