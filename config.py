@@ -2,7 +2,7 @@
 import os
 import sys
 
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 GITHUB_URL = "https://github.com/sarangks2/PCMonitor"   # 저장소 주소 (정보 화면에 표시)
 
 if getattr(sys, "frozen", False):

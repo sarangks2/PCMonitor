@@ -62,16 +62,25 @@ def serve(mon):
         acked = set(db.get("acked_events") or [])
         evs = db.query("SELECT * FROM events WHERE severity='crit' AND ts>? AND category IN (%s) AND title NOT LIKE '침입 흔적 점검 완료%%' "
                        "ORDER BY ts DESC LIMIT 100" % ",".join("?" * len(SEC_CATS)), (int(time.time()) - 86400,) + SEC_CATS)
-        for e in evs:
+        groups = {}
+        for e in evs:  # 같은 제목은 한 줄로 묶음 (최신 것 기준, 확인함은 묶음 전체에)
             if e["id"] in acked:
                 continue
+            g = groups.get(e["title"])
+            if g:
+                g["ids"].append(e["id"])
+                continue
+            groups[e["title"]] = {"e": e, "ids": [e["id"]]}
+        for g in groups.values():
+            e = g["e"]
             what, how, acts = mon.rem.event_help(e)
             try:
                 d = json.loads(e["detail"] or "{}")
                 det = [f"{k}: {v}" for k, v in d.items()][:8] if isinstance(d, dict) else [str(d)]
             except Exception:
                 det = [e["detail"]] if e["detail"] else []
-            items.append({"type": "event", "eid": e["id"], "sev": "crit", "ts": e["ts"], "title": e["title"], "check": CAT_KO.get(e["category"], e["category"]),
+            items.append({"type": "event", "eid": e["id"], "eids": g["ids"], "count": len(g["ids"]), "sev": "crit", "ts": e["ts"],
+                          "title": e["title"] + (f"  ({len(g['ids'])}회)" if len(g["ids"]) > 1 else ""), "check": CAT_KO.get(e["category"], e["category"]),
                           "detail": [str(x)[:300] for x in det], "what": what, "how": how, "actions": pub_actions(mon, acts)})
         data = {"crit": sum(1 for i in items if i["sev"] == "crit"), "warn": sum(1 for i in items if i["sev"] == "warn"), "items": items}
         risk_cache.update(ts=time.time(), data=data)

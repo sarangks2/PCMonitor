@@ -207,7 +207,19 @@ class Monitor:
                 self.db.add_event(m["ts"], "resource", "warn", "pcmon", 0, f"{title} {val:.0f}%", {"상위": who})
                 self.high[key] = -config.ALERT_COOLDOWN_SECS  # 바로 다시 기록하지 않도록
 
+    def _arm_watchdog(self):
+        """수집이 2분 넘게 멈추면 모든 스레드의 실행 위치를 data/hang.txt 에 남긴다.
+        (파이썬이 멈춰 있어도 동작하는 faulthandler 의 별도 감시 스레드 사용)"""
+        import faulthandler
+        try:
+            if not hasattr(self, "_wd_file"):
+                self._wd_file = open(os.path.join(config.DATA_DIR, "hang.txt"), "a", encoding="utf-8")
+            faulthandler.dump_traceback_later(120, repeat=False, file=self._wd_file)
+        except Exception:
+            pass
+
     def run_sampler(self):
+        self._arm_watchdog()
         psutil.cpu_percent(None)
         io0, net0, t0 = psutil.disk_io_counters(), psutil.net_io_counters(), time.time()
         last_tick = time.time()
@@ -222,6 +234,7 @@ class Monitor:
                     self.db.add_event(now, "stall", "warn", "pcmon", 0, f"수집 {gap:.0f}초 끊김 (응답 없음 또는 절전)",
                                       {"from": last_tick})
                 last_tick = now
+                self._arm_watchdog()
                 vm = psutil.virtual_memory()
                 pi = winutil.perf_info()
                 io, net = psutil.disk_io_counters(), psutil.net_io_counters()
@@ -348,17 +361,46 @@ class Monitor:
 URL = f"http://127.0.0.1:{config.HTTP_PORT}/"
 
 
-def _monitor_up():
+def _monitor_up(timeout=5):
     import urllib.request
     try:
-        with urllib.request.urlopen(URL + "api/ping", timeout=5) as r:
+        with urllib.request.urlopen(URL + "api/ping", timeout=timeout) as r:
             return b"pcmon" in r.read()
     except Exception:
         return False
 
 
-def open_app_window():
-    """주소창 없는 독립 앱 창으로 대시보드를 연다 (Edge/Chrome 앱 모드, 없으면 기본 브라우저)."""
+def _monitor_process_exists():
+    """모니터 본체가 떠 있는지 (응답이 느려도). 관리자 프로세스의 뮤텍스는 일반 권한에서도 '있음'은 알 수 있다."""
+    import ctypes
+    h = ctypes.windll.kernel32.OpenMutexW(0x00100000, False, "Global\\pcmon_single_instance")  # SYNCHRONIZE
+    if h:
+        ctypes.windll.kernel32.CloseHandle(h)
+        return True
+    return ctypes.windll.kernel32.GetLastError() == 5  # 접근 거부 = 존재함
+
+
+LOADING_HTML = """<!doctype html><meta charset="utf-8"><title>PC 모니터</title>
+<style>body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:#f6f7f9;color:#1d2330;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+@media(prefers-color-scheme:dark){body{background:#0f1218;color:#e6e9ef}}.b{text-align:center;max-width:460px;padding:20px}
+.s{width:36px;height:36px;border:4px solid #8884;border-top-color:#2f6fde;border-radius:50%;animation:r 1s linear infinite;margin:0 auto 16px}
+@keyframes r{to{transform:rotate(360deg)}}.m{color:#667085;font-size:13px;line-height:1.6}</style>
+<div class="b"><div class="s"></div><h3 style="margin:0 0 8px">PC 모니터를 시작하는 중…</h3>
+<div class="m" id="m">준비되면 자동으로 화면이 열립니다.</div></div>
+<script>
+const go="__URL__",t0=Date.now();
+function tick(){fetch("__PING__",{mode:"no-cors",cache:"no-store"}).then(()=>location.replace(go)).catch(()=>{
+ const s=Math.round((Date.now()-t0)/1000),m=document.getElementById("m");
+ if(s>20)m.innerHTML="PC가 바빠서 시간이 걸리고 있습니다 ("+s+"초).<br>백신 전체 검사·업데이트 설치 중이면 몇 분 걸릴 수 있습니다.";
+ if(s>600)m.innerHTML+="<br><br>10분이 지나도 열리지 않으면 PC를 다시 시작하거나<br>C:\\\\ProgramData\\\\PCMonitor\\\\pcmon.log 를 확인해 주세요.";
+ setTimeout(tick,2000)})}
+tick();
+</script>"""
+
+
+def open_app_window(wait_page=False):
+    """주소창 없는 독립 앱 창으로 대시보드를 연다 (Edge/Chrome 앱 모드, 없으면 기본 브라우저).
+    wait_page=True 이면 '시작 중' 화면을 먼저 띄우고, 모니터가 준비되면 자동으로 넘어간다."""
     import subprocess
     import webbrowser
     pf86 = os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")
@@ -372,7 +414,14 @@ def open_app_window():
             url = URL + "?t=" + f.read().strip()
     except OSError:
         url = URL
-    profile = os.path.join(la or os.environ.get("TEMP", "."), "PCMonitor", "appwindow")  # 평소 브라우저와 분리된 전용 프로필
+    base = os.path.join(la or os.environ.get("TEMP", "."), "PCMonitor")
+    profile = os.path.join(base, "appwindow")  # 평소 브라우저와 분리된 전용 프로필
+    if wait_page:
+        os.makedirs(base, exist_ok=True)
+        page = os.path.join(base, "loading.html")  # 본인 사용자 폴더 (다른 사용자는 못 읽음)
+        with open(page, "w", encoding="utf-8") as f:
+            f.write(LOADING_HTML.replace("__URL__", url).replace("__PING__", URL + "api/ping"))
+        url = "file:///" + page.replace("\\", "/")
     for c in cands:
         if c and os.path.exists(c):
             subprocess.Popen([c, f"--app={url}", f"--user-data-dir={profile}", "--window-size=1320,900",
@@ -383,18 +432,21 @@ def open_app_window():
 
 
 def launcher():
-    """사용자가 실행했을 때: 모니터가 돌고 있으면 창만 띄우고, 아니면 자동실행 작업(관리자)을 깨운 뒤 창을 띄운다."""
+    """사용자가 실행했을 때 (기다리지 않고 바로 창을 띄움):
+    - 모니터가 응답하면 → 대시보드 창
+    - 모니터가 떠 있지만 느리면 → '시작 중' 창 (준비되면 자동 전환)
+    - 모니터가 없으면 → 자동실행 작업(관리자)을 깨우고 '시작 중' 창
+    - 자동실행 작업도 없으면 False → 이 프로세스가 직접 모니터 실행"""
     import subprocess
-    if not _monitor_up():
-        subprocess.run(["schtasks", "/run", "/tn", "PCMonitor"], capture_output=True, creationflags=winutil.CREATE_NO_WINDOW)
-        for _ in range(30):
-            if _monitor_up():
-                break
-            time.sleep(0.5)
-    if _monitor_up():
+    if _monitor_up(timeout=3):
         open_app_window()
         return True
-    return False
+    if not _monitor_process_exists():
+        r = subprocess.run(["schtasks", "/run", "/tn", "PCMonitor"], capture_output=True, creationflags=winutil.CREATE_NO_WINDOW)
+        if r.returncode != 0:
+            return False
+    open_app_window(wait_page=True)
+    return True
 
 
 def _single_instance():
@@ -414,7 +466,7 @@ if __name__ == "__main__":
         if launcher():
             sys.exit(0)
         # 자동 실행 작업이 없으면 이 프로세스가 직접 모니터 실행 (일부 보안 기록은 못 읽음)
-        threading.Timer(5, open_app_window).start()
+        open_app_window(wait_page=True)
     _mutex = _single_instance()
     try:
         Monitor().main()

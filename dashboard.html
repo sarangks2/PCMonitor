@@ -222,8 +222,12 @@ let tab='ov';
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));
   document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hide',s.id!==b.dataset.t));
-  tab=b.dataset.t;refresh();
+  tab=b.dataset.t;document.title='PC 모니터 · '+b.textContent.trim();
+  if(location.hash!=='#'+tab)history.replaceState(null,'','#'+tab);refresh();
 });
+/* 주소의 #탭이름 으로 바로 열기 (예: #about, #live) */
+function openHashTab(){const t=(location.hash||'').slice(1);const b=t&&document.querySelector(`nav button[data-t="${CSS.escape(t)}"]`);if(b&&t!==tab)b.click()}
+addEventListener('hashchange',openHashTab);
 
 /* ---------- 차트 ---------- */
 function chart(cv,data,series,opt){
@@ -399,7 +403,7 @@ document.addEventListener('click',async e=>{
     b.disabled=true;const res=await post('/api/action/run',{id:b.dataset.act});
     if(!res.ok&&res.msg)alert(res.msg);afterAction();return}
   const k=e.target.closest('[data-ack]');
-  if(k){await post('/api/risks/ack',{id:+k.dataset.ack});openRisks(true);refresh();return}
+  if(k){await post('/api/risks/ack',{ids:k.dataset.ack.split(',').map(Number)});openRisks(true);refresh();return}
   const o=e.target.closest('[data-open="risks"]');if(o){openRisks();return}
   const c=e.target.closest('[data-cmd]');
   if(c&&!c.disabled){if(c.dataset.confirm&&!confirm(c.dataset.confirm))return;c.disabled=true;
@@ -415,7 +419,7 @@ async function openRisks(quiet){const r=await j('/api/risks');
     <span class="mut" style="font-size:12px;float:right">${i.ts?fmtT(i.ts,true):''}</span>
     <div class="howto"><b>무슨 일?</b> ${esc(i.what)}<br><b>어떻게?</b> ${esc(i.how)}</div>
     ${i.detail.length?`<details><summary class="mut" style="font-size:12px">자세히</summary><ul class="ul">${i.detail.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`:''}
-    <div class="acts">${actBtns(i.actions)}${i.type==='event'?`<button class="abtn s" data-ack="${i.eid}">확인함 (문제 없음)</button>`:''}
+    <div class="acts">${actBtns(i.actions)}${i.type==='event'?`<button class="abtn s" data-ack="${(i.eids||[i.eid]).join(',')}">확인함 (문제 없음)</button>`:''}
       ${i.type==='finding'?'<a href="#" class="mut" style="font-size:12px" onclick="closeRisks();goTrace();return false">흔적 점검에서 보기 →</a>':''}</div></div>`).join('')
     :'<p class="ok" style="font-size:15px">✓ 해결되지 않은 위험·주의 항목이 없습니다.</p>';
   if(!quiet)$('#riskModal').classList.remove('hide')}
@@ -423,7 +427,7 @@ function closeRisks(){$('#riskModal').classList.add('hide')}
 $('#riskClose').onclick=closeRisks;
 $('#riskModal').onclick=e=>{if(e.target.id==='riskModal')closeRisks()};
 addEventListener('keydown',e=>{if(e.key==='Escape')closeRisks()});
-$('#ackAll').onclick=async()=>{const r=await j('/api/risks');const ids=r.items.filter(i=>i.type==='event').map(i=>i.eid);
+$('#ackAll').onclick=async()=>{const r=await j('/api/risks');const ids=r.items.filter(i=>i.type==='event').flatMap(i=>i.eids||[i.eid]);
   if(!ids.length||!confirm(`이벤트 ${ids.length}건을 모두 '확인함'으로 처리할까요?\n(흔적 점검 항목은 조치하거나 다시 점검해야 사라집니다)`))return;
   await post('/api/risks/ack',{ids});openRisks(true);refresh()};
 
@@ -501,7 +505,7 @@ async function refresh(){
     else await loadEv();
   }catch(e){$('#upd').textContent='모니터에 연결할 수 없음 (실행 중인지 확인)'}
 }
-j('/api/incidents').then(r=>{incMarks=r.map(x=>x.last_heartbeat)}).finally(refresh);
+j('/api/incidents').then(r=>{incMarks=r.map(x=>x.last_heartbeat)}).finally(()=>{if(location.hash.length>1&&location.hash!=='#ov')openHashTab();else{document.title='PC 모니터 · 개요';refresh()}});
 setInterval(()=>{if(tab==='ov'||tab==='about')refresh()},10000);
 setInterval(()=>{if(tab==='live')refresh()},3000);
 setInterval(()=>{if(tab!=='live')j('/api/live').then(L=>$('#liveDot').className='dot '+L.level).catch(()=>{})},15000);

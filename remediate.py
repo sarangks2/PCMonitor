@@ -338,8 +338,13 @@ class Remediator:
             if name and "\\" not in name and not name.startswith("CN="):
                 acts.append(self.action_setting("user_disable", f"'{name}' 계정 사용 안 함", f"'{name}' 계정을 로그인할 수 없게 합니다.", user=name))
         elif cat == "defender" and ("탐지" in title or "조치 실패" in title):
-            what = "Windows 보안(백신)이 악성코드를 찾았습니다."
-            how = "'조치 완료'면 이미 처리됐습니다. 조치 실패면 빠른 검사를 다시 하고, 그래도 남으면 오프라인 검사를 하세요."
+            what = "Windows 보안(백신)이 악성코드나 해킹 도구를 찾았습니다."
+            how = "아래 '삭제'로 파일을 지우세요. 이미 '조치 완료'면 처리된 것입니다. 남아 있으면 빠른 검사를 다시 하세요."
+            # 경로 예: containerfile:_C:\...\x.7z; file:_C:\...\x.7z->(...)
+            for raw in re.split(r";\s*", str(d.get("Path", ""))):
+                pth = re.sub(r"^(containerfile|file|process):_", "", raw.strip()).split("->")[0]
+                if pth and os.path.isfile(pth) and not any(a.get("path") == pth for a in acts):
+                    acts += [a for a in self.action_delete(pth) if a["label"] == "삭제"]
             acts.append(self.action_setting("defender_quick", "빠른 검사 시작", "Windows 보안 빠른 검사를 시작합니다 (몇 분 걸림)."))
         elif cat == "defender" and ("꺼짐" in title or "예외" in title):
             what = "백신의 보호 기능이 꺼졌거나 검사 예외가 추가됐습니다. 악성코드가 자신을 숨기려고 자주 하는 일입니다."
