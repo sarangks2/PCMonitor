@@ -616,7 +616,7 @@ async function refresh(){
 }
 /* ---------- 언어 (한국어 / English) ---------- */
 let LANG='ko',TR=null;
-function trText(s){if(!TR||!s||!/[가-힣]/.test(s))return s;for(const[p,r]of TR.pats)s=s.replace(p,r);for(const[k,v]of TR.phrases)if(s.includes(k))s=s.split(k).join(v);return s}
+function trText(s){if(!TR||!s||!/[가-힣]/.test(s))return s;for(const[k,v]of TR.phrases)if(k.length>=6&&s.includes(k))s=s.split(k).join(v);for(const[p,r]of TR.pats)s=s.replace(p,r);for(const[k,v]of TR.phrases)if(k.length<6&&s.includes(k))s=s.split(k).join(v);return s}
 function trNode(root){if(!TR)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
   while((n=w.nextNode())){if(/[가-힣]/.test(n.nodeValue)&&!(n.parentNode&&/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.nodeName))){const t=trText(n.nodeValue);if(t!==n.nodeValue)n.nodeValue=t}}
   if(root.querySelectorAll)root.querySelectorAll('[placeholder],[title],[data-confirm]').forEach(el=>{for(const a of['placeholder','title','data-confirm'])if(el.hasAttribute(a)&&/[가-힣]/.test(el.getAttribute(a))){const t=trText(el.getAttribute(a));if(t!==el.getAttribute(a))el.setAttribute(a,t)}})}

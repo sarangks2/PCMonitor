@@ -28,9 +28,13 @@ def tr(text, lang):
     if lang != "en" or not text or not re.search("[가-힣]", text):
         return text
     pats, phrases = _load()
+    # 1) 긴 문장 먼저 (숫자가 든 문장이 패턴에 먼저 쪼개지지 않게) → 2) 숫자+단위 패턴 → 3) 나머지 짧은 단어
+    for ko, en in phrases:
+        if len(ko) >= 6 and ko in text:
+            text = text.replace(ko, en)
     for p, r in pats:
         text = p.sub(r, text)
     for ko, en in phrases:
-        if ko in text:
+        if len(ko) < 6 and ko in text:
             text = text.replace(ko, en)
     return text
