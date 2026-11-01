@@ -22,6 +22,7 @@ from intrusion import FirewallWatcher, TraceScanner
 from procinfo import PROCINFO
 from remediate import Remediator
 from sysupdate import SysUpdate
+from finder import Finder, Notes
 from security import SecurityMonitor
 
 os.makedirs(config.DATA_DIR, exist_ok=True)
@@ -41,6 +42,8 @@ class Monitor:
         self.trace = TraceScanner(self.db, self)
         self.rem = Remediator(self.db, self)
         self.upd = SysUpdate(self.db)
+        self.notes = Notes(self.db)
+        self.finder = Finder(self)
         self.latest = {}          # 현재 값 (대시보드용)
         self.top_now = []         # 현재 상위 프로세스
         self.proc_cache = {}      # pid -> psutil.Process

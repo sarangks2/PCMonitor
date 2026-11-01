@@ -47,6 +47,11 @@ def ip_kind(ip):
     return "ext"
 
 
+def finding_key(check, title):
+    """'무시' 규칙용 키: 숫자는 바뀌어도 같은 항목으로 본다 (예: 'Defender 검사 예외 6개' = '… 7개')."""
+    return f"{check}|{re.sub(r'[0-9][0-9,.:]*', '#', title or '')}"
+
+
 def _loopback(ip):
     try:
         return ipaddress.ip_address(ip.split("%")[0]).is_loopback
@@ -428,7 +433,8 @@ class TraceScanner:
         R = getattr(self.sec, "rem", None)  # 바로 정리 기능 (Monitor.rem)
 
         def add(check, sev, title, detail="", actions=None):
-            F.append({"check": check, "sev": sev, "title": title, "detail": detail, "actions": (actions or []) if R else []})
+            F.append({"check": check, "sev": sev, "title": title, "detail": detail, "actions": (actions or []) if R else [],
+                      "key": finding_key(check, title)})
 
         raw = winutil.run_ps_json(COLLECT_PS, timeout=240) or {}
         if not raw:

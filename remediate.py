@@ -120,6 +120,12 @@ def find_installed(name_hint=None, exe_path=None):
               os.environ.get("APPDATA", "").lower(), os.environ.get("USERPROFILE", "").lower()}
     if exe_dir in shared or exe_dir.startswith(SYSROOT) or exe_dir.endswith("\\downloads") or exe_dir.endswith("\\desktop"):
         exe_dir = ""
+    # 설치 폴더 이름 (예: ...\INCAInternet\nProtect Online Security → 'nprotect online security')
+    folder = os.path.basename(exe_dir) if exe_dir else ""
+    if folder in ("bin", "app", "application", "program", "x64", "x86", "current", "resources", "tools", "lib") or len(folder) < 6:
+        folder = os.path.basename(os.path.dirname(exe_dir)) if exe_dir and folder in ("bin", "app", "application", "x64", "x86", "current") else ""
+    if folder and len(folder) < 6:
+        folder = ""
     hits = []
     for hive, path in UNINSTALL_KEYS:
         try:
@@ -145,7 +151,8 @@ def find_installed(name_hint=None, exe_path=None):
                         un = val("UninstallString")
                         un_dir = os.path.dirname(exe_from(un)).lower()
                         match = (hint and hint in dn.lower()) or (exe_dir and loc and (exe_dir == loc or exe_dir.startswith(loc + "\\"))) \
-                            or (exe_dir and un_dir and un_dir not in shared and exe_dir == un_dir)
+                            or (exe_dir and un_dir and un_dir not in shared and exe_dir == un_dir) \
+                            or (folder and folder in dn.lower())
                         if match and un:
                             hits.append({"name": dn, "version": val("DisplayVersion"), "publisher": val("Publisher"),
                                          "uninstall": un, "quiet": val("QuietUninstallString"), "key": sub,
@@ -250,15 +257,16 @@ class Remediator:
             return []
         if not hasattr(self, "_pa_cache"):
             self._pa_cache, self.extra = {}, {}
-        key = (name, exe.lower(), adv)
+        key = (name, exe.lower(), adv, row.get("product") or "")
         hit = self._pa_cache.get(key)
         if hit and time.time() - hit[0] < 600:
             return hit[1]
         acts = [{"id": self.new_id("kill", exe.lower() or name), "kind": "kill", "label": "종료", "name": row.get("name"), "exe": exe,
                  "confirm": f"{row.get('name')} 를 지금 종료합니다.\n저장하지 않은 작업이 있으면 사라질 수 있습니다."}]
         if adv in ("remove", "remove_rec", "check") and exe:
-            acts += self.action_uninstall(None, exe)
-            if adv == "check" and not any(a["kind"] == "uninstall" for a in acts):
+            # 제품 이름(예: nProtect Online Security)으로도 '앱 제거' 목록을 찾는다
+            acts += self.action_uninstall(row.get("product") or None, exe)
+            if not any(a["kind"] == "uninstall" for a in acts):
                 acts += self.action_delete(exe)
         for a in acts:
             self.extra[a["id"]] = a

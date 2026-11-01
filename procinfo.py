@@ -180,6 +180,7 @@ class ProcInfo:
             except Exception:
                 exe = ""
         info = {"path": exe or "", "company": "", "desc": "", "cat": ""}
+        vs = {}
         if exe:
             with self.lock:
                 vs = self.by_path.get(exe)
@@ -212,10 +213,25 @@ class ProcInfo:
             info["desc"] = ""  # 파일 설명이 이름과 같으면 정보가 없는 것
         if not info["desc"]:
             info["desc"] = "설명 없음" + (" (서명·출처 확인 권장)" if info["cat"] == "사용자 폴더" else "")
+        info["product"] = (vs.get("ProductName") if exe else "") or ""
         info["advice"], info["advice_text"] = advice_for(key, info, bool(kr))
+        self._apply_note(key, info)
         with self.lock:
             if key != "svchost.exe":
-                self.by_name[key] = {k: info[k] for k in ("desc", "company", "cat", "path", "advice", "advice_text")}
+                self.by_name[key] = {k: info.get(k, "") for k in ("desc", "company", "cat", "path", "advice", "advice_text", "product")}
+        return info
+
+    def _apply_note(self, key, info):
+        """사용자 메모가 있으면 설명·권장을 메모로 바꿔 보여 준다."""
+        n = getattr(self, "user_notes", {}).get(key)
+        if not n:
+            return info
+        from finder import ADVICE_FROM_NOTE
+        info["note"] = n.get("note", "")
+        if n.get("note"):
+            info["desc"] = "📝 " + n["note"]
+        if n.get("verdict") in ADVICE_FROM_NOTE:
+            info["advice"], info["advice_text"] = ADVICE_FROM_NOTE[n["verdict"]]
         return info
 
     def by_name_only(self, name):
@@ -223,12 +239,12 @@ class ProcInfo:
         with self.lock:
             hit = self.by_name.get(key)
         if hit:
-            return hit
+            return self._apply_note(key, dict(hit))
         if key in KNOWN:
             info = {"desc": KNOWN[key][0], "cat": KNOWN[key][1], "company": "", "path": ""}
             info["advice"], info["advice_text"] = advice_for(key, info)
-            return info
-        return {"desc": "", "cat": "", "company": "", "path": "", "advice": "", "advice_text": ""}
+            return self._apply_note(key, info)
+        return self._apply_note(key, {"desc": "", "cat": "", "company": "", "path": "", "advice": "", "advice_text": ""})
 
 
 PROCINFO = ProcInfo()

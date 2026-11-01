@@ -3,6 +3,8 @@ import hmac
 import json
 import logging
 import os
+import re
+import secrets
 import threading
 import time
 from http.cookies import SimpleCookie
@@ -43,28 +45,91 @@ CAT_KO = {"intrusion": "침입", "security": "보안", "defender": "백신", "ne
 SEC_CATS = ("intrusion", "security", "defender", "network", "process", "persistence")
 
 
+def event_key(title):
+    """이벤트 '무시' 규칙 키: 숫자만 다른 같은 경고는 같은 것으로 (예: '로그인 실패 3회' = '5회')."""
+    return "evt|" + re.sub(r"[0-9][0-9,.:]*", "#", re.sub(r"\s+\(\d+회\)$", "", title or ""))
+
+
+class IgnoreStore:
+    """무시한 항목 목록 (kv 'ignored'). 언제·무엇을 무시했는지 기록하고 '다시 표시'로 되살린다.
+    type: finding(흔적 점검 항목, 계속 무시) · event_rule(같은 제목 경고 계속 무시) · event_once(이번 경고만 확인함)"""
+
+    def __init__(self, db):
+        self.db = db
+        old = db.get("acked_events")  # 이전 버전의 '확인함' 기록을 옮겨 옴
+        if old:
+            lst = db.get("ignored") or []
+            lst.append({"id": secrets.token_hex(4), "type": "event_once", "title": f"이전에 확인함 처리한 경고 {len(old)}건",
+                        "check": "이전 기록", "ts": int(time.time()), "eids": [int(i) for i in old if str(i).isdigit()][-3000:]})
+            db.set("ignored", lst)
+            db.set("acked_events", None)
+
+    def list(self):
+        return self.db.get("ignored") or []
+
+    def state(self):
+        fk, rk, once = set(), set(), set()
+        for x in self.list():
+            if x["type"] == "finding":
+                fk.add(x["key"])
+            elif x["type"] == "event_rule":
+                rk.add(x["key"])
+                once.update(x.get("eids") or [])
+            else:
+                once.update(x.get("eids") or [])
+        return fk, rk, once
+
+    def add(self, typ, title, check, key=None, eids=None):
+        if typ not in ("finding", "event_rule", "event_once"):
+            return {"ok": False, "msg": "잘못된 요청"}
+        title, check = str(title)[:300], str(check)[:40]
+        lst = self.list()
+        if key and any(x.get("key") == key for x in lst):
+            return {"ok": True, "msg": "이미 무시 중입니다"}
+        lst.append({"id": secrets.token_hex(4), "type": typ, "title": title, "check": check, "ts": int(time.time()),
+                    "key": key, "eids": [int(i) for i in (eids or []) if str(i).isdigit()][:500]})
+        self.db.set("ignored", lst[-500:])
+        label = {"finding": "무시함", "event_rule": "같은 경고 계속 무시", "event_once": "확인함"}[typ]
+        self.db.add_event(time.time(), "action", "info", "pcmon", 0, f"{label}: {title}", {"구분": check})
+        return {"ok": True}
+
+    def restore(self, iid):
+        lst = self.list()
+        hit = [x for x in lst if x["id"] == iid]
+        if not hit:
+            return {"ok": False, "msg": "항목을 찾을 수 없습니다"}
+        self.db.set("ignored", [x for x in lst if x["id"] != iid])
+        self.db.add_event(time.time(), "action", "info", "pcmon", 0, f"다시 표시: {hit[0]['title']}", {"구분": hit[0]["check"]})
+        return {"ok": True, "msg": f"'{hit[0]['title']}' 을 다시 표시합니다"}
+
+
 def serve(mon):
     db = mon.db
     risk_cache = {"ts": 0, "data": None}
+    ign = IgnoreStore(db)
+    mon.ignore = ign
 
     def build_risks(force=False):
         """아직 해결되지 않은 위험·주의 항목 (흔적 점검 결과 + '확인함' 안 누른 위험 이벤트 24시간)."""
         if not force and time.time() - risk_cache["ts"] < 8 and risk_cache["data"]:
             return risk_cache["data"]
         items = []
+        fkeys, rkeys, acked = ign.state()
         scan = db.get("trace_scan") or {}
         for f in scan.get("findings") or []:
+            fk = f.get("key") or intrusion.finding_key(f["check"], f["title"])
+            if fk in fkeys:
+                continue
             if f["sev"] in ("crit", "warn") and not all(mon.rem.status(a["id"]).get("state") == "ok" for a in f.get("actions") or [{"id": "-"}]):
-                items.append({"type": "finding", "sev": f["sev"], "ts": scan.get("ts"), "title": f["title"], "check": f["check"],
-                              "detail": f["detail"] if isinstance(f["detail"], list) else ([f["detail"]] if f["detail"] else []),
-                              "what": "흔적 점검에서 발견된 항목입니다.", "how": "아래 버튼으로 바로 조치하거나, 문제없는 항목이면 무시해도 됩니다.",
+                items.append({"type": "finding", "key": fk, "sev": f["sev"], "ts": scan.get("ts"), "title": f["title"], "raw_title": f["title"],
+                              "check": f["check"], "detail": f["detail"] if isinstance(f["detail"], list) else ([f["detail"]] if f["detail"] else []),
+                              "what": "흔적 점검에서 발견된 항목입니다.", "how": "아래 버튼으로 바로 조치하거나, 괜찮은 항목이면 '무시'를 누르세요 (무시한 항목 목록에서 다시 표시 가능).",
                               "actions": pub_actions(mon, f.get("actions"))})
-        acked = set(db.get("acked_events") or [])
         evs = db.query("SELECT * FROM events WHERE severity='crit' AND ts>? AND category IN (%s) AND title NOT LIKE '침입 흔적 점검 완료%%' "
                        "ORDER BY ts DESC LIMIT 100" % ",".join("?" * len(SEC_CATS)), (int(time.time()) - 86400,) + SEC_CATS)
         groups = {}
         for e in evs:  # 같은 제목은 한 줄로 묶음 (최신 것 기준, 확인함은 묶음 전체에)
-            if e["id"] in acked:
+            if e["id"] in acked or event_key(e["title"]) in rkeys:
                 continue
             g = groups.get(e["title"])
             if g:
@@ -80,9 +145,11 @@ def serve(mon):
             except Exception:
                 det = [e["detail"]] if e["detail"] else []
             items.append({"type": "event", "eid": e["id"], "eids": g["ids"], "count": len(g["ids"]), "sev": "crit", "ts": e["ts"],
+                          "raw_title": e["title"], "key": event_key(e["title"]),
                           "title": e["title"] + (f"  ({len(g['ids'])}회)" if len(g["ids"]) > 1 else ""), "check": CAT_KO.get(e["category"], e["category"]),
                           "detail": [str(x)[:300] for x in det], "what": what, "how": how, "actions": pub_actions(mon, acts)})
-        data = {"crit": sum(1 for i in items if i["sev"] == "crit"), "warn": sum(1 for i in items if i["sev"] == "warn"), "items": items}
+        data = {"crit": sum(1 for i in items if i["sev"] == "crit"), "warn": sum(1 for i in items if i["sev"] == "warn"), "items": items,
+                "ignored": len(ign.list())}
         risk_cache.update(ts=time.time(), data=data)
         return data
 
@@ -150,11 +217,26 @@ def serve(mon):
             return L
         if path == "/api/trace":
             r = mon.trace.result()
+            fkeys = ign.state()[0]
             # 화면에는 버튼 표시에 필요한 것만 (실제 명령·경로는 서버에만 보관)
             for f in r.get("findings") or []:
+                f["key"] = f.get("key") or intrusion.finding_key(f["check"], f["title"])
+                f["ignored"] = f["key"] in fkeys
                 f["actions"] = [{"id": a["id"], "label": a["label"], "confirm": a.get("confirm", ""), "kind": a["kind"],
                                  "job": mon.rem.status(a["id"])} for a in (f.get("actions") or [])]
             return r
+        if path == "/api/find":
+            r = mon.finder.find(q.get("q", [""])[0][:60])
+            for k in ("running", "installed", "files"):
+                for row in r.get(k) or []:
+                    row["actions"] = pub_actions(mon, row.get("actions"))
+            return r
+        if path == "/api/notes":
+            return mon.notes.list()
+        if path == "/api/ignored":
+            names = {"finding": "점검 항목 무시", "event_rule": "같은 경고 계속 무시", "event_once": "이번 경고만 확인함"}
+            return [{**x, "type_name": names.get(x["type"], x["type"]), "count": len(x.get("eids") or [])}
+                    for x in sorted(ign.list(), key=lambda x: -x["ts"])]
         if path == "/api/about":
             return about()
         if path == "/api/risks":
@@ -293,13 +375,28 @@ def serve(mon):
             res = mon.rem.run(str(body.get("id", ""))[:32])
         elif p == "/api/quarantine/restore":
             res = mon.rem.restore(str(body.get("qid", ""))[:40])
-        elif p == "/api/risks/ack":
-            acked = list(db_ack_get())
-            ids = body.get("ids") if isinstance(body.get("ids"), list) else [body.get("id")]
-            acked += [int(i) for i in ids if str(i).isdigit()]
-            mon.db.set("acked_events", acked[-3000:])
+        elif p == "/api/ignore":
+            typ = str(body.get("type", ""))
+            title, check = str(body.get("title", ""))[:300], str(body.get("check", ""))[:40]
+            if typ == "finding":
+                key = intrusion.finding_key(check, title)   # 키는 서버에서 다시 계산
+            elif typ == "event_rule":
+                key = event_key(title)
+            else:
+                key = None
+            ids = body.get("eids") if isinstance(body.get("eids"), list) else []
+            res = mon.ignore.add(typ, title, check, key=key, eids=ids)
             mon.build_risks(force=True)
-            res = {"ok": True}
+        elif p == "/api/notes":
+            res = mon.notes.set(str(body.get("name", "")), str(body.get("note", "")), str(body.get("verdict", "")))
+            mon.rem._pa_cache.clear()
+        elif p == "/api/ignore/restore":
+            res = mon.ignore.restore(str(body.get("id", ""))[:16])
+            mon.build_risks(force=True)
+        elif p == "/api/risks/ack":  # 이전 화면 호환
+            ids = body.get("ids") if isinstance(body.get("ids"), list) else [body.get("id")]
+            res = mon.ignore.add("event_once", str(body.get("title", "경고")), "보안", eids=ids)
+            mon.build_risks(force=True)
         elif p in ("/api/wu/start", "/api/wu/refresh", "/api/defender/start", "/api/defender/cancel"):
             if not mon.sec.status.get("admin"):
                 res = {"ok": False, "msg": "관리자 권한으로 실행 중이 아니라 할 수 없습니다"}

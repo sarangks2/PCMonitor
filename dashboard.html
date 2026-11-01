@@ -86,6 +86,11 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--ch
 .adv.remove_rec{background:rgba(200,30,30,.14);color:var(--crit)}
 .pacts{display:flex;gap:4px;margin-top:3px;flex-wrap:wrap}.pacts .abtn{padding:1px 8px;font-size:11.5px}
 .ul{margin:4px 0 0;padding-left:18px;font-size:12.5px}
+.find.ignored{opacity:.55}.find.ignored:hover{opacity:.85}
+.inp{padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--fg);font:inherit;font-size:13px;min-width:0}
+@media (max-width:700px){#noteForm{grid-template-columns:1fr!important}}
+.fsec{margin:12px 0 4px;font-size:13px;font-weight:600}
+.notelink{font-size:11px;color:var(--cpu);cursor:pointer;margin-left:4px}
 </style>
 </head>
 <body>
@@ -95,6 +100,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--ch
     <button data-t="ov" class="on">개요</button>
     <button data-t="live">침입 감시 <span id="liveDot" class="dot"></span></button>
     <button data-t="trace">흔적 점검</button>
+    <button data-t="prog">프로그램</button>
     <button data-t="inc">장애 기록</button>
     <button data-t="sec">보안</button>
     <button data-t="ev">전체 이벤트</button>
@@ -151,6 +157,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--ch
   </div>
   <div id="traceOut"></div>
   <div class="card" style="margin-top:12px"><h2>격리 보관함 <span class="mut" style="font-weight:400;font-size:12px">격리한 파일은 여기서 원래 위치로 되돌릴 수 있습니다</span></h2><table id="quar"></table></div>
+  <div class="card" style="margin-top:12px"><h2>무시한 항목 <span class="mut" style="font-weight:400;font-size:12px">무시한 점검 항목·경고 기록. [다시 표시]로 되살릴 수 있습니다</span></h2><table id="ignTable"></table></div>
 </section>
 
 <section id="inc" class="hide"><div class="card"><h2>비정상 종료 · 멈춤 기록</h2><div id="incs"></div></div></section>
@@ -158,6 +165,24 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--ch
 <section id="sec" class="hide">
   <div class="grid" id="secTiles"></div>
   <div class="card"><h2>보안 이벤트 (30일)</h2><table id="secEv"></table></div>
+</section>
+
+<section id="prog" class="hide">
+  <div class="card" style="margin-bottom:12px">
+    <h2>프로그램 바로 찾기</h2>
+    <form id="findForm" style="display:flex;gap:8px;flex-wrap:wrap"><input id="findQ" placeholder="이름 일부 입력 (예: agy, nosstarter, teamviewer)" style="flex:1;min-width:220px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--fg);font:inherit">
+      <button class="btn" type="submit">찾기</button></form>
+    <div class="mut" style="font-size:12px;margin-top:6px">실행 중인 프로세스, 설치된 프로그램, 디스크의 실행 파일(PATH·Program Files·AppData·다운로드)을 찾습니다. 인터넷으로는 아무것도 보내지 않습니다.</div>
+    <div id="findOut" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <h2>내 메모 <span class="mut" style="font-weight:400;font-size:12px">프로그램에 남긴 메모는 프로세스 목록 등에서 설명 대신 표시됩니다</span></h2>
+    <form id="noteForm" style="display:grid;grid-template-columns:180px 1fr 150px auto;gap:8px;align-items:center">
+      <input id="noteName" placeholder="프로그램 이름 (예: agy.exe)" class="inp"><input id="noteText" placeholder="메모 (예: Antigravity CLI, 내가 설치함)" class="inp">
+      <select id="noteVerdict" class="inp"><option value="">판단 없음</option><option value="safe">안전 (그대로 둠)</option><option value="check">확인 필요</option><option value="remove">삭제 예정</option></select>
+      <button class="btn" type="submit">저장</button></form>
+    <table id="noteTable" style="margin-top:10px"></table>
+  </div>
 </section>
 
 <section id="about" class="hide">
@@ -203,6 +228,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--ch
       <button class="abtn s" id="ackAll" title="이벤트 항목을 모두 확인함 처리">모두 확인함</button>
       <button class="mclose" id="riskClose" aria-label="닫기">✕</button></div>
     <div id="riskList"></div>
+    <details id="ignBox" class="hide" style="margin-top:12px"><summary class="mut">무시한 항목 <span id="ignCount"></span>개 — 펼쳐서 다시 표시</summary><table id="ignModalTable" style="margin-top:6px"></table></details>
   </div>
 </div>
 <script>
@@ -291,7 +317,7 @@ async function loadSummary(){
   $('#alerts').innerHTML=s.alerts.length?'<tr><th>시각</th><th></th><th>내용</th></tr>'+s.alerts.map(a=>`<tr><td class="mut" style="white-space:nowrap">${fmtT(a.ts,true)}</td><td>${sev(a.severity)}</td><td><b>${esc(a.title)}</b><br><span class="mut">${esc(a.body)}</span></td></tr>`).join(''):'<tr><td class="mut">알림 없음</td></tr>';
   const ADV={must:'필수',keep:'그대로 두세요',close:'종료 가능',remove:'삭제 가능',remove_rec:'삭제 권장',check:'확인 필요'};
   const pt=(rows,k)=>'<tr><th>프로세스</th><th class="n">CPU</th><th class="n">메모리</th></tr>'+rows.map(r=>{
-    const adv=r.advice?`<div><span class="adv ${r.advice}" title="${esc(r.advice_text)}">${ADV[r.advice]||''}</span> <span class="pdesc">${r.advice==='must'||r.advice==='keep'?'':esc(r.advice_text)}</span></div>`:'';
+    const adv=r.advice?`<div><span class="adv ${r.advice}" title="${esc(r.advice_text)}">${ADV[r.advice]||''}</span> <span class="pdesc">${r.advice==='must'||r.advice==='keep'?'':esc(r.advice_text)}</span><span class="notelink" data-notefor="${esc(r.name)}">메모</span></div>`:'';
     const acts=(r.actions||[]).length?`<div class="pacts">${actBtns(r.actions,true)}</div>`:'';
     return `<tr>${pcell(r).replace('</td>',adv+acts+'</td>')}<td class="n">${r.cpu.toFixed(1)}%</td><td class="n">${r.mem_mb.toFixed(0)} MB</td></tr>`}).join('');
   $('#topcpu').innerHTML=pt(s.top_cpu);$('#topmem').innerHTML=pt(s.top_mem);
@@ -379,14 +405,17 @@ async function loadTrace(){
   $('#traceInfo').innerHTML=r.running?'<span class="pulse">점검 중입니다 (30초~2분)</span>':r.ts?`마지막 점검 ${fmtT(r.ts,true)} · ${r.secs}초 · <b class="${r.crit?'bad':''}">위험 ${r.crit}</b> · <b class="${r.warn?'wn':''}">주의 ${r.warn}</b>`:'아직 점검 기록이 없습니다';
   if(!r.admin)$('#traceInfo').innerHTML+=' · <span class="wn">관리자 권한이 아니라 일부 항목을 못 봅니다</span>';
   const SEVN={crit:'위험',warn:'주의',info:'정보',ok:'정상'};
-  let busy=false;
+  let busy=false;const ignList=await j('/api/ignored');const ignByKey={};ignList.forEach(x=>{if(x.key)ignByKey[x.key]=x});
   $('#traceOut').innerHTML=(r.findings||[]).map(f=>{const d=Array.isArray(f.detail)?f.detail:(f.detail?[f.detail]:[]);
     const acts=(f.actions||[]).map(a=>{const jb=a.job||{};if(jb.state==='running')busy=true;
       const cls=(a.kind==='uninstall'||a.kind==='delete')?'':a.kind==='quarantine'?'q':'s';
       const st=jb.state==='running'?`<span class="jmsg pulse">${esc(jb.msg)}</span>`:jb.state==='ok'?`<span class="jmsg ok">✓ ${esc(jb.msg)}</span>`:jb.state==='fail'?`<span class="jmsg bad">✗ ${esc(jb.msg)}</span>`:'';
       return `<button class="abtn ${cls}" data-act="${esc(a.id)}" data-confirm="${esc(a.confirm)}" ${jb.state==='running'||jb.state==='ok'||!r.admin?'disabled':''}>${esc(a.label)}</button>${st}`}).join('');
-    return `<div class="find ${f.sev}"><span class="sev ${f.sev==='ok'?'info':f.sev}" ${f.sev==='ok'?'style="color:var(--ok)"':''}>${SEVN[f.sev]}</span> <span class="tag">${esc(f.check)}</span><b>${esc(f.title)}</b>${d.length?'<ul>'+d.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>':''}${acts?`<div class="acts">${acts}</div>`:''}</div>`}).join('');
-  loadQuar();
+    const ig=f.ignored?ignByKey[f.key]:null, canIgn=!f.ignored&&(f.sev==='crit'||f.sev==='warn');
+    const ib=f.ignored?(ig?`<button class="abtn s" data-unign="${esc(ig.id)}">다시 표시</button><span class="jmsg mut">${fmtT(ig.ts,true)}에 무시함</span>`:'')
+      :canIgn?ignBtn({type:'finding',title:f.title,check:f.check}):'';
+    return `<div class="find ${f.sev}${f.ignored?' ignored':''}"><span class="sev ${f.sev==='ok'?'info':f.sev}" ${f.sev==='ok'?'style="color:var(--ok)"':''}>${SEVN[f.sev]}</span>${f.ignored?' <span class="sev info">무시됨</span>':''} <span class="tag">${esc(f.check)}</span><b>${esc(f.title)}</b>${d.length?'<ul>'+d.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>':''}${acts||ib?`<div class="acts">${f.ignored?'':acts}${ib}</div>`:''}</div>`}).join('');
+  loadQuar();loadIgnored('#ignTable');
   clearTimeout(tracePoll);if(r.running||busy)tracePoll=setTimeout(()=>tab==='trace'&&loadTrace(),3000);
 }
 async function post(u,body){const r=await fetch(u,{method:'POST',headers:{'X-PCMon':'1','Content-Type':'application/json'},body:JSON.stringify(body||{})});return r.json()}
@@ -402,8 +431,13 @@ document.addEventListener('click',async e=>{
   if(b&&!b.disabled){if(!confirm(b.dataset.confirm+'\n\n진행할까요?'))return;
     b.disabled=true;const res=await post('/api/action/run',{id:b.dataset.act});
     if(!res.ok&&res.msg)alert(res.msg);afterAction();return}
-  const k=e.target.closest('[data-ack]');
-  if(k){await post('/api/risks/ack',{ids:k.dataset.ack.split(',').map(Number)});openRisks(true);refresh();return}
+  const g=e.target.closest('[data-ign]');
+  if(g){const q=JSON.parse(g.dataset.ign);
+    const msg={finding:'이 항목을 무시합니다.\n위험·주의 건수에서 빠지고, 다시 점검해도 계속 숨겨집니다.',event_rule:'같은 제목의 경고를 앞으로 계속 숨깁니다.',event_once:'이번 경고만 확인함으로 처리합니다. (같은 경고가 또 생기면 다시 표시됩니다)'}[q.type];
+    if(!confirm(msg+'\n\n「'+q.title+'」\n\n무시한 항목 목록에서 언제든 다시 표시할 수 있습니다.'))return;
+    g.disabled=true;await post('/api/ignore',q);afterIgnore();return}
+  const u=e.target.closest('[data-unign]');
+  if(u){u.disabled=true;const res=await post('/api/ignore/restore',{id:u.dataset.unign});if(!res.ok)alert(res.msg);afterIgnore();return}
   const o=e.target.closest('[data-open="risks"]');if(o){openRisks();return}
   const c=e.target.closest('[data-cmd]');
   if(c&&!c.disabled){if(c.dataset.confirm&&!confirm(c.dataset.confirm))return;c.disabled=true;
@@ -419,9 +453,12 @@ async function openRisks(quiet){const r=await j('/api/risks');
     <span class="mut" style="font-size:12px;float:right">${i.ts?fmtT(i.ts,true):''}</span>
     <div class="howto"><b>무슨 일?</b> ${esc(i.what)}<br><b>어떻게?</b> ${esc(i.how)}</div>
     ${i.detail.length?`<details><summary class="mut" style="font-size:12px">자세히</summary><ul class="ul">${i.detail.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`:''}
-    <div class="acts">${actBtns(i.actions)}${i.type==='event'?`<button class="abtn s" data-ack="${(i.eids||[i.eid]).join(',')}">확인함 (문제 없음)</button>`:''}
+    <div class="acts">${actBtns(i.actions)}${i.type==='event'
+      ?ignBtn({type:'event_once',title:i.raw_title,check:i.check,eids:i.eids||[i.eid]},'확인함 (이번만)')+ignBtn({type:'event_rule',title:i.raw_title,check:i.check,eids:i.eids||[i.eid]},'무시 (계속 숨김)')
+      :ignBtn({type:'finding',title:i.raw_title,check:i.check})}
       ${i.type==='finding'?'<a href="#" class="mut" style="font-size:12px" onclick="closeRisks();goTrace();return false">흔적 점검에서 보기 →</a>':''}</div></div>`).join('')
     :'<p class="ok" style="font-size:15px">✓ 해결되지 않은 위험·주의 항목이 없습니다.</p>';
+  $('#ignBox').classList.toggle('hide',!r.ignored);$('#ignCount').textContent=r.ignored;if(r.ignored)loadIgnored('#ignModalTable');
   if(!quiet)$('#riskModal').classList.remove('hide')}
 function closeRisks(){$('#riskModal').classList.add('hide')}
 $('#riskClose').onclick=closeRisks;
@@ -429,7 +466,43 @@ $('#riskModal').onclick=e=>{if(e.target.id==='riskModal')closeRisks()};
 addEventListener('keydown',e=>{if(e.key==='Escape')closeRisks()});
 $('#ackAll').onclick=async()=>{const r=await j('/api/risks');const ids=r.items.filter(i=>i.type==='event').flatMap(i=>i.eids||[i.eid]);
   if(!ids.length||!confirm(`이벤트 ${ids.length}건을 모두 '확인함'으로 처리할까요?\n(흔적 점검 항목은 조치하거나 다시 점검해야 사라집니다)`))return;
-  await post('/api/risks/ack',{ids});openRisks(true);refresh()};
+  await post('/api/ignore',{type:'event_once',title:`위험 목록 경고 ${ids.length}건 모두 확인함`,check:'보안',eids:ids});afterIgnore()};
+function ignBtn(q,label){return `<button class="abtn s" data-ign="${esc(JSON.stringify(q))}">${esc(label||'무시')}</button>`}
+function afterIgnore(){if(!$('#riskModal').classList.contains('hide'))openRisks(true);if(tab==='trace')loadTrace();refresh()}
+async function loadIgnored(sel){const L=await j('/api/ignored');const el=$(sel);if(!el)return;
+  el.innerHTML=L.length?'<tr><th>무시한 시각</th><th>종류</th><th>항목</th><th></th></tr>'+L.map(x=>`<tr><td class="mut" style="white-space:nowrap">${fmtT(x.ts,true)}</td><td class="mut">${esc(x.type_name)}${x.count>1?` (${x.count}건)`:''}</td><td><span class="tag">${esc(x.check)}</span>${esc(x.title)}</td><td><button class="abtn s" data-unign="${esc(x.id)}">다시 표시</button></td></tr>`).join('')
+    :'<tr><td class="mut">무시한 항목이 없습니다</td></tr>'}
+
+/* ---------- 프로그램 찾기 · 내 메모 ---------- */
+const VERD={safe:'안전',check:'확인 필요',remove:'삭제 예정'};
+$('#findForm').onsubmit=async e=>{e.preventDefault();const q=$('#findQ').value.trim();if(q.length<2)return;
+  $('#findOut').innerHTML='<span class="pulse mut">찾는 중… (디스크 검색은 최대 몇 초)</span>';
+  const r=await j('/api/find?q='+encodeURIComponent(q));if(r.error){$('#findOut').innerHTML=`<span class="wn">${esc(r.error)}</span>`;return}
+  const ADV={must:'필수',keep:'그대로 두세요',close:'종료 가능',remove:'삭제 가능',remove_rec:'삭제 권장',check:'확인 필요'};
+  const adv=a=>a.advice?`<span class="adv ${a.advice}" title="${esc(a.advice_text||'')}">${ADV[a.advice]||''}</span> `:'';
+  const note=n=>`<span class="notelink" data-notefor="${esc(n)}">메모</span>`;
+  let h='';
+  if(r.notes.length)h+='<div class="fsec">📝 내 메모</div>'+r.notes.map(n=>`<div class="find info"><b>${esc(n.name)}</b> ${n.verdict?`<span class="tag">${VERD[n.verdict]}</span>`:''} ${esc(n.note)}</div>`).join('');
+  h+=`<div class="fsec">실행 중 (${r.running.length})</div>`+(r.running.length?'<table><tr><th>프로세스</th><th class="n">메모리</th><th></th></tr>'+r.running.map(p=>`<tr>${pcell(p)}<td class="n">${p.mem_mb} MB<div class="mut" style="font-size:11px">${p.pids.length}개</div></td><td>${adv(p)}${note(p.name)}<div class="pacts">${actBtns(p.actions,true)}</div></td></tr>`).join('')+'</table>':'<div class="mut">없음</div>');
+  h+=`<div class="fsec">설치된 프로그램 (${r.installed.length})</div>`+(r.installed.length?'<table>'+r.installed.map(p=>`<tr><td><b>${esc(p.name)}</b> <span class="mut">${esc(p.version||'')}</span><div class="pdesc">${esc(p.publisher||'')}</div></td><td><div class="pacts">${actBtns(p.actions,true)}</div></td></tr>`).join('')+'</table>':'<div class="mut">없음</div>');
+  h+=`<div class="fsec">디스크의 실행 파일 (${r.files.length}${r.files_partial?', 시간 제한으로 일부만':''})</div>`+(r.files.length?'<table><tr><th>파일</th><th>서명</th><th></th></tr>'+r.files.map(f=>`<tr><td><b>${esc(f.name)}</b>${f.running?' <span class="tag ok">실행 중</span>':''}<div class="pdesc">${esc(f.desc||'설명 없음')}${f.company?' · '+esc(f.company):''} · ${f.size_mb}MB</div><div class="pdesc" style="word-break:break-all">${esc(f.path)}</div></td>
+      <td class="${f.sig==='Valid'?'ok':'wn'}" style="font-size:12px">${f.sig==='Valid'?'✓ '+esc(f.signer||'서명됨'):f.sig==='NotSigned'?'서명 없음':esc(f.sig||'-')}</td><td>${note(f.name)}<div class="pacts">${actBtns(f.actions,true)}</div></td></tr>`).join('')+'</table>':'<div class="mut">없음</div>');
+  if(r.known.length)h+='<div class="fsec">알고 있는 프로그램</div>'+r.known.map(k=>`<div class="find info"><b>${esc(k.name)}</b> ${adv(k)} <span class="tag">${esc(k.cat)}</span>${esc(k.desc)}</div>`).join('');
+  h+=`<div style="margin-top:10px;font-size:12.5px">찾는 게 없거나 처음 보는 프로그램이면 → <a href="https://www.google.com/search?q=${encodeURIComponent(q+' 프로그램 무엇')}" target="_blank" rel="noopener">인터넷에서 「${esc(q)}」 찾아보기</a> <span class="mut">(브라우저에서 열림)</span></div>`;
+  $('#findOut').innerHTML=h};
+async function loadNotes(){const L=await j('/api/notes');
+  $('#noteTable').innerHTML=L.length?'<tr><th>프로그램</th><th>판단</th><th>메모</th><th>저장</th><th></th></tr>'+L.map(n=>`<tr><td><b>${esc(n.name)}</b></td><td>${n.verdict?`<span class="tag">${VERD[n.verdict]}</span>`:''}</td><td>${esc(n.note)}</td><td class="mut" style="white-space:nowrap">${fmtT(n.ts,true)}</td>
+    <td style="white-space:nowrap"><button class="abtn s" data-noteedit="${esc(JSON.stringify(n))}">수정</button> <button class="abtn" data-notedel="${esc(n.name)}">삭제</button></td></tr>`).join(''):'<tr><td class="mut">아직 메모가 없습니다. 위에서 찾은 프로그램의 [메모]를 누르거나 직접 입력하세요.</td></tr>'}
+$('#noteForm').onsubmit=async e=>{e.preventDefault();const name=$('#noteName').value.trim();if(!name)return;
+  const r=await post('/api/notes',{name,note:$('#noteText').value,verdict:$('#noteVerdict').value});alert(r.msg);
+  $('#noteText').value='';$('#noteVerdict').value='';loadNotes()};
+function editNote(name,note,verdict){if(tab!=='prog')document.querySelector('nav button[data-t="prog"]').click();
+  $('#noteName').value=name;$('#noteText').value=note||'';$('#noteVerdict').value=verdict||'';$('#noteText').focus();$('#noteForm').scrollIntoView({behavior:'smooth',block:'center'})}
+document.addEventListener('click',async e=>{
+  const n=e.target.closest('[data-notefor]');if(n){editNote(n.dataset.notefor);return}
+  const ed=e.target.closest('[data-noteedit]');if(ed){const v=JSON.parse(ed.dataset.noteedit);editNote(v.name,v.note,v.verdict);return}
+  const d=e.target.closest('[data-notedel]');if(d){if(!confirm(`「${d.dataset.notedel}」 메모를 지울까요?`))return;await post('/api/notes',{name:d.dataset.notedel,note:'',verdict:''});loadNotes()}
+});
 
 /* ---------- 정보 ---------- */
 async function loadAbout(){const a=await j('/api/about');
@@ -500,6 +573,7 @@ async function refresh(){
     else if(tab==='live')await loadLive();
     else if(tab==='trace')await loadTrace();
     else if(tab==='about')await loadAbout();
+    else if(tab==='prog')await loadNotes();
     else if(tab==='inc')await loadInc();
     else if(tab==='sec')await loadSec();
     else await loadEv();
