@@ -16,6 +16,7 @@ import traceback
 import psutil
 
 import config
+import i18n
 import winutil
 from db import DB
 from intrusion import FirewallWatcher, TraceScanner
@@ -23,6 +24,7 @@ from procinfo import PROCINFO
 from remediate import Remediator
 from sysupdate import SysUpdate
 from finder import Finder, Notes
+from banking import Banking
 from security import SecurityMonitor
 
 os.makedirs(config.DATA_DIR, exist_ok=True)
@@ -44,6 +46,7 @@ class Monitor:
         self.upd = SysUpdate(self.db)
         self.notes = Notes(self.db)
         self.finder = Finder(self)
+        self.bank = Banking(self)
         self.latest = {}          # 현재 값 (대시보드용)
         self.top_now = []         # 현재 상위 프로세스
         self.proc_cache = {}      # pid -> psutil.Process
@@ -67,7 +70,8 @@ class Monitor:
         self.db.execute("INSERT INTO alerts(ts,key,severity,title,body) VALUES(?,?,?,?,?)",
                         (int(now), key, severity, title, body))
         log.warning("ALERT [%s] %s - %s", severity, title, body.replace("\n", " "))
-        winutil.toast(("⚠ " if severity == "crit" else "") + title, body)
+        lang = self.db.get("ui_lang") or "ko"
+        winutil.toast(("⚠ " if severity == "crit" else "") + i18n.tr(title, lang), i18n.tr(body, lang))
 
     # ------------------------------------------------------------------ 장애 감지
     def detect_incident(self):
@@ -319,6 +323,7 @@ class Monitor:
                 ("net", 30, self.sec.check_network),
                 ("fw", 5, self.fw.poll),
                 ("mpsample", 30, self.upd.sample),
+                ("bank", 3, self.bank.tick),
                 ("agg", 300, self.db.aggregate),
                 ("clean", 3600, self.db.cleanup)]
         threading.Thread(target=self._loop, args=(slow, newproc), daemon=True).start()

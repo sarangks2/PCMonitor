@@ -233,6 +233,10 @@ def serve(mon):
             return r
         if path == "/api/notes":
             return mon.notes.list()
+        if path == "/api/banking":
+            return mon.bank.status()
+        if path == "/api/settings":
+            return {"lang": mon.db.get("ui_lang") or "ko"}
         if path == "/api/ignored":
             names = {"finding": "점검 항목 무시", "event_rule": "같은 경고 계속 무시", "event_once": "이번 경고만 확인함"}
             return [{**x, "type_name": names.get(x["type"], x["type"]), "count": len(x.get("eids") or [])}
@@ -331,6 +335,9 @@ def serve(mon):
             q = parse_qs(u.query)
             if u.path == "/api/ping":
                 return self._send(200, json.dumps({"app": "pcmon"}).encode(), "application/json")
+            if u.path == "/i18n_en.json":
+                with open(os.path.join(config.RES_DIR, "i18n_en.json"), "rb") as f:
+                    return self._send(200, f.read(), "application/json; charset=utf-8")
             if u.path == "/favicon.ico":
                 with open(os.path.join(config.RES_DIR, "pcmon.ico"), "rb") as f:
                     return self._send(200, f.read(), "image/x-icon")
@@ -387,6 +394,29 @@ def serve(mon):
             ids = body.get("eids") if isinstance(body.get("eids"), list) else []
             res = mon.ignore.add(typ, title, check, key=key, eids=ids)
             mon.build_risks(force=True)
+        elif p == "/api/settings":
+            lang = str(body.get("lang", "ko"))
+            mon.db.set("ui_lang", lang if lang in ("ko", "en") else "ko")
+            res = {"ok": True}
+        elif p == "/api/banking":
+            act = str(body.get("action", ""))
+            B = mon.bank
+            if not mon.sec.status.get("admin"):
+                res = {"ok": False, "msg": "관리자 권한으로 실행 중이 아니라 바꿀 수 없습니다"}
+            elif act in ("block", "unblock"):
+                res = B.set_block_external(act == "block")
+            elif act == "on":
+                res = B.turn_on("수동")
+            elif act == "off":
+                res = B.turn_off("수동")
+            elif act == "mode":
+                kws = body.get("keywords") if isinstance(body.get("keywords"), list) else None
+                res = B.set_mode(str(body.get("mode", "")), [str(k) for k in kws] if kws is not None else None, body.get("idle_min"))
+            elif act == "restore":
+                B.cfg["mode"] = "always"
+                res = B.restore_original()
+            else:
+                res = {"ok": False, "msg": "잘못된 요청"}
         elif p == "/api/notes":
             res = mon.notes.set(str(body.get("name", "")), str(body.get("note", "")), str(body.get("verdict", "")))
             mon.rem._pa_cache.clear()

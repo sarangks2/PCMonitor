@@ -69,6 +69,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--ch
 .jmsg{font-size:12px}
 .tile.click{cursor:pointer;transition:box-shadow .15s}.tile.click:hover{box-shadow:0 0 0 2px var(--cpu)}
 .tile.click .s:after{content:' · 눌러서 보기 ›';color:var(--cpu)}
+html[lang=en] .tile.click .s:after{content:' · click to view ›'}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
 .modal.hide{display:none}
 .mbox{background:var(--bg);border-radius:12px;max-width:900px;width:100%;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
@@ -107,6 +108,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--ch
     <button data-t="about">정보</button>
   </nav>
   <span id="upd"></span>
+  <button id="langBtn" class="abtn s" style="padding:3px 10px" title="Language / 언어">EN</button>
 </header>
 <main>
 <section id="ov">
@@ -168,6 +170,10 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--ch
 </section>
 
 <section id="prog" class="hide">
+  <div class="card" style="margin-bottom:12px" id="bankCard">
+    <h2>인터넷뱅킹 보안 프로그램 <span class="mut" style="font-weight:400;font-size:12px">nProtect·CrossEX·TouchEn·Wizvera·IPinside·공동인증서 도구 등</span></h2>
+    <div id="bankBody" class="mut">확인 중…</div>
+  </div>
   <div class="card" style="margin-bottom:12px">
     <h2>프로그램 바로 찾기</h2>
     <form id="findForm" style="display:flex;gap:8px;flex-wrap:wrap"><input id="findQ" placeholder="이름 일부 입력 (예: agy, nosstarter, teamviewer)" style="flex:1;min-width:220px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--fg);font:inherit">
@@ -473,6 +479,35 @@ async function loadIgnored(sel){const L=await j('/api/ignored');const el=$(sel);
   el.innerHTML=L.length?'<tr><th>무시한 시각</th><th>종류</th><th>항목</th><th></th></tr>'+L.map(x=>`<tr><td class="mut" style="white-space:nowrap">${fmtT(x.ts,true)}</td><td class="mut">${esc(x.type_name)}${x.count>1?` (${x.count}건)`:''}</td><td><span class="tag">${esc(x.check)}</span>${esc(x.title)}</td><td><button class="abtn s" data-unign="${esc(x.id)}">다시 표시</button></td></tr>`).join('')
     :'<tr><td class="mut">무시한 항목이 없습니다</td></tr>'}
 
+/* ---------- 인터넷뱅킹 보안 프로그램 ---------- */
+async function loadBank(){const b=await j('/api/banking');const I=b.inventory;
+  const ext=I.ports.filter(p=>p.external);
+  const MODE={always:'항상 켜 둠 (원래대로)',auto:'은행·공공기관 사이트를 열 때만 자동으로 켜기',off:'꺼 둠 (필요할 때 직접 켜기)'};
+  let h=`<div class="kv"><span>지금 상태</span><span>${b.busy?`<span class="pulse wn">${esc(b.busy)}…</span>`:b.state==='on'?'<b class="wn">켜짐</b>':'<b class="ok">꺼짐</b>'}
+     ${b.mode==='auto'&&b.last_match?` <span class="mut" style="font-size:12px">· 마지막 감지: ${esc(b.last_match.slice(0,40))} (${fmtT(b.last_seen,true)})</span>`:''}</span>
+    <span>프로그램</span><span>서비스 ${I.services.length}개 · 로그인 시 자동 실행 ${I.runs.length}개${b.saved_runs?` (+ 꺼 두는 동안 보관 ${b.saved_runs}개)`:''} · 실행 중 ${I.procs.length}개</span>
+    <span>외부 노출</span><span>${ext.length?`<b class="bad">다른 기기에서 접속 가능한 포트 ${ext.length}개</b> (${esc(ext.map(p=>p.proc+':'+p.port).join(', '))})`:'<span class="ok">없음</span>'}${b.block_external?' · <b class="ok">외부 접속 차단 중</b>':''}</span></div>`;
+  h+=`<div class="fsec">외부 접속 차단</div><div style="font-size:13px">다른 기기에서 이 프로그램들로 접속하는 것을 방화벽으로 막습니다. 이 PC의 브라우저에서는 그대로 쓸 수 있어 뱅킹에 영향이 없습니다.</div>
+    <div class="acts">${b.block_external?'<button class="abtn s" data-bank="unblock">차단 해제</button>':'<button class="abtn" data-bank="block" data-confirm="뱅킹 보안 프로그램의 외부(다른 기기) 접속을 막을까요?\n이 PC의 브라우저에서는 그대로 쓸 수 있습니다.">외부 접속 차단</button>'}</div>`;
+  h+=`<div class="fsec">실행 방식</div><div style="font-size:13px;line-height:1.9">${Object.entries(MODE).map(([k,v])=>`<label style="display:block"><input type="radio" name="bankMode" value="${k}" ${b.mode===k?'checked':''} ${k==='auto'&&!b.auto_available?'disabled':''}> ${v}${k==='auto'&&!b.auto_available?' <span class="mut">(로그인 없이 실행 중이라 사용 불가)</span>':''}</label>`).join('')}</div>
+    <details style="margin-top:4px" ${b.mode==='auto'?'open':''}><summary class="mut" style="font-size:12.5px">자동 켜기 조건 — 창 제목에 들어 있으면 켜는 단어 (${b.keywords.length}개)</summary>
+      <textarea id="bankKw" class="inp" style="width:100%;height:70px;margin-top:6px">${esc(b.keywords.join(', '))}</textarea>
+      <div style="font-size:12.5px;margin-top:4px">사이트 창이 닫힌 뒤 <input id="bankIdle" type="number" min="1" max="240" value="${b.idle_min}" class="inp" style="width:64px"> 분 지나면 다시 끕니다.</div></details>
+    <div class="acts"><button class="abtn s" id="bankSave">실행 방식 저장</button>
+      ${b.state==='on'?'<button class="abtn" data-bank="off">지금 끄기</button>':'<button class="abtn s" data-bank="on">지금 켜기</button>'}
+      ${b.saved_services||b.saved_runs?'<button class="abtn s" data-bank="restore" data-confirm="뱅킹 보안 프로그램을 설치 때 설정(항상 자동 실행)으로 되돌릴까요?">원래대로 되돌리기</button>':''}</div>
+    <div class="mut" style="font-size:12px;margin-top:6px">※ 사이트(URL)별로 제한하는 설정은 이 프로그램들에 없어서, 사이트 창이 열릴 때만 켜는 방식으로 같은 효과를 냅니다. 켜진 직후 사이트가 「설치 필요」라고 하면 새로고침(F5) 하세요.</div>`;
+  h+=`<details style="margin-top:8px"><summary class="mut" style="font-size:12.5px">설치된 구성 요소 보기</summary><ul class="ul">${I.services.map(s=>`<li>서비스 ${esc(s.display)} — ${s.status==='running'?'실행 중':'중지'} · ${{automatic:'자동',manual:'수동',disabled:'사용 안 함'}[s.start]||esc(s.start)}</li>`).join('')}
+    ${I.runs.map(r=>`<li>로그인 시 실행: ${esc(r.name)}</li>`).join('')}${I.ports.map(p=>`<li>포트 ${p.port} (${esc(p.proc)}) ${p.external?'<b class="bad">외부 노출</b>':'이 PC 안에서만'}</li>`).join('')}</ul></details>`;
+  $('#bankBody').className='';$('#bankBody').innerHTML=h;
+  $('#bankSave').onclick=async()=>{const m=(document.querySelector('input[name=bankMode]:checked')||{}).value;if(!m)return;
+    if(m!=='always'&&!confirm(m==='auto'?'평소에는 뱅킹 보안 프로그램을 꺼 두고, 은행·공공기관 사이트 창이 열리면 자동으로 켭니다.\n진행할까요?':'뱅킹 보안 프로그램을 꺼 둡니다. 필요할 때 [지금 켜기]를 누르세요.\n진행할까요?'))return;
+    $('#bankSave').disabled=true;const r=await post('/api/banking',{action:'mode',mode:m,keywords:$('#bankKw').value.split(/[,\n]/),idle_min:+$('#bankIdle').value||10});alert(r.msg);loadBank()};
+  if(b.busy)setTimeout(()=>tab==='prog'&&loadBank(),2500)}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-bank]');if(!b||b.disabled)return;
+  if(b.dataset.confirm&&!confirm(b.dataset.confirm))return;b.disabled=true;b.textContent+='…';
+  const r=await post('/api/banking',{action:b.dataset.bank});alert(r.msg);loadBank()});
+
 /* ---------- 프로그램 찾기 · 내 메모 ---------- */
 const VERD={safe:'안전',check:'확인 필요',remove:'삭제 예정'};
 $('#findForm').onsubmit=async e=>{e.preventDefault();const q=$('#findQ').value.trim();if(q.length<2)return;
@@ -573,13 +608,31 @@ async function refresh(){
     else if(tab==='live')await loadLive();
     else if(tab==='trace')await loadTrace();
     else if(tab==='about')await loadAbout();
-    else if(tab==='prog')await loadNotes();
+    else if(tab==='prog'){loadBank();await loadNotes()}
     else if(tab==='inc')await loadInc();
     else if(tab==='sec')await loadSec();
     else await loadEv();
   }catch(e){$('#upd').textContent='모니터에 연결할 수 없음 (실행 중인지 확인)'}
 }
-j('/api/incidents').then(r=>{incMarks=r.map(x=>x.last_heartbeat)}).finally(()=>{if(location.hash.length>1&&location.hash!=='#ov')openHashTab();else{document.title='PC 모니터 · 개요';refresh()}});
+/* ---------- 언어 (한국어 / English) ---------- */
+let LANG='ko',TR=null;
+function trText(s){if(!TR||!s||!/[가-힣]/.test(s))return s;for(const[p,r]of TR.pats)s=s.replace(p,r);for(const[k,v]of TR.phrases)if(s.includes(k))s=s.split(k).join(v);return s}
+function trNode(root){if(!TR)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
+  while((n=w.nextNode())){if(/[가-힣]/.test(n.nodeValue)&&!(n.parentNode&&/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.nodeName))){const t=trText(n.nodeValue);if(t!==n.nodeValue)n.nodeValue=t}}
+  if(root.querySelectorAll)root.querySelectorAll('[placeholder],[title],[data-confirm]').forEach(el=>{for(const a of['placeholder','title','data-confirm'])if(el.hasAttribute(a)&&/[가-힣]/.test(el.getAttribute(a))){const t=trText(el.getAttribute(a));if(t!==el.getAttribute(a))el.setAttribute(a,t)}})}
+async function initLang(){try{LANG=(await j('/api/settings')).lang||'ko'}catch(e){}
+  $('#langBtn').textContent=LANG==='en'?'한국어':'EN';
+  if(LANG!=='en')return;
+  const d=await (await fetch('/i18n_en.json')).json();
+  TR={pats:d.patterns.map(([p,r])=>[new RegExp(p,'g'),r]),phrases:d.phrases.sort((a,b)=>b[0].length-a[0].length)};
+  document.documentElement.lang='en';
+  const oc=window.confirm.bind(window),oa=window.alert.bind(window);window.confirm=m=>oc(trText(String(m)));window.alert=m=>oa(trText(String(m)));
+  trNode(document.body);let pend=false;
+  new MutationObserver(()=>{if(pend)return;pend=true;setTimeout(()=>{pend=false;trNode(document.body);const t=trText(document.title);if(t!==document.title)document.title=t},30)}).observe(document.body,{childList:true,subtree:true,characterData:true});
+  document.title=trText(document.title)}
+$('#langBtn').onclick=async()=>{await post('/api/settings',{lang:LANG==='en'?'ko':'en'});location.reload()};
+
+initLang().finally(()=>j('/api/incidents').then(r=>{incMarks=r.map(x=>x.last_heartbeat)}).finally(()=>{if(location.hash.length>1&&location.hash!=='#ov')openHashTab();else{document.title='PC 모니터 · 개요';refresh()}}));
 setInterval(()=>{if(tab==='ov'||tab==='about')refresh()},10000);
 setInterval(()=>{if(tab==='live')refresh()},3000);
 setInterval(()=>{if(tab!=='live')j('/api/live').then(L=>$('#liveDot').className='dot '+L.level).catch(()=>{})},15000);
