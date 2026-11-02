@@ -26,7 +26,7 @@ Windows PC·서버가 **왜 멈추는지**, **누가 침입하려 하는지**, *
 
 ### 실행 파일(권장, 파이썬 필요 없음)
 
-1. [Releases](../../releases)에서 `PCMonitor.zip`을 받아 압축을 풉니다.
+1. [Releases](../../releases)에서 `PCMonitor.zip`을 받아 압축을 풉니다. (`PCMonitor.exe`와 `_internal` 폴더가 항상 같은 폴더에 있어야 합니다)
 2. **`Install.cmd`를 더블클릭**하고 관리자 권한 확인 창에서 **[예]** 를 누릅니다.
 3. 바탕화면·시작 메뉴의 **PC 모니터**로 엽니다.
 
@@ -157,17 +157,19 @@ Windows는 검사 진행률을 제공하지 않습니다. 전체 검사는 **백
 | `winutil.py` | 이벤트 로그 API(wevtapi), PowerShell 실행, 알림, OS 정보 |
 | `dashboard.py` / `dashboard.html` | 로컬 웹 서버와 화면 |
 | `install.ps1` / `Install.cmd` | 설치 (PC/서버 자동 판단) |
+| `build.ps1` | 배포 파일(`dist\PCMonitor.zip`) 만들기 |
 
 ---
 
 ## 직접 빌드
 
 ```powershell
-pip install psutil pyinstaller pillow
-python make_icon.py pcmon.ico
-python -m PyInstaller --onefile --noconsole --name PCMonitor --icon pcmon.ico `
-  --add-data "dashboard.html;." --add-data "pcmon.ico;." --add-data "i18n_en.json;." monitor.py
+powershell -ExecutionPolicy Bypass -File build.ps1    # → dist\PCMonitor.zip
 ```
+
+exe 한 개(`--onefile`)가 아닌 폴더(`--onedir`, `PCMonitor.exe` + `_internal`)로 만듭니다.
+`--onefile`은 실행할 때 자기 안의 파일을 임시 폴더에 풀어 실행하는데, 이 방식이 악성코드와 비슷해 백신(V3 등)이 오진하는 일이 많기 때문입니다.
+아이콘을 새로 만들려면 `pip install pillow` 후 `python make_icon.py pcmon.ico`.
 
 ---
 

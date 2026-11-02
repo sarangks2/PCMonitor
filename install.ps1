@@ -36,6 +36,12 @@ if (Test-Path $srcExe) {
         foreach ($f in 'PCMonitor.exe', 'install.ps1', 'uninstall.ps1', 'Install.cmd', 'Uninstall.cmd', 'README.md') {
             if (Test-Path (Join-Path $here $f)) { Copy-Item (Join-Path $here $f) $InstallDir -Force }
         }
+        # 실행에 필요한 라이브러리 폴더 (1.3.0 부터 exe 한 개가 아닌 폴더 형태로 배포 — 백신 오진 줄이기)
+        $lib = Join-Path $here '_internal'
+        if (Test-Path $lib) {
+            Remove-Item (Join-Path $InstallDir '_internal') -Recurse -Force -ErrorAction SilentlyContinue
+            Copy-Item $lib $InstallDir -Recurse -Force
+        }
     }
     $exe = Join-Path $InstallDir 'PCMonitor.exe'
     $runExe = $exe; $runArgs = '--background'
