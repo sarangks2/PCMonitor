@@ -239,11 +239,37 @@ def _b64(s):
     return base64.b64encode(s.encode("utf-8")).decode()
 
 
-def toast(title, body):
+APP_ID = "PCMonitor.App"
+_PS_APP_ID = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe"
+_app_id_ok = None
+
+
+def register_app_id(name="PC 모니터"):
+    """알림 센터에 'Windows PowerShell' 대신 'PC 모니터' 이름·아이콘으로 보이게 앱 ID 를 등록 (현재 사용자).
+    실패하면 PowerShell 앱 ID 로 보낸다."""
+    global _app_id_ok
+    try:
+        import winreg
+        import config
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\Classes\AppUserModelId" + "\\" + APP_ID) as k:
+            winreg.SetValueEx(k, "DisplayName", 0, winreg.REG_SZ, name)
+            ico = os.path.join(config.RES_DIR, "pcmon.ico")
+            if os.path.exists(ico):
+                winreg.SetValueEx(k, "IconUri", 0, winreg.REG_SZ, ico)
+        _app_id_ok = name
+    except Exception:
+        _app_id_ok = False
+    return _app_id_ok
+
+
+def toast(title, body, app_name="PC 모니터"):
     """Windows 알림 센터 팝업. SYSTEM 계정이거나 실패하면(서버 코어, 구형 OS) 세션 메시지 창으로 대신."""
     if is_system():
-        threading.Thread(target=session_message, args=("PC 모니터: " + title, body), daemon=True).start()
+        threading.Thread(target=session_message, args=(app_name + ": " + title, body), daemon=True).start()
         return
+    if _app_id_ok != app_name:
+        register_app_id(app_name)
+    app_id = APP_ID if _app_id_ok else _PS_APP_ID
     t, b = _b64(escape(title)), _b64(escape(body))
     script = (
         "$t=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('%s'));"
@@ -253,9 +279,8 @@ def toast(title, body):
         "$x=New-Object Windows.Data.Xml.Dom.XmlDocument;"
         "$x.LoadXml(\"<toast><visual><binding template='ToastGeneric'><text>$t</text><text>$b</text></binding></visual></toast>\");"
         "$n=[Windows.UI.Notifications.ToastNotification]::new($x);"
-        "[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("
-        "'{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe').Show($n)"
-    ) % (t, b)
+        "[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('%s').Show($n)"
+    ) % (t, b, app_id)
     def run():
         try:
             r = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand",
@@ -265,7 +290,7 @@ def toast(title, body):
         except Exception:
             ok = False
         if not ok:
-            session_message("PC 모니터: " + title, body)
+            session_message(app_name + ": " + title, body)
 
     threading.Thread(target=run, daemon=True).start()
 

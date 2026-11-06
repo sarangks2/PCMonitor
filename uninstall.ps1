@@ -5,6 +5,7 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 Unregister-ScheduledTask -TaskName 'PCMonitor' -Confirm:$false -ErrorAction SilentlyContinue
 Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'PCMonitor.exe' -or ($_.Name -match '^pythonw?\.exe$' -and $_.CommandLine -match 'monitor\.py') } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+Remove-Item 'HKCU:\Software\Classes\AppUserModelId\PCMonitor.App' -Recurse -ErrorAction SilentlyContinue  # 알림 앱 이름 등록
 foreach ($dir in [Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs')) {
     Remove-Item (Join-Path $dir 'PC 모니터.url'), (Join-Path $dir 'PC 모니터.lnk') -ErrorAction SilentlyContinue
 }

@@ -65,6 +65,10 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--ch
 .abtn{border:1px solid var(--crit);color:var(--crit);background:transparent;border-radius:6px;padding:4px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
 .abtn:hover{background:rgba(200,30,30,.08)}
 .abtn.q{border-color:var(--warn);color:var(--warn)}.abtn.s{border-color:var(--cpu);color:var(--cpu)}
+#ntWrap{position:relative}
+#ntPop{position:absolute;right:0;top:calc(100% + 6px);width:300px;max-width:calc(100vw - 32px);z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.18);font-size:13px}
+#ntPop label{display:block;padding:3px 0;cursor:pointer}
+#ntBtn.muted{border-color:var(--mut);color:var(--mut);text-decoration:line-through}
 .abtn:disabled{opacity:.45;cursor:default}
 .jmsg{font-size:12px}
 .tile.click{cursor:pointer;transition:box-shadow .15s}.tile.click:hover{box-shadow:0 0 0 2px var(--cpu)}
@@ -108,6 +112,29 @@ html[lang=en] .tile.click .s:after{content:' · click to view ›'}
     <button data-t="about">정보</button>
   </nav>
   <span id="upd"></span>
+  <div id="ntWrap">
+    <button id="ntBtn" class="abtn s" style="padding:3px 10px" title="알림 설정 · 모니터 끄기">알림</button>
+    <div id="ntPop" class="card hide">
+      <h2 style="margin:0 0 8px;font-size:14px">알림 팝업</h2>
+      <label><input type="radio" name="ntLv" value="all"> 모두 보기</label>
+      <label><input type="radio" name="ntLv" value="crit"> 위험만 보기</label>
+      <label><input type="radio" name="ntLv" value="off"> 끄기</label>
+      <div class="mut" style="font-size:12px;margin:10px 0 4px">잠시 끄기</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="abtn s ntMute" data-m="60">1시간</button>
+        <button class="abtn s ntMute" data-m="480">8시간</button>
+        <button class="abtn s ntMute" data-m="1440">하루</button>
+        <button class="abtn s ntMute hide" data-m="0" id="ntUnmute">다시 켜기</button>
+      </div>
+      <div id="ntState" class="mut" style="font-size:12px;margin-top:6px"></div>
+      <p class="mut" style="font-size:12px;margin:8px 0 0">팝업을 꺼도 감시와 기록은 계속됩니다. 경고는 '전체 이벤트'에서 볼 수 있습니다.</p>
+      <button id="ntTest" class="abtn s" style="margin-top:8px">시험 알림 보내기</button>
+      <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
+      <h2 style="margin:0 0 6px;font-size:14px">모니터 끄기</h2>
+      <p class="mut" style="font-size:12px;margin:0 0 8px">창을 닫아도 모니터는 뒤에서 계속 돕니다. 완전히 멈추려면 여기서 끄세요. 다음 로그인 때나 PC 모니터 아이콘을 열면 다시 켜집니다.</p>
+      <button id="ntStop" class="abtn">모니터 끄기</button>
+    </div>
+  </div>
   <button id="langBtn" class="abtn s" style="padding:3px 10px" title="Language / 언어">EN</button>
 </header>
 <main>
@@ -631,6 +658,30 @@ async function initLang(){try{LANG=(await j('/api/settings')).lang||'ko'}catch(e
   new MutationObserver(()=>{if(pend)return;pend=true;setTimeout(()=>{pend=false;trNode(document.body);const t=trText(document.title);if(t!==document.title)document.title=t},30)}).observe(document.body,{childList:true,subtree:true,characterData:true});
   document.title=trText(document.title)}
 $('#langBtn').onclick=async()=>{await post('/api/settings',{lang:LANG==='en'?'ko':'en'});location.reload()};
+
+/* ---------- 알림 설정 · 모니터 끄기 ---------- */
+function showNotify(n,now){
+  document.querySelectorAll('input[name=ntLv]').forEach(r=>r.checked=r.value===n.level);
+  const muted=n.mute_until>now;
+  $('#ntUnmute').classList.toggle('hide',!muted);
+  const until=new Date(n.mute_until*1000).toLocaleString(LANG==='en'?'en-US':'ko-KR');
+  $('#ntState').textContent=!muted?'':LANG==='en'?`Muted until ${until}`:`${until} 까지 꺼 둠`;
+  const off=muted||n.level==='off';
+  $('#ntBtn').classList.toggle('muted',off);
+  $('#ntBtn').textContent=off?'알림 꺼짐':n.level==='crit'?'알림: 위험만':'알림'}
+async function loadNotify(){try{const s=await j('/api/settings');showNotify(s.notify,s.now)}catch(e){}}
+$('#ntBtn').onclick=e=>{e.stopPropagation();$('#ntPop').classList.toggle('hide');if(!$('#ntPop').classList.contains('hide'))loadNotify()};
+$('#ntPop').onclick=e=>e.stopPropagation();
+document.addEventListener('click',()=>$('#ntPop').classList.add('hide'));
+document.querySelectorAll('input[name=ntLv]').forEach(r=>r.onchange=async()=>{await post('/api/settings',{level:r.value});loadNotify()});
+document.querySelectorAll('.ntMute').forEach(b=>b.onclick=async()=>{await post('/api/settings',{mute_min:+b.dataset.m});loadNotify()});
+$('#ntTest').onclick=async()=>{await post('/api/notify/test');$('#ntState').textContent='보냈습니다. 화면 오른쪽 아래를 확인하세요.'};
+$('#ntStop').onclick=async()=>{
+  if(!confirm('PC 모니터를 끕니다. 감시·기록·알림이 모두 멈춥니다.\n(뱅킹 보안 프로그램 자동 끄기도 멈춥니다)\n\n다음 로그인 때나 PC 모니터 아이콘을 열면 다시 켜집니다.\n끌까요?'))return;
+  try{await post('/api/monitor/stop')}catch(e){}
+  document.body.innerHTML='<div style="padding:40px;font-family:inherit"><h2>PC 모니터를 껐습니다</h2><p>감시와 알림이 멈췄습니다. 이 창은 닫아도 됩니다.</p><p class="mut">다시 켜려면 바탕화면이나 시작 메뉴의 <b>PC 모니터</b> 아이콘을 여세요. 다음 로그인 때도 자동으로 켜집니다.</p></div>';
+  if(TR)trNode(document.body)};
+loadNotify();
 
 initLang().finally(()=>j('/api/incidents').then(r=>{incMarks=r.map(x=>x.last_heartbeat)}).finally(()=>{if(location.hash.length>1&&location.hash!=='#ov')openHashTab();else{document.title='PC 모니터 · 개요';refresh()}}));
 setInterval(()=>{if(tab==='ov'||tab==='about')refresh()},10000);

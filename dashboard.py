@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, urlparse
 
 import config
 import intrusion
+import winutil
 from procinfo import PROCINFO
 
 log = logging.getLogger("pcmon.web")
@@ -236,7 +237,7 @@ def serve(mon):
         if path == "/api/banking":
             return mon.bank.status()
         if path == "/api/settings":
-            return {"lang": mon.db.get("ui_lang") or "ko"}
+            return {"lang": mon.db.get("ui_lang") or "ko", "notify": mon.notify_settings(), "now": int(time.time())}
         if path == "/api/ignored":
             names = {"finding": "점검 항목 무시", "event_rule": "같은 경고 계속 무시", "event_once": "이번 경고만 확인함"}
             return [{**x, "type_name": names.get(x["type"], x["type"]), "count": len(x.get("eids") or [])}
@@ -395,8 +396,26 @@ def serve(mon):
             res = mon.ignore.add(typ, title, check, key=key, eids=ids)
             mon.build_risks(force=True)
         elif p == "/api/settings":
-            lang = str(body.get("lang", "ko"))
-            mon.db.set("ui_lang", lang if lang in ("ko", "en") else "ko")
+            if "lang" in body:
+                lang = str(body.get("lang", "ko"))
+                mon.db.set("ui_lang", lang if lang in ("ko", "en") else "ko")
+            n = mon.notify_settings()
+            if body.get("level") in ("all", "crit", "off"):
+                n["level"] = body["level"]
+            if "mute_min" in body:  # 0 = 다시 켜기, 그 밖 = 지금부터 N분 동안 끄기 (최대 7일)
+                try:
+                    m = max(0, min(7 * 1440, int(body["mute_min"])))
+                except (TypeError, ValueError):
+                    m = 0
+                n["mute_until"] = int(time.time()) + m * 60 if m else 0
+            mon.db.set("notify", n)
+            res = {"ok": True, "notify": n}
+        elif p == "/api/monitor/stop":
+            threading.Timer(1.0, mon.shutdown).start()  # 응답을 먼저 보내고 끈다
+            res = {"ok": True}
+        elif p == "/api/notify/test":
+            winutil.toast("알림 시험", "PC 모니터 알림이 이렇게 보입니다.",
+                          app_name="PC Monitor" if (mon.db.get("ui_lang") or "ko") == "en" else "PC 모니터")
             res = {"ok": True}
         elif p == "/api/banking":
             act = str(body.get("action", ""))

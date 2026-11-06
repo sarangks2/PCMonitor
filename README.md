@@ -49,6 +49,15 @@ python monitor.py                   # 화면(앱 창) 열기
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
+### 끄기 · 알림 줄이기
+
+앱 창을 닫아도 모니터는 뒤에서 계속 돌며 알림을 띄웁니다. 오른쪽 위 **[알림]** 버튼에서:
+
+- **알림 팝업**: 모두 보기 / 위험만 보기 / 끄기, 또는 1시간·8시간·하루 동안 잠시 끄기 (팝업만 줄이고 감시·기록은 계속, 경고는 '전체 이벤트'에 남음)
+- **모니터 끄기**: 감시·기록·알림을 모두 멈춤. 다음 로그인(서버는 부팅) 때나 PC 모니터 아이콘을 열면 다시 켜집니다. 계속 꺼 두려면 관리자 PowerShell에서 `Disable-ScheduledTask -TaskName PCMonitor`.
+
+알림은 알림 센터에 **PC 모니터** 이름으로 표시됩니다 (현재 사용자 레지스트리 `HKCU\Software\Classes\AppUserModelId\PCMonitor.App` 에 등록, 제거할 때 함께 삭제).
+
 ### 제거
 
 `Uninstall.cmd` 더블클릭. 기록까지 지우려면 관리자 PowerShell에서 `uninstall.ps1 -DeleteData`.

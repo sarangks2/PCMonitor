@@ -70,8 +70,30 @@ class Monitor:
         self.db.execute("INSERT INTO alerts(ts,key,severity,title,body) VALUES(?,?,?,?,?)",
                         (int(now), key, severity, title, body))
         log.warning("ALERT [%s] %s - %s", severity, title, body.replace("\n", " "))
+        if not self.popup_allowed(severity, now):
+            return  # 기록은 남기고 팝업만 생략 (앱의 이벤트 화면에서 볼 수 있음)
         lang = self.db.get("ui_lang") or "ko"
-        winutil.toast(("⚠ " if severity == "crit" else "") + i18n.tr(title, lang), i18n.tr(body, lang))
+        winutil.toast(("⚠ " if severity == "crit" else "") + i18n.tr(title, lang), i18n.tr(body, lang),
+                      app_name="PC Monitor" if lang == "en" else "PC 모니터")
+
+    def notify_settings(self):
+        n = self.db.get("notify") or {}
+        return {"level": n.get("level") if n.get("level") in ("all", "crit", "off") else "all",
+                "mute_until": int(n.get("mute_until") or 0)}
+
+    def popup_allowed(self, severity, now=None):
+        """알림 설정: all=모두 · crit=위험만 · off=끄기, mute_until=그때까지 잠시 끄기."""
+        n = self.notify_settings()
+        if n["mute_until"] > (now or time.time()) or n["level"] == "off":
+            return False
+        return n["level"] == "all" or severity == "crit"
+
+    def shutdown(self, reason="사용자가 끔"):
+        """모니터 본체를 정상 종료 (종료 코드 0 → 예약 작업이 '실패 후 다시 시작'을 하지 않음).
+        다음 로그인/부팅 때나 PC 모니터 아이콘을 열면 다시 켜진다."""
+        log.info("종료: %s", reason)
+        self.db.set("stopped_at", time.time())
+        self.stop.set()
 
     # ------------------------------------------------------------------ 장애 감지
     def detect_incident(self):
@@ -79,8 +101,13 @@ class Monitor:
         last_hb = self.db.get("heartbeat")
         boot = psutil.boot_time()
         self.db.set("boot_time", boot)
+        stopped = self.db.get("stopped_at")
+        if stopped:
+            self.db.set("stopped_at", 0)
         if not last_hb or last_hb >= boot:
             return
+        if stopped and stopped >= last_hb:
+            return  # 사용자가 모니터를 끈 뒤라 '멈추기 직전' 기록이 없다
         if self.db.query("SELECT 1 FROM incidents WHERE boot_time=?", (int(boot),)):
             return
         since_ms = int((time.time() - last_hb + 600) * 1000)
@@ -364,6 +391,12 @@ class Monitor:
         threading.Thread(target=dashboard.serve, args=(self,), daemon=True).start()
         threading.Thread(target=self.run_background, daemon=True).start()
         self.run_sampler()
+        try:
+            import faulthandler
+            faulthandler.cancel_dump_traceback_later()
+        except Exception:
+            pass
+        log.info("수집 중지됨")
 
 
 URL = f"http://127.0.0.1:{config.HTTP_PORT}/"
