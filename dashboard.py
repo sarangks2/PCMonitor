@@ -498,7 +498,7 @@ def serve(mon):
                             except Exception:
                                 pass
                     if killed:
-                        res = {"ok": True, "msg": f"'{pname or pid}' 프로세스 {killed}개를 강제 종료(바로 차기)했습니다."}
+                        res = {"ok": True, "msg": f"'{pname or pid}' 프로세스 {killed}개를 즉시 강제 종료했습니다."}
                     else:
                         res = {"ok": False, "msg": f"종료할 '{pname or pid}' 프로세스를 찾을 수 없거나 이미 종료되었습니다."}
             elif p == "/api/proc/test_spawn":
@@ -506,7 +506,7 @@ def serve(mon):
                 try:
                     proc = subprocess.Popen(["notepad.exe"])
                     res = {"ok": True, "pid": proc.pid, "name": "notepad.exe",
-                           "msg": f"테스트 프로세스 'notepad.exe' (PID: {proc.pid})가 실행되었습니다! 이제 '바로 차기'를 눌러보세요."}
+                           "msg": f"테스트 프로세스 'notepad.exe' (PID: {proc.pid})가 실행되었습니다! 이제 '즉시 종료'를 눌러보세요."}
                 except Exception as e:
                     res = {"ok": False, "msg": f"테스트 프로세스 실행 실패: {e}"}
             elif p in ("/api/mem/trim", "/api/mem/optimize"):

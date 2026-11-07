@@ -410,12 +410,12 @@ html[lang=en] .tile.click .s:after{content:' · click for details ›'}
         </div>
         <div class="mut" style="font-size:12.5px;margin-top:4px;line-height:1.55">
           인터넷뱅킹 프로그램은 평소 꺼 두시고, <b>은행/공공기관 사이트 열 때만 자동 켜기</b>로 설정하는 것을 적극 권장합니다.<br>
-          지금 백그라운드에서 자원을 쓰는 모든 뱅킹 프로그램을 한 번에 끝내려면 아래 [바로 차기]를 누르세요.
+          지금 백그라운드에서 자원을 쓰는 모든 뱅킹 프로그램을 한 번에 끝내려면 아래 [즉시 강제 종료]를 누르세요.
         </div>
       </div>
       <div>
         <button id="btnKillAllBanking" class="btn" type="button" style="background:linear-gradient(135deg,#d97706,#dc2626);color:#fff;border:0;padding:9px 16px;border-radius:8px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(220,38,38,0.25);display:inline-flex;align-items:center;gap:6px">
-          <span>⚡ 뱅킹 보안 프로그램 지금 바로 차기 (전체 종료)</span>
+          <span>⚡ 뱅킹 보안 프로그램 즉시 종료 (전체 강제 종료)</span>
         </button>
       </div>
     </div>
@@ -426,16 +426,16 @@ html[lang=en] .tile.click .s:after{content:' · click for details ›'}
     <div id="bankBody" class="mut">확인 중…</div>
   </div>
 
-  <!-- 테스트 프로세스 실행 및 바로 차기 테스트 카드 -->
+  <!-- 테스트 프로세스 실행 및 즉시 종료 테스트 카드 -->
   <div class="card" style="margin-bottom:12px;border-left:4px solid var(--cpu)">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
       <div>
         <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px">
-          <span>🧪 프로세스 바로 차기(강제종료) 체험 테스트</span>
+          <span>🧪 프로세스 즉시 강제 종료 체험 테스트</span>
           <span class="opt-badge rec" style="background:rgba(37,99,235,0.12);color:var(--cpu)">안전 체험</span>
         </div>
         <div class="mut" style="font-size:12.5px;margin-top:4px">
-          안전한 테스트용 프로세스(메모장)를 실행한 뒤, 목록에서 <b>[⚡ 바로 차기]</b>를 눌러 정상적으로 즉시 종료되는지 확인해볼 수 있습니다.
+          안전한 테스트용 프로세스(메모장)를 실행한 뒤, 목록에서 <b>[⚡ 즉시 종료]</b>를 눌러 정상적으로 즉시 종료되는지 확인해볼 수 있습니다.
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
@@ -874,7 +874,7 @@ async function loadSummary(){
   const ADV={must:'필수',keep:'그대로 두세요',close:'종료 가능',remove:'삭제 가능',remove_rec:'삭제 권장',check:'확인 필요'};
   const pt=(rows,k)=>'<tr><th>프로세스</th><th class="n">CPU</th><th class="n">메모리</th></tr>'+rows.map(r=>{
     const aiBtn=`<button class="abtn ai" data-ai-type="proc" data-ai-name="${esc(r.name)}" data-ai-desc="${esc(r.desc||'')}" data-ai-cat="${esc(r.cat||'')}" data-ai-company="${esc(r.company||'')}">🤖 AI 설명</button>`;
-    const killBtn=`<button class="abtn btn-proc-kill" data-proc-kill="${esc(r.name)}" data-proc-pid="${r.pid||''}" style="border-color:var(--crit);color:var(--crit);padding:1px 7px;font-size:11px" title="이 프로세스를 즉시 강제 종료합니다">⚡ 바로 차기</button>`;
+    const killBtn=`<button class="abtn btn-proc-kill" data-proc-kill="${esc(r.name)}" data-proc-pid="${r.pid||''}" style="border-color:var(--crit);color:var(--crit);padding:1px 7px;font-size:11px" title="이 프로세스를 즉시 강제 종료합니다">⚡ 즉시 종료</button>`;
     const adv=r.advice?`<div><span class="adv ${r.advice}" title="${esc(r.advice_text)}">${ADV[r.advice]||''}</span> <span class="pdesc">${r.advice==='must'||r.advice==='keep'?'':esc(r.advice_text)}</span><span class="notelink" data-notefor="${esc(r.name)}">메모</span> ${aiBtn} ${killBtn}</div>`:`<div style="margin-top:2px"><span class="notelink" data-notefor="${esc(r.name)}">메모</span> ${aiBtn} ${killBtn}</div>`;
     const acts=(r.actions||[]).length?`<div class="pacts">${actBtns(r.actions,true)}</div>`:'';
     return `<tr>${pcell(r).replace('</td>',adv+acts+'</td>')}<td class="n">${r.cpu.toFixed(1)}%</td><td class="n">${r.mem_mb.toFixed(0)} MB</td></tr>`}).join('');
@@ -1125,7 +1125,7 @@ function openTileDetailModal(key){
       <tbody>
         ${procs.slice(0, 5).map(r => {
           const aiBtn = `<button class="abtn ai" data-ai-type="proc" data-ai-name="${esc(r.name)}" data-ai-desc="${esc(r.desc||'')}" data-ai-cat="${esc(r.cat||'')}" data-ai-company="${esc(r.company||'')}">🤖 AI</button>`;
-          const killBtn = `<button class="abtn btn-proc-kill" data-proc-kill="${esc(r.name)}" data-proc-pid="${r.pid||''}" style="border-color:var(--crit);color:var(--crit);padding:1px 7px;font-size:11px" title="즉시 강제 종료">⚡ 바로 차기</button>`;
+          const killBtn = `<button class="abtn btn-proc-kill" data-proc-kill="${esc(r.name)}" data-proc-pid="${r.pid||''}" style="border-color:var(--crit);color:var(--crit);padding:1px 7px;font-size:11px" title="즉시 강제 종료">⚡ 즉시 종료</button>`;
           return `<tr>
             ${pcell(r)}
             <td class="n ${r.cpu>50?'bad':r.cpu>20?'wn':''}">${(r.cpu||0).toFixed(1)}%</td>
@@ -1297,11 +1297,11 @@ function openTileDetailModal(key){
                 <span><b>${esc(p.name)}</b> <span class="mut">(${(p.mem_mb||0).toFixed(0)} MB 점유)</span></span>
                 <span>
                   <button class="abtn ai" data-ai-type="proc" data-ai-name="${esc(p.name)}" data-ai-desc="${esc(p.desc||'')}">🤖 AI</button>
-                  <button class="abtn btn-proc-kill" data-proc-kill="${esc(p.name)}" data-proc-pid="${p.pid||''}" style="border-color:var(--crit);color:var(--crit);padding:1px 7px;font-size:11px">⚡ 바로 차기</button>
+                  <button class="abtn btn-proc-kill" data-proc-kill="${esc(p.name)}" data-proc-pid="${p.pid||''}" style="border-color:var(--crit);color:var(--crit);padding:1px 7px;font-size:11px">⚡ 즉시 종료</button>
                 </span>
               </div>
             `).join('')}
-            <div class="mut" style="margin-top:6px;font-size:12px">💡 장시간 켜둔 브라우저 단일 탭이나 백그라운드 프로그램이 메모리를 놓아주지 않고 있을 수 있습니다. 불필요한 탭을 닫거나 '⚡ 바로 차기'를 권장합니다.</div>
+            <div class="mut" style="margin-top:6px;font-size:12px">💡 장시간 켜둔 브라우저 단일 탭이나 백그라운드 프로그램이 메모리를 놓아주지 않고 있을 수 있습니다. 불필요한 탭을 닫거나 '⚡ 즉시 종료'를 권장합니다.</div>
           </div>
         ` : `
           <p class="mut" style="margin:6px 0 0;font-size:12px">비정상적으로 메모리를 과도하게 점유하거나 지속 누수 중인 프로세스가 없습니다.</p>
@@ -1882,7 +1882,7 @@ $('#findForm').onsubmit=async e=>{e.preventDefault();const q=$('#findQ').value.t
   const note=n=>`<span class="notelink" data-notefor="${esc(n)}">메모</span>`;
   let h='';
   if(r.notes.length)h+='<div class="fsec">📝 내 메모</div>'+r.notes.map(n=>`<div class="find info"><b>${esc(n.name)}</b> ${n.verdict?`<span class="tag">${VERD[n.verdict]}</span>`:''} ${esc(n.note)}</div>`).join('');
-  h+=`<div class="fsec">실행 중 (${r.running.length})</div>`+(r.running.length?'<table><tr><th>프로세스</th><th class="n">메모리</th><th></th></tr>'+r.running.map(p=>`<tr>${pcell(p)}<td class="n">${p.mem_mb} MB<div class="mut" style="font-size:11px">${p.pids.length}개</div></td><td>${adv(p)}${note(p.name)}<button class="abtn btn-proc-kill" data-proc-kill="${esc(p.name)}" data-proc-pid="${(p.pids&&p.pids[0])||''}" style="border-color:var(--crit);color:var(--crit);padding:1px 7px;font-size:11px;margin-left:4px" title="이 프로세스를 즉시 강제 종료합니다">⚡ 바로 차기</button><div class="pacts">${actBtns(p.actions,true)}</div></td></tr>`).join('')+'</table>':'<div class="mut">없음</div>');
+  h+=`<div class="fsec">실행 중 (${r.running.length})</div>`+(r.running.length?'<table><tr><th>프로세스</th><th class="n">메모리</th><th></th></tr>'+r.running.map(p=>`<tr>${pcell(p)}<td class="n">${p.mem_mb} MB<div class="mut" style="font-size:11px">${p.pids.length}개</div></td><td>${adv(p)}${note(p.name)}<button class="abtn btn-proc-kill" data-proc-kill="${esc(p.name)}" data-proc-pid="${(p.pids&&p.pids[0])||''}" style="border-color:var(--crit);color:var(--crit);padding:1px 7px;font-size:11px;margin-left:4px" title="이 프로세스를 즉시 강제 종료합니다">⚡ 즉시 종료</button><div class="pacts">${actBtns(p.actions,true)}</div></td></tr>`).join('')+'</table>':'<div class="mut">없음</div>');
   h+=`<div class="fsec">설치된 프로그램 (${r.installed.length})</div>`+(r.installed.length?'<table>'+r.installed.map(p=>`<tr><td><b>${esc(p.name)}</b> <span class="mut">${esc(p.version||'')}</span><div class="pdesc">${esc(p.publisher||'')}</div></td><td><div class="pacts">${actBtns(p.actions,true)}</div></td></tr>`).join('')+'</table>':'<div class="mut">없음</div>');
   h+=`<div class="fsec">디스크의 실행 파일 (${r.files.length}${r.files_partial?', 시간 제한으로 일부만':''})</div>`+(r.files.length?'<table><tr><th>파일</th><th>서명</th><th></th></tr>'+r.files.map(f=>`<tr><td><b>${esc(f.name)}</b>${f.running?' <span class="tag ok">실행 중</span>':''}<div class="pdesc">${esc(f.desc||'설명 없음')}${f.company?' · '+esc(f.company):''} · ${f.size_mb}MB</div><div class="pdesc" style="word-break:break-all">${esc(f.path)}</div></td>
       <td class="${f.sig==='Valid'?'ok':'wn'}" style="font-size:12px">${f.sig==='Valid'?'✓ '+esc(f.signer||'서명됨'):f.sig==='NotSigned'?'서명 없음':esc(f.sig||'-')}</td><td>${note(f.name)}<div class="pacts">${actBtns(f.actions,true)}</div></td></tr>`).join('')+'</table>':'<div class="mut">없음</div>');
