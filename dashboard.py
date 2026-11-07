@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, urlparse
 
 import config
 import intrusion
+import ai_explain
 import winutil
 from procinfo import PROCINFO
 
@@ -28,12 +29,22 @@ NO_ACCESS_HTML = """<!doctype html><meta charset="utf-8"><title>PC 모니터</ti
 
 def annotate(rows):
     for r in rows:
-        info = PROCINFO.by_name_only(r.get("name"))
+        pid = r.get("pid")
+        if pid:
+            try:
+                info = PROCINFO.describe(pid, r.get("name"), exe=r.get("path"))
+            except Exception:
+                info = PROCINFO.by_name_only(r.get("name"))
+        else:
+            info = PROCINFO.by_name_only(r.get("name"))
+        if info.get("display_name"):
+            r["display_name"] = info["display_name"]
         r.setdefault("desc", info["desc"])
         r.setdefault("cat", info["cat"])
         r.setdefault("company", info["company"])
         r.setdefault("path", info["path"])
     return rows
+
 
 
 def pub_actions(mon, acts):
@@ -237,7 +248,13 @@ def serve(mon):
         if path == "/api/banking":
             return mon.bank.status()
         if path == "/api/settings":
-            return {"lang": mon.db.get("ui_lang") or "ko", "notify": mon.notify_settings(), "now": int(time.time())}
+            return {"lang": mon.db.get("ui_lang") or "ko", "close_action": mon.db.get("close_action") or "tray",
+                    "alert_level": mon.db.get("alert_level") or "crit",
+                    "notify_mode": mon.db.get("notify_mode") or "instant"}
+        if path == "/api/ai/explain":
+            target = q.get("target", [""])[0][:120]
+            k = q.get("type", ["process"])[0][:30]
+            return ai_explain.explain_item(name=target, kind=k)
         if path == "/api/ignored":
             names = {"finding": "점검 항목 무시", "event_rule": "같은 경고 계속 무시", "event_once": "이번 경고만 확인함"}
             return [{**x, "type_name": names.get(x["type"], x["type"]), "count": len(x.get("eids") or [])}
@@ -253,10 +270,30 @@ def serve(mon):
         if path == "/api/quarantine":
             return mon.rem.quarantine_list()
         if path == "/api/summary":
+            import psutil
             last_inc = db.query("SELECT ts,kind,bugcheck,last_heartbeat FROM incidents ORDER BY ts DESC LIMIT 1")
             counts = db.query("SELECT category, severity, COUNT(*) n FROM events WHERE ts>? GROUP BY 1,2", (now - 86400,))
+            drives = []
+            try:
+                for ptn in psutil.disk_partitions(all=False):
+                    if ("fixed" in ptn.opts or "rw" in ptn.opts) and not ptn.mountpoint.startswith(("\\\\", "/")):
+                        try:
+                            du = psutil.disk_usage(ptn.mountpoint)
+                            drives.append({
+                                "mount": ptn.mountpoint,
+                                "drive": ptn.mountpoint[:2],
+                                "free_gb": round(du.free / 1e9, 1),
+                                "total_gb": round(du.total / 1e9, 1),
+                                "used_gb": round((du.total - du.free) / 1e9, 1),
+                                "pct": round(du.percent, 1)
+                            })
+                        except Exception:
+                            pass
+            except Exception:
+                pass
             return {
                 "now": now, "latest": mon.latest, "disk_free_gb": round(mon.latest_disk, 1),
+                "drives": drives,
                 "top_cpu": with_acts(mon.top_now[:6]), "top_mem": with_acts(getattr(mon, "mem_top", [])[:6]),
                 "risks": {k: v for k, v in build_risks().items() if k != "items"},
                 "status": mon.sec.status, "last_incident": last_inc[0] if last_inc else None,
@@ -282,15 +319,21 @@ def serve(mon):
                                 "net_rx": sum(r["net_rx"] for r in chunk) / len(chunk),
                                 "net_tx": sum(r["net_tx"] for r in chunk) / len(chunk)})
                 return out
-            rows = db.query("SELECT ts,cpu_avg cpu,cpu_max,mem_max mem,commit_max commit,disk_busy_max disk,net_rx,net_tx "
+            rows = db.query('SELECT ts,cpu_avg cpu,cpu_max,mem_max mem,commit_max "commit",disk_busy_max disk,net_rx,net_tx '
                             "FROM metrics_5m WHERE ts>=? ORDER BY ts", (since,))
             return rows
         if path == "/api/procs":
-            ts = int(q.get("ts", [now])[0])
+            try:
+                ts = int(q.get("ts", [now])[0])
+            except (ValueError, TypeError):
+                ts = int(now)
             return annotate(db.query("SELECT * FROM procs WHERE ts=(SELECT ts FROM procs ORDER BY ABS(ts-?) LIMIT 1) "
                                      "ORDER BY kind, rank", (ts,)))
         if path == "/api/events":
-            days = float(q.get("days", ["7"])[0])
+            try:
+                days = float(q.get("days", ["7"])[0])
+            except (ValueError, TypeError):
+                days = 7.0
             cats = q.get("cat", [""])[0]
             sql = "SELECT * FROM events WHERE ts>=?"
             args = [now - int(days * 86400)]
@@ -299,6 +342,9 @@ def serve(mon):
                 sql += " AND category IN (%s)" % ",".join("?" * len(cl))
                 args += cl
             return db.query(sql + " ORDER BY ts DESC LIMIT 500", args)
+        if path == "/api/mem/breakdown":
+            import procinfo
+            return procinfo.get_memory_breakdown()
         if path == "/api/incidents":
             rows = db.query("SELECT * FROM incidents ORDER BY ts DESC LIMIT 50")
             for r in rows:
@@ -373,94 +419,168 @@ def serve(mon):
             return self._send(403, b"forbidden", "text/plain")
         p = urlparse(self.path).path
         try:
-            n = min(int(self.headers.get("Content-Length") or 0), 4096)
+            n = min(int(self.headers.get("Content-Length") or 0), 65536)
             body = json.loads(self.rfile.read(n) or b"{}") if n else {}
         except Exception:
             body = {}
-        if p == "/api/trace/run":
-            res = {"started": mon.trace.start()}
-        elif p == "/api/action/run":
-            res = mon.rem.run(str(body.get("id", ""))[:32])
-        elif p == "/api/quarantine/restore":
-            res = mon.rem.restore(str(body.get("qid", ""))[:40])
-        elif p == "/api/ignore":
-            typ = str(body.get("type", ""))
-            title, check = str(body.get("title", ""))[:300], str(body.get("check", ""))[:40]
-            if typ == "finding":
-                key = intrusion.finding_key(check, title)   # 키는 서버에서 다시 계산
-            elif typ == "event_rule":
-                key = event_key(title)
-            else:
-                key = None
-            ids = body.get("eids") if isinstance(body.get("eids"), list) else []
-            res = mon.ignore.add(typ, title, check, key=key, eids=ids)
-            mon.build_risks(force=True)
-        elif p == "/api/settings":
-            if "lang" in body:
-                lang = str(body.get("lang", "ko"))
-                mon.db.set("ui_lang", lang if lang in ("ko", "en") else "ko")
-            n = mon.notify_settings()
-            if body.get("level") in ("all", "crit", "off"):
-                n["level"] = body["level"]
-            if "mute_min" in body:  # 0 = 다시 켜기, 그 밖 = 지금부터 N분 동안 끄기 (최대 7일)
+        try:
+            if p == "/api/trace/run":
+                res = {"started": mon.trace.start()}
+            elif p == "/api/action/run":
+                res = mon.rem.run(str(body.get("id", ""))[:32])
+            elif p == "/api/quarantine/restore":
+                res = mon.rem.restore(str(body.get("qid", ""))[:40])
+            elif p == "/api/ignore":
+                typ = str(body.get("type", ""))
+                title, check = str(body.get("title", ""))[:300], str(body.get("check", ""))[:40]
+                if typ == "finding":
+                    key = intrusion.finding_key(check, title)   # 키는 서버에서 다시 계산
+                elif typ == "event_rule":
+                    key = event_key(title)
+                else:
+                    key = None
+                ids = body.get("eids") if isinstance(body.get("eids"), list) else []
+                res = mon.ignore.add(typ, title, check, key=key, eids=ids)
+                mon.build_risks(force=True)
+            elif p == "/api/settings":
+                if "lang" in body:
+                    lang = str(body.get("lang", "ko"))
+                    mon.db.set("ui_lang", lang if lang in ("ko", "en") else "ko")
+                if "close_action" in body:
+                    ca = str(body.get("close_action", "tray"))
+                    if ca in ("tray", "exit"):
+                        mon.db.set("close_action", ca)
+                if "alert_level" in body:
+                    al = str(body.get("alert_level", "crit"))
+                    if al in ("crit", "all", "mute"):
+                        mon.db.set("alert_level", al)
+                if "notify_mode" in body:
+                    nm = str(body.get("notify_mode", "instant"))
+                    if nm in ("instant", "silent", "digest"):
+                        mon.db.set("notify_mode", nm)
+                res = {"ok": True}
+            elif p == "/api/proc/kill":
+                import psutil
+                pname = str(body.get("name", "")).strip().lower()
+                pid = body.get("pid")
+                PROTECTED = {"system", "smss.exe", "csrss.exe", "wininit.exe", "services.exe", "lsass.exe", "svchost.exe", "explorer.exe"}
+                if pname in PROTECTED:
+                    res = {"ok": False, "msg": f"'{pname}'은(는) Windows 핵심 시스템 프로세스로 종료할 수 없습니다."}
+                else:
+                    killed = 0
+                    if pid:
+                        try:
+                            p = psutil.Process(int(pid))
+                            if p.name().lower() not in PROTECTED:
+                                p.kill()
+                                killed += 1
+                        except Exception:
+                            pass
+                    if not killed and pname:
+                        for p in psutil.process_iter(["name"]):
+                            try:
+                                if p.info.get("name", "").lower() == pname:
+                                    p.kill()
+                                    killed += 1
+                            except Exception:
+                                pass
+                    if killed:
+                        res = {"ok": True, "msg": f"'{pname or pid}' 프로세스 {killed}개를 강제 종료(바로 차기)했습니다."}
+                    else:
+                        res = {"ok": False, "msg": f"종료할 '{pname or pid}' 프로세스를 찾을 수 없거나 이미 종료되었습니다."}
+            elif p == "/api/proc/test_spawn":
+                import subprocess
                 try:
-                    m = max(0, min(7 * 1440, int(body["mute_min"])))
-                except (TypeError, ValueError):
-                    m = 0
-                n["mute_until"] = int(time.time()) + m * 60 if m else 0
-            mon.db.set("notify", n)
-            res = {"ok": True, "notify": n}
-        elif p == "/api/monitor/stop":
-            threading.Timer(1.0, mon.shutdown).start()  # 응답을 먼저 보내고 끈다
-            res = {"ok": True}
-        elif p == "/api/notify/test":
-            winutil.toast("알림 시험", "PC 모니터 알림이 이렇게 보입니다.",
-                          app_name="PC Monitor" if (mon.db.get("ui_lang") or "ko") == "en" else "PC 모니터")
-            res = {"ok": True}
-        elif p == "/api/banking":
-            act = str(body.get("action", ""))
-            B = mon.bank
-            if not mon.sec.status.get("admin"):
-                res = {"ok": False, "msg": "관리자 권한으로 실행 중이 아니라 바꿀 수 없습니다"}
-            elif act in ("block", "unblock"):
-                res = B.set_block_external(act == "block")
-            elif act == "on":
-                res = B.turn_on("수동")
-            elif act == "off":
-                res = B.turn_off("수동")
-            elif act == "mode":
-                kws = body.get("keywords") if isinstance(body.get("keywords"), list) else None
-                res = B.set_mode(str(body.get("mode", "")), [str(k) for k in kws] if kws is not None else None, body.get("idle_min"))
-            elif act == "restore":
-                B.cfg["mode"] = "always"
-                res = B.restore_original()
+                    proc = subprocess.Popen(["notepad.exe"])
+                    res = {"ok": True, "pid": proc.pid, "name": "notepad.exe",
+                           "msg": f"테스트 프로세스 'notepad.exe' (PID: {proc.pid})가 실행되었습니다! 이제 '바로 차기'를 눌러보세요."}
+                except Exception as e:
+                    res = {"ok": False, "msg": f"테스트 프로세스 실행 실패: {e}"}
+            elif p in ("/api/mem/trim", "/api/mem/optimize"):
+                import procinfo
+                res = procinfo.optimize_memory()
+                try:
+                    db.add_event(int(time.time()), "system", "info", "pcmon", 0,
+                                 f"안전 메모리 최적화 수행: {res.get('saved_mb', 0)}MB 회수 (프로세스 {res.get('count', 0)}개)", "")
+                except Exception:
+                    pass
+            elif p == "/api/shutdown":
+                threading.Timer(0.3, mon.shutdown).start()
+                res = {"ok": True, "msg": "PC 모니터 백그라운드를 종료합니다"}
+            elif p == "/api/ai/explain":
+                name = str(body.get("name") or body.get("target") or "")[:120]
+                path_val = str(body.get("path", ""))[:300]
+                details = str(body.get("details", ""))[:1000]
+                kind = str(body.get("kind") or body.get("type") or "process")[:30]
+                res = ai_explain.explain_item(name=name, path=path_val, details=details, kind=kind)
+            elif p == "/api/tray/balloon":
+                title = str(body.get("title", "PC 모니터"))[:60]
+                msg = str(body.get("msg", ""))[:250]
+                if getattr(mon, "tray", None):
+                    mon.tray.show_balloon(title, msg)
+                else:
+                    winutil.toast(title, msg)
+                res = {"ok": True}
+            elif p == "/api/ui_closed":
+                ca = mon.db.get("close_action") or "tray"
+                if ca == "exit":
+                    threading.Timer(0.3, mon.shutdown).start()
+                elif getattr(mon, "tray", None):
+                    mon.tray.show_balloon("PC 모니터", "백그라운드 감시가 트레이에서 계속 실행 중입니다.")
+                else:
+                    winutil.toast("PC 모니터", "백그라운드 감시가 트레이에서 계속 실행 중입니다.")
+                res = {"ok": True}
+            elif p == "/api/banking":
+                act = str(body.get("action", ""))
+                B = mon.bank
+                if not mon.sec.status.get("admin"):
+                    res = {"ok": False, "msg": "관리자 권한으로 실행 중이 아니라 바꿀 수 없습니다"}
+                elif act in ("block", "unblock"):
+                    res = B.set_block_external(act == "block")
+                elif act == "on":
+                    res = B.turn_on("수동")
+                elif act == "off":
+                    res = B.turn_off("수동")
+                elif act == "kick_all":
+                    res = B.kick_all()
+                elif act == "apply_recommended":
+                    res = B.apply_recommended()
+                elif act == "mode":
+                    kws = body.get("keywords") if isinstance(body.get("keywords"), list) else None
+                    res = B.set_mode(str(body.get("mode", "")), [str(k) for k in kws] if kws is not None else None, body.get("idle_min"))
+                elif act == "restore":
+                    B.cfg["mode"] = "always"
+                    res = B.restore_original()
+                else:
+                    res = {"ok": False, "msg": "잘못된 요청"}
+            elif p == "/api/notes":
+                res = mon.notes.set(str(body.get("name", "")), str(body.get("note", "")), str(body.get("verdict", "")))
+                mon.rem._pa_cache.clear()
+            elif p == "/api/ignore/restore":
+                res = mon.ignore.restore(str(body.get("id", ""))[:16])
+                mon.build_risks(force=True)
+            elif p == "/api/risks/ack":  # 이전 화면 호환
+                ids = body.get("ids") if isinstance(body.get("ids"), list) else [body.get("id")]
+                res = mon.ignore.add("event_once", str(body.get("title", "경고")), "보안", eids=ids)
+                mon.build_risks(force=True)
+            elif p in ("/api/wu/start", "/api/wu/refresh", "/api/defender/start", "/api/defender/cancel"):
+                if not mon.sec.status.get("admin"):
+                    res = {"ok": False, "msg": "관리자 권한으로 실행 중이 아니라 할 수 없습니다"}
+                elif p == "/api/wu/start":
+                    res = mon.upd.start_wu()
+                elif p == "/api/wu/refresh":
+                    threading.Thread(target=mon.upd.refresh_wu, daemon=True).start()
+                    res = {"ok": True, "msg": "업데이트 목록을 다시 확인합니다 (최대 1~2분)"}
+                elif p == "/api/defender/start":
+                    res = mon.upd.defender_start(str(body.get("kind", "")))
+                else:
+                    res = mon.upd.defender_cancel()
             else:
-                res = {"ok": False, "msg": "잘못된 요청"}
-        elif p == "/api/notes":
-            res = mon.notes.set(str(body.get("name", "")), str(body.get("note", "")), str(body.get("verdict", "")))
-            mon.rem._pa_cache.clear()
-        elif p == "/api/ignore/restore":
-            res = mon.ignore.restore(str(body.get("id", ""))[:16])
-            mon.build_risks(force=True)
-        elif p == "/api/risks/ack":  # 이전 화면 호환
-            ids = body.get("ids") if isinstance(body.get("ids"), list) else [body.get("id")]
-            res = mon.ignore.add("event_once", str(body.get("title", "경고")), "보안", eids=ids)
-            mon.build_risks(force=True)
-        elif p in ("/api/wu/start", "/api/wu/refresh", "/api/defender/start", "/api/defender/cancel"):
-            if not mon.sec.status.get("admin"):
-                res = {"ok": False, "msg": "관리자 권한으로 실행 중이 아니라 할 수 없습니다"}
-            elif p == "/api/wu/start":
-                res = mon.upd.start_wu()
-            elif p == "/api/wu/refresh":
-                threading.Thread(target=mon.upd.refresh_wu, daemon=True).start()
-                res = {"ok": True, "msg": "업데이트 목록을 다시 확인합니다 (최대 1~2분)"}
-            elif p == "/api/defender/start":
-                res = mon.upd.defender_start(str(body.get("kind", "")))
-            else:
-                res = mon.upd.defender_cancel()
-        else:
-            return self._send(404, b"not found", "text/plain")
-        return self._send(200, json.dumps(res, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
+                return self._send(404, b"not found", "text/plain")
+            return self._send(200, json.dumps(res, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
+        except Exception as e:
+            log.exception("do_POST error")
+            return self._send(500, str(e).encode(), "text/plain")
 
     def db_ack_get():
         return mon.db.get("acked_events") or []

@@ -38,10 +38,48 @@ PS_ATTACK_PATTERNS = [
     "certutil -urlcache", "bitsadmin /transfer", "vssadmin delete shadows", "wevtutil cl",
     "new-object net.sockets.tcpclient", "system.net.sockets.tcpclient",
 ]
-# 이 PC에서 정상적으로 쓰는 것 (pcmon 자신, Claude Code 셸, Windows 내장 모듈)
-PS_BENIGN_MARKERS = ["toastnotificationmanager", "get-authenticodesignature", "function write-result",
-                     "__cmdletization", "microsoft.powershell.core\\set-strictmode",
-                     "$psdefaultparametervalues['out-file:encoding'] = 'utf8'"]  # Claude Code 셸 도구
+# 이 PC에서 정상적으로 쓰는 것 (pcmon 자신, Claude Code, Antigravity, 개발 CLI 및 빌드 도구)
+PS_BENIGN_MARKERS = [
+    "toastnotificationmanager", "get-authenticodesignature", "function write-result",
+    "__cmdletization", "microsoft.powershell.core\\set-strictmode",
+    "$psdefaultparametervalues['out-file:encoding'] = 'utf8'",  # Claude Code 셸 도구
+    "antigravity", "gemini-cli", "claude", "openconnect",
+    "virtualenv", "site-packages", "pip install", "npm ", "yarn ", "cargo ",
+    "scoop ", "winget ", "chocolatey", "vscode", "cursor",
+]
+
+
+def identify_script_context(script, path=""):
+    """PowerShell 스크립트 및 경로로부터 실행 주체 프로그램/도구명 식별."""
+    low = ((path or "") + " " + (script or "")).lower()
+    if "antigravity" in low:
+        return "Antigravity CLI (개발 도우미)"
+    if "claude" in low:
+        return "Claude Desktop (AI 어시스턴트)"
+    if "openconnect" in low or "vpn" in low:
+        return "OpenConnect VPN"
+    if "npm" in low or "node_modules" in low:
+        return "Node.js / npm"
+    if "python" in low or "pip" in low:
+        return "Python / pip"
+    if "git" in low:
+        return "Git 도구"
+    if "docker" in low:
+        return "Docker"
+    if "vscode" in low or "cursor" in low:
+        return "VS Code / Cursor"
+    if path:
+        base = os.path.basename(path).strip()
+        if base:
+            return base
+    # 주요 실행 cmdlet/명령 추출
+    m = re.search(r"^\s*([a-zA-Z0-9_\-\.\:]+)", (script or "").strip())
+    if m:
+        first_cmd = m.group(1)
+        if len(first_cmd) <= 30 and first_cmd.lower() not in ("if", "try", "catch", "foreach", "param", "{"):
+            return f"PowerShell ({first_cmd})"
+    return "PowerShell 스크립트"
+
 
 
 def _is_external(ip):
@@ -240,9 +278,12 @@ class SecurityMonitor:
                 hits.append("Defender 기능 끄기")
             if not hits or any(b in low for b in PS_BENIGN_MARKERS):
                 return
-            add(ts, "security", "crit", "PowerShell", i, "위험한 PowerShell 스크립트 실행: " + ", ".join(hits[:3]),
-                {"script": full[:1500], "path": d.get("Path", "")})
-            alert("ps4104", "crit", "위험한 PowerShell 실행", ", ".join(hits[:3]) + "\n" + full[:120])
+            prog = identify_script_context(full, d.get("Path", ""))
+            clean_snippet = re.sub(r"\s+", " ", full[:150]).strip()
+            add(ts, "security", "crit", "PowerShell", i, f"위험한 스크립트 실행 ({prog}): " + ", ".join(hits[:3]),
+                {"program": prog, "script": full[:1500], "path": d.get("Path", ""), "patterns": hits})
+            alert("ps4104", "crit", f"[{prog}] 의심 명령 감지",
+                  f"프로그램: {prog}\n탐지 유형: {', '.join(hits[:2])}\n내용: {clean_snippet}")
 
     # ====================================================== 자동실행(지속성) 변경
     def _snapshot_persistence(self):

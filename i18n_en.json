@@ -1,496 +1,4414 @@
 {
   "patterns": [
-    ["위험 (\\d+)건 · 주의 (\\d+)건", "$1 critical · $2 warnings"],
-    ["위험 (\\d+)건", "$1 critical"],
-    ["주의 (\\d+)건", "$1 warnings"],
-    ["위험 (\\d+)", "Critical $1"],
-    ["주의 (\\d+)", "Warning $1"],
-    ["프로세스 (\\d+)개", "$1 processes"],
-    ["스레드 (\\d+)개", "$1 threads"],
-    ["핸들 (\\d+)개", "$1 handles"],
-    ["서비스 (\\d+)개", "$1 services"],
-    ["실행 중 (\\d+)개", "$1 running"],
-    ["로그인 시 자동 실행 (\\d+)개", "$1 run at sign-in"],
-    ["다운로드됨 (\\d+)개", "$1 downloaded"],
-    ["설치 안 된 보안 업데이트 (\\d+)개", "$1 security updates not installed"],
-    ["설치 대기 업데이트 (\\d+)개", "$1 updates pending"],
-    ["방화벽 규칙 (\\d+)개", "$1 firewall rules"],
-    ["자동실행 (\\d+)개", "$1 autoruns"],
-    ["다른 기기에서 접속 가능한 포트 (\\d+)개", "$1 ports reachable from other devices"],
-    ["무시한 항목 (\\d+)개", "$1 ignored items"],
-    ["(\\d+)일 전", "$1 days ago"],
-    ["(\\d+)시간 (\\d+)분", "$1 h $2 min"],
-    ["(\\d+)시간", "$1 h"],
-    ["(\\d+)분", "$1 min"],
-    ["(\\d+)초", "$1 s"],
-    ["(\\d+)일", "$1 days"],
-    ["(\\d+)회", "$1×"],
-    ["(\\d+)건", "$1"],
-    ["(\\d+)개", "$1"],
-    ["(\\d+)곳", "$1 sources"],
-    ["(\\d+)/(\\d+)개 완료", "$1/$2 done"]
+    [
+      "위험 (\\d+)건 · 주의 (\\d+)건",
+      "$1 critical · $2 warnings"
+    ],
+    [
+      "위험 (\\d+)건",
+      "$1 critical"
+    ],
+    [
+      "주의 (\\d+)건",
+      "$1 warnings"
+    ],
+    [
+      "위험 (\\d+)",
+      "Critical $1"
+    ],
+    [
+      "주의 (\\d+)",
+      "Warning $1"
+    ],
+    [
+      "프로세스 (\\d+)개",
+      "$1 processes"
+    ],
+    [
+      "스레드 (\\d+)개",
+      "$1 threads"
+    ],
+    [
+      "핸들 (\\d+)개",
+      "$1 handles"
+    ],
+    [
+      "서비스 (\\d+)개",
+      "$1 services"
+    ],
+    [
+      "실행 중 (\\d+)개",
+      "$1 running"
+    ],
+    [
+      "로그인 시 자동 실행 (\\d+)개",
+      "$1 run at sign-in"
+    ],
+    [
+      "다운로드됨 (\\d+)개",
+      "$1 downloaded"
+    ],
+    [
+      "설치 안 된 보안 업데이트 (\\d+)개",
+      "$1 security updates not installed"
+    ],
+    [
+      "설치 대기 업데이트 (\\d+)개",
+      "$1 updates pending"
+    ],
+    [
+      "방화벽 규칙 (\\d+)개",
+      "$1 firewall rules"
+    ],
+    [
+      "자동실행 (\\d+)개",
+      "$1 autoruns"
+    ],
+    [
+      "다른 기기에서 접속 가능한 포트 (\\d+)개",
+      "$1 ports reachable from other devices"
+    ],
+    [
+      "무시한 항목 (\\d+)개",
+      "$1 ignored items"
+    ],
+    [
+      "(\\d+)일 전",
+      "$1 days ago"
+    ],
+    [
+      "(\\d+)시간 (\\d+)분",
+      "$1 h $2 min"
+    ],
+    [
+      "(\\d+)시간",
+      "$1 h"
+    ],
+    [
+      "(\\d+)분",
+      "$1 min"
+    ],
+    [
+      "(\\d+)초",
+      "$1 s"
+    ],
+    [
+      "(\\d+)일",
+      "$1 days"
+    ],
+    [
+      "(\\d+)회",
+      "$1×"
+    ],
+    [
+      "(\\d+)건",
+      "$1"
+    ],
+    [
+      "(\\d+)개",
+      "$1"
+    ],
+    [
+      "(\\d+)곳",
+      "$1 sources"
+    ],
+    [
+      "(\\d+)/(\\d+)개 완료",
+      "$1/$2 done"
+    ]
   ],
   "phrases": [
-    ["사용자 지정 검사", "Custom scan"],
-    ["전체 검사", "Full scan"],
-    ["빠른 검사", "Quick scan"],
-    ["GB 사용", "GB used"],
-    ["스레드", "threads"],
-    ["핸들", "handles"],
-    ["정의", "definitions"],
-    ["On demand", "On demand"],
-    ["예약된 유지 관리", "Scheduled maintenance"],
-    ["모니터 설치 이후 비정상 종료가 없습니다. 생기면 멈추기 직전 5분 기록이 여기에 저장됩니다.", "No abnormal shutdowns since install. If one happens, the 5 minutes before the freeze are saved here."],
-    ["백도어 계정, 원격 제어 프로그램, 숨은 자동실행, 로그인 화면 백도어, 백신 예외, hosts/프록시 변조, 서명 없는 프로그램, 로그 삭제·원격 로그인 이력을 확인합니다. 하루 한 번 자동 점검합니다.", "Checks backdoor accounts, remote-control tools, hidden autoruns, sign-in screen backdoors, antivirus exclusions, hosts/proxy tampering, unsigned programs, and log-clearing / remote sign-in history. Runs automatically once a day."],
-    ["실행 중인 프로세스, 설치된 프로그램, 디스크의 실행 파일(PATH·Program Files·AppData·다운로드)을 찾습니다. 인터넷으로는 아무것도 보내지 않습니다.", "Searches running processes, installed programs and executables on disk (PATH, Program Files, AppData, Downloads). Nothing is sent to the internet."],
-    ["사이트(URL)별로 제한하는 설정은 이 프로그램들에 없어서, 사이트 창이 열릴 때만 켜는 방식으로 같은 효과를 냅니다. 켜진 직후 사이트가 「설치 필요」라고 하면 새로고침(F5) 하세요.", "These programs have no per-site (URL) setting, so the same effect is achieved by turning them on only while a banking site window is open. If the site asks you to install right after they turn on, refresh (F5)."],
-    ["다른 기기에서 이 프로그램들로 접속하는 것을 방화벽으로 막습니다. 이 PC의 브라우저에서는 그대로 쓸 수 있어 뱅킹에 영향이 없습니다.", "Blocks other devices from connecting to these programs with the firewall. Browsers on this PC still work, so banking is not affected."],
-    ["평소에는 뱅킹 보안 프로그램을 꺼 두고, 은행·공공기관 사이트 창이 열리면 자동으로 켭니다.", "Keep banking security programs off normally and turn them on automatically when a bank / government site window opens."],
-    ["초마다 CPU·메모리·디스크·네트워크 사용량과 상위 프로세스를 기록합니다. Windows가 이미 제공하는 정보(성능 카운터)를 읽기만 합니다.", " seconds it records CPU, memory, disk, network usage and top processes — reading only what Windows already provides (performance counters)."],
-    ["표시를 남깁니다. 재부팅 뒤 이 표시가 끊긴 시각과 Windows 종료 기록(Kernel-Power 41 등)을 맞춰 보고, 멈추기 직전 5분을 장애 기록으로 남깁니다.", " mark. After a reboot it matches when the mark stopped with Windows shutdown records (Kernel-Power 41 etc.) and saves the 5 minutes before the freeze."],
-    ["이벤트 로그(로그인, 백신, 서비스 설치)와 방화벽 차단 기록을 읽고, 자동실행 목록·열린 포트의 변화를 비교합니다.", "Reads event logs (sign-ins, antivirus, service installs) and firewall block logs, and compares changes in autoruns and open ports."],
-    ["하루 한 번 계정·원격 접속·백신 예외·숨은 자동실행·서명 없는 프로그램을 확인합니다.", "Once a day it checks accounts, remote access, antivirus exclusions, hidden autoruns and unsigned programs."],
-    ["사용자가 버튼을 누르고 확인했을 때만 제거·격리·차단을 실행합니다. 자동으로 무언가를 지우지 않습니다.", "Removal, quarantine and blocking run only when you press a button and confirm. Nothing is deleted automatically."],
-    ["오래된 기록은 스스로 지워서 저장 공간이 일정 크기 이상 늘지 않습니다.", "Old records are deleted automatically, so storage never grows beyond a fixed size."],
-    ["외부 서버 접속·자동 업데이트·사용 통계 전송이 없습니다. 아래", "No external server, auto-update or usage statistics. The"],
-    ["이 실제 연결 수를 보여 줍니다.", "below shows the actual connection count."],
-    ["화면은 127.0.0.1(자기 자신) 주소로만 열려 다른 기기에서 접속할 수 없습니다.", "The screen only listens on 127.0.0.1 (this PC), so other devices cannot connect."],
-    ["접근 열쇠가 있어야 화면을 볼 수 있고, 다른 사이트가 몰래 조치 버튼을 누를 수 없게 막았습니다.", "An access key is required to view it, and other websites cannot secretly press action buttons."],
-    ["화면은 점검에서 만든 조치 번호만 보낼 수 있고, Windows 시스템 파일·Microsoft 서명 파일은 지우지 않습니다.", "The screen can only send action IDs created by the scan, and Windows system files / Microsoft-signed files are never deleted."],
-    ["격리는 되돌리기가, 삭제는 휴지통 복원이 가능합니다.", "Quarantine can be undone; deletions go to the Recycle Bin."],
-    ["모든 동작을 코드로 확인할 수 있습니다.", "Every behavior can be verified in the source code."],
-    ["디스크에 데이터가 많아 전체 검사가 오래 걸립니다. 급하면 중지하고 빠른 검사를 하세요.", "There is a lot of data on disk, so a full scan takes long. If urgent, stop it and run a quick scan."],
-    ["전체 검사는 디스크 전체를 검사해서 몇 시간~수십 시간 걸릴 수 있습니다. 시작할까요?", "A full scan checks every disk and may take hours. Start it?"],
-    ["설치 중 PC가 느려질 수 있고, 끝나면 재부팅이 필요할 수 있습니다.", "The PC may slow down during installation, and a restart may be needed afterwards."],
-    ["업데이트 확인·다운로드·설치를 시작합니다.", "Start checking, downloading and installing updates."],
-    ["진행률은 Windows가 알려 주지 않아 경과 시간만 표시합니다", "Windows does not report progress, so only elapsed time is shown"],
-    ["검사가 매우 느려 남은 시간을 예측하기 어렵습니다.", "The scan is very slow; remaining time can't be estimated."],
-    ["를 안 쓸 때만 검사」 설정이 켜져 있어, PC를 쓰는 동안에는 검사가 거의 멈춥니다.", "is idle」 is on, so the scan nearly pauses while you use the PC."],
-    ["「PC를 안 쓸 때만 검사」", "「Scan only when the PC is idle」"],
-    ["들어온 외부 연결, 차단된 인터넷 접속 시도, 로그인 실패, 원격 세션이 없습니다.", "No inbound external connections, blocked internet attempts, sign-in failures or remote sessions."],
-    ["그래프를 클릭하면 그 시점에 자원을 많이 쓴 프로세스를 보여 줍니다.", "Click the chart to see which processes used the most resources at that moment."],
-    ["관리자 권한으로 설치해야 침입 시도를 볼 수 있습니다", "Install with administrator rights to see intrusion attempts"],
-    ["관리자 권한이 없어 로그인 기록을 볼 수 없습니다", "No administrator rights, so sign-in records can't be read"],
-    ["관리자 권한이 아니라 일부 항목을 못 봅니다", "Not running as administrator, so some items can't be checked"],
-    ["관리자 권한으로 실행 중이 아니라 조치할 수 없습니다", "Not running as administrator, so actions are unavailable"],
-    ["관리자 권한으로 실행 중이 아니라 할 수 없습니다", "Not running as administrator, so this is unavailable"],
-    ["관리자 권한으로 실행 중이 아니라 바꿀 수 없습니다", "Not running as administrator, so this can't be changed"],
-    ["이 항목을 무시합니다.", "Ignore this item."],
-    ["위험·주의 건수에서 빠지고, 다시 점검해도 계속 숨겨집니다.", "It is removed from the counts and stays hidden after future scans."],
-    ["같은 제목의 경고를 앞으로 계속 숨깁니다.", "Keep hiding warnings with the same title from now on."],
-    ["이번 경고만 확인함으로 처리합니다. (같은 경고가 또 생기면 다시 표시됩니다)", "Mark only this warning as reviewed. (It will show again if it happens again)"],
-    ["무시한 항목 목록에서 언제든 다시 표시할 수 있습니다.", "You can show it again any time from the ignored list."],
-    ["흔적 점검 항목은 조치하거나 다시 점검해야 사라집니다)", "scan findings disappear only after you act on them or rescan)"],
-    ["해결되지 않은 위험·주의 항목이 없습니다.", "No unresolved critical/warning items."],
-    ["이 파일을 원래 위치로 되돌리고, 지웠던 방화벽 규칙·자동실행 등록도 복구합니다.", "Restore this file to its original location, including the firewall rules and autoruns that were removed."],
-    ["뱅킹 보안 프로그램을 설치 때 설정(항상 자동 실행)으로 되돌릴까요?", "Restore banking security programs to their installed settings (always start automatically)?"],
-    ["뱅킹 보안 프로그램의 외부(다른 기기) 접속을 막을까요?", "Block external (other device) access to banking security programs?"],
-    ["이 PC의 브라우저에서는 그대로 쓸 수 있습니다.", "Browsers on this PC can still use them."],
-    ["뱅킹 보안 프로그램을 꺼 둡니다. 필요할 때", "Turn banking security programs off. When needed press"],
-    ["보안 검사 정보를 읽을 수 없습니다 (다른 백신 사용 중일 수 있음)", "Security scan info can't be read (another antivirus may be in use)"],
-    ["보안(Defender)이 설치되어 있지 않습니다", "Security (Defender) is not installed"],
-    ["보안은 보조(수동) 모드", "Security is in passive mode"],
-    ["찾는 게 없거나 처음 보는 프로그램이면", "Not found, or never seen this program?"],
-    ["찾는 중… (디스크 검색은 최대 몇 초)", "Searching… (disk search takes a few seconds)"],
-    ["아직 메모가 없습니다. 위에서 찾은 프로그램의", "No notes yet. Press"],
-    ["를 누르거나 직접 입력하세요.", "on a program found above, or type one."],
-    ["프로그램에 남긴 메모는 프로세스 목록 등에서 설명 대신 표시됩니다", "Notes replace the description wherever the program appears"],
-    ["무시한 점검 항목·경고 기록.", "Record of ignored findings and warnings."],
-    ["격리한 파일은 여기서 원래 위치로 되돌릴 수 있습니다", "Quarantined files can be restored to their original location here"],
-    ["방화벽이 막은 접속 시도 (24시간, 10분 단위)", "Connection attempts blocked by firewall (24 h, 10-min bins)"],
-    ["방화벽이 막은 접속 시도가 없습니다", "No connection attempts blocked by the firewall"],
-    ["로그인 시도 (24시간 실패 · 7일 원격 성공)", "Sign-in attempts (24 h failures · 7 d remote successes)"],
-    ["로그인 성공/실패 감사 켜기 (침입 시도 기록용)", "Turn on sign-in success/failure auditing (to record intrusion attempts)"],
-    ["그 밖의 설정은 버튼을 눌러 확인한 경우에만 바꿉니다", "Other settings change only when you press a button and confirm"],
-    ["켜기 (최대 4MB, 접속 시도 감시용)", "turned on (max 4 MB, to watch connection attempts)"],
-    ["은행·공공기관 사이트를 열 때만 자동으로 켜기", "Turn on automatically only when a bank / government site is open"],
-    ["로그인 없이 실행 중이라 사용 불가)", "unavailable when running without sign-in)"],
-    ["창 제목에 들어 있으면 켜는 단어", "words in window titles that turn them on"],
-    ["사이트 창이 닫힌 뒤", "Turn off again"],
-    ["분 지나면 다시 끕니다.", "minutes after the site window closes."],
-    ["꺼 둠 (필요할 때 직접 켜기)", "Keep off (turn on manually when needed)"],
-    ["항상 켜 둠 (원래대로)", "Always on (original)"],
-    ["진행 중인 검사를 중지할까요?", "Stop the running scan?"],
-    ["재부팅하면 업데이트 설치가 끝납니다", "Restart to finish installing updates"],
-    ["모니터에 연결할 수 없음 (실행 중인지 확인)", "Can't reach the monitor (check that it is running)"],
-    ["모니터 아이콘으로 다시 열어 주세요.", "Monitor icon to open it again."],
-    ["이름 일부 입력 (예: agy, nosstarter, teamviewer)", "Type part of a name (e.g. agy, nosstarter, teamviewer)"],
-    ["프로그램 이름 (예: agy.exe)", "Program name (e.g. agy.exe)"],
-    ["메모 (예: Antigravity CLI, 내가 설치함)", "Note (e.g. Antigravity CLI, installed by me)"],
-    ["메모를 지울까요?", "Delete this note?"],
-    ["이벤트 항목을 모두 확인함 처리", "Mark all events as reviewed"],
-    ["점검 중입니다 (30초~2분)", "Scanning (30 s – 2 min)"],
-    ["더 지켜본 뒤 표시합니다", "more before showing"],
-    ["진행률 계산 중", "Calculating progress"],
-    ["검사 속도를", "Watching scan speed"],
-    ["으로 처리할까요?", "?"],
-    ["건을 모두", " items as"],
-    ["외부에서 들어온 연결 없음", "No inbound external connections"],
-    ["외부에서 접속 가능한 열린 포트", "Open ports reachable from outside"],
-    ["지금 인터넷과 통신 중인 프로그램", "Programs talking to the internet now"],
-    ["지금 내 PC로 들어온 연결", "Inbound connections right now"],
-    ["원격 세션 · 원격 제어 프로그램", "Remote sessions · remote-control tools"],
-    ["직전 상위 프로세스 · 관련 이벤트", "Top processes before · related events"],
-    ["비정상 종료 · 멈춤 기록", "Abnormal shutdowns · freezes"],
-    ["PC 모니터가 지금 쓰는 자원", "Resources PC Monitor is using now"],
-    ["Windows 설정에 하는 일", "Changes made to Windows settings"],
-    ["Windows 보안 백신 검사", "Windows Security antivirus scan"],
-    ["Windows 업데이트", "Windows Update"],
-    ["인터넷뱅킹 보안 프로그램", "Internet-banking security programs"],
-    ["공동인증서 도구 등", "certificate tools, etc."],
-    ["프로그램 바로 찾기", "Find a program"],
-    ["침입 흔적 점검", "Intrusion trace scan"],
-    ["방화벽 차단 기록 감시 중", "Watching firewall block log"],
-    ["설치된 구성 요소 보기", "Show installed components"],
-    ["원래대로 되돌리기", "Restore original"],
-    ["실행 방식 저장", "Save run mode"],
-    ["외부 접속 차단 중", "external access blocked"],
-    ["외부 접속 차단", "Block external access"],
-    ["꺼 두는 동안 보관", "kept while off"],
-    ["마지막 감지", "last detected"],
-    ["대기 목록 보기", "Show pending list"],
-    ["목록 새로 고침", "Refresh list"],
-    ["목록 확인 중…", "Checking list…"],
-    ["설정에서 열기", "Open in Settings"],
-    ["업데이트 시작", "Start update"],
-    ["빠른 검사 시작", "Start quick scan"],
-    ["전체 검사 시작", "Start full scan"],
-    ["진행 중인 검사 없음", "No scan running"],
-    ["최근 검사", "Recent scans"],
-    ["검사 중지", "Stop scan"],
-    ["검사한 양", "Scanned"],
-    ["전체 디스크 사용량", "total disk usage"],
-    ["남은 시간 약", "about"],
-    ["최신 상태", "Up to date"],
-    ["마지막 확인", "Last check"],
-    ["마지막 설치", "Last install"],
-    ["일시중지됨", "paused"],
-    ["무시한 항목", "Ignored items"],
-    ["무시한 시각", "Ignored at"],
-    ["펼쳐서 다시 표시", "expand to show again"],
-    ["무시한 항목이 없습니다", "No ignored items"],
-    ["격리 보관함", "Quarantine"],
-    ["격리한 파일이 없습니다", "No quarantined files"],
-    ["격리 시각", "Quarantined"],
-    ["원래 위치", "Original location"],
-    ["함께 지운 것", "Also removed"],
-    ["위험 · 주의 항목", "Critical · warning items"],
-    ["모두 확인함", "Mark all reviewed"],
-    ["확인함 (이번만)", "Reviewed (this time)"],
-    ["무시 (계속 숨김)", "Ignore (always hide)"],
-    ["다시 표시", "Show again"],
-    ["에 무시함", " ignored"],
-    ["무시됨", "Ignored"],
-    ["무슨 일?", "What happened?"],
-    ["어떻게?", "What to do?"],
-    ["자세히", "Details"],
-    ["흔적 점검에서 바로 제거", "remove it in Trace scan"],
-    ["흔적 점검에서 보기", "View in Trace scan"],
-    ["직접 설치한 게 아니면", "If you didn't install it,"],
-    ["지금 점검", "Scan now"],
-    ["점검 중…", "Scanning…"],
-    ["아직 점검 기록이 없습니다", "No scans yet"],
-    ["마지막 점검", "Last scan"],
-    ["지금 CPU 상위", "Top CPU now"],
-    ["지금 메모리 상위", "Top memory now"],
-    ["상위 (1분 평균)", "top (1-min average)"],
-    ["메모리 상위", "Top memory"],
-    ["최근 알림", "Recent alerts"],
-    ["알림 없음", "No alerts"],
-    ["디스크 · 네트워크", "Disk · network"],
-    ["디스크 사용률", "Disk busy"],
-    ["CPU · 메모리", "CPU · memory"],
-    ["데이터 수집 중…", "Collecting data…"],
-    ["마지막 장애", "Last failure"],
-    ["모니터 시작 이후", "since monitor start"],
-    ["모니터 DB", "Monitor DB"],
-    ["최대 50MB · 오래된 기록 자동 삭제", "max 50 MB · old records auto-deleted"],
-    ["눌러서 보기", "click to view"],
-    ["이상 없음", "All clear"],
-    ["현재 침입 시도 없음", "No intrusion attempts now"],
-    ["주의가 필요한 항목 있음", "Items need attention"],
-    ["침입 시도 감지", "Intrusion attempt detected"],
-    ["들어온 외부 연결", "Inbound external connections"],
-    ["막은 접속 시도 (1시간)", "Blocked attempts (1 h)"],
-    ["로그인 실패 (24시간)", "Sign-in failures (24 h)"],
-    ["인터넷 연결 포함", "includes internet"],
-    ["인터넷 연결 없음", "none from internet"],
-    ["인터넷 출처", "internet sources"],
-    ["보안 로그 감시 중", "security log watched"],
-    ["보안 로그 권한 없음", "no access to security log"],
-    ["원격 제어 프로그램 없음", "no remote-control tools"],
-    ["로그인 실패·원격 로그인 없음", "No sign-in failures or remote sign-ins"],
-    ["세션 없음", "No sessions"],
-    ["이 PC 앞(콘솔)", "at this PC (console)"],
-    ["연결 시도 중", "connecting"],
-    ["연결됨", "connected"],
-    ["이 PC 안에서만", "local only"],
-    ["외부 노출", "exposed"],
-    ["포트 스캔", "Port scan"],
-    ["대상 포트", "Target ports"],
-    ["출처 IP", "Source IP"],
-    ["출발지", "Source"],
-    ["내 포트", "Local port"],
-    ["상대 주소", "Remote addresses"],
-    ["연결 수", "Connections"],
-    ["접속 위치", "From"],
-    ["실시간 바이러스 보호", "Real-time protection"],
-    ["바이러스 정의", "Virus definitions"],
-    ["로그인 기록 감시", "Sign-in log monitoring"],
-    ["모두 켜짐", "all on"],
-    ["꺼진 프로필 있음", "some profiles off"],
-    ["보안 이벤트 (30일)", "Security events (30 d)"],
-    ["기록된 보안 이벤트가 없습니다.", "No security events recorded."],
-    ["확인 안 됨", "not detected"],
-    ["다른 백신", "Other antivirus"],
-    ["작동 원리", "How it works"],
-    ["안전한 이유", "Why it's safe"],
-    ["인터넷으로 아무것도 보내지 않습니다.", "Sends nothing to the internet."],
-    ["이 PC 안에서만 열립니다.", "Opens only inside this PC."],
-    ["설치한 계정만 볼 수 있습니다.", "Only the installing account can view it."],
-    ["임의 명령을 실행하지 않습니다.", "Never runs arbitrary commands."],
-    ["되돌릴 수 있습니다.", "Actions can be undone."],
-    ["소스가 공개돼 있습니다.", "The source code is public."],
-    ["자동 실행 작업", "scheduled task"],
-    ["멈춤 추적", "Freeze tracking"],
-    ["보안 감시", "Security monitoring"],
-    ["살아 있음", "alive"],
-    ["기록할 때마다", "Each time it records, it leaves an"],
-    ["전체 CPU 대비", "of total CPU"],
-    ["작업 세트", "working set"],
-    ["저장 공간", "Storage"],
-    ["외부 통신", "External traffic"],
-    ["화면용", "UI on"],
-    ["만 열림", "only"],
-    ["으로 실행 중 · 스레드", "· threads"],
-    ["실행 시작", "started"],
-    ["점검용 보조 프로세스", "helper processes"],
-    ["기록 위치", "Data folder"],
-    ["보관: 10초 기록", "Retention: 10-s data"],
-    ["일, 5분 요약", "d, 5-min summary"],
-    ["일, 이벤트", "d, events"],
-    ["일 (지나면 자동 삭제)", "d (auto-deleted after)"],
-    ["관리자 권한", "administrator"],
-    ["일반 권한", "standard user"],
-    ["서버 모드", "server mode"],
-    ["판단 없음", "No verdict"],
-    ["안전 (그대로 둠)", "Safe (keep)"],
-    ["확인 필요", "Needs review"],
-    ["삭제 예정", "To remove"],
-    ["삭제 권장", "Remove recommended"],
-    ["삭제 가능", "Removable"],
-    ["종료 가능", "Can close"],
-    ["그대로 두세요", "Keep"],
-    ["알고 있는 프로그램", "Known programs"],
-    ["설치된 프로그램", "Installed programs"],
-    ["디스크의 실행 파일", "Executables on disk"],
-    ["시간 제한으로 일부만", "partial due to time limit"],
-    ["인터넷에서", "Search the internet for"],
-    ["찾아보기", ""],
-    ["브라우저에서 열림)", "opens in browser)"],
-    ["프로그램 무엇", "program what is"],
-    ["설명 없음", "No description"],
-    ["서명 없음", "Unsigned"],
-    ["서명됨", "signed"],
-    ["실행 중", "Running"],
-    ["내 메모", "My notes"],
-    ["설치 필요", "install required"],
-    ["지금 상태", "Current state"],
-    ["지금 켜기", "Turn on now"],
-    ["지금 끄기", "Turn off now"],
-    ["실행 방식", "Run mode"],
-    ["자동 켜기 조건", "Auto-on condition"],
-    ["로그인 시 실행", "Run at sign-in"],
-    ["사용 안 함", "Disabled"],
-    ["차단 해제", "Unblock"],
-    ["진행할까요?", "Proceed?"],
-    ["확인 중…", "Checking…"],
-    ["확인 중", "Checking"],
-    ["진행 중", "running"],
-    ["취소됨", "cancelled"],
-    ["완료", "done"],
-    ["실패", "failed"],
-    ["성공", "success"],
-    ["전체 이벤트", "All events"],
-    ["침입 감시", "Live intrusion"],
-    ["흔적 점검", "Trace scan"],
-    ["장애 기록", "Failures"],
-    ["프로그램", "Programs"],
-    ["개요", "Overview"],
-    ["정보", "About"],
-    ["보안", "Security"],
-    ["갱신", "updated"],
-    ["프로세스", "Process"],
-    ["메모리", "Memory"],
-    ["커밋", "commit"],
-    ["사용률", "busy"],
-    ["여유", "free"],
-    ["디스크", "Disk"],
-    ["네트워크", "Network"],
-    ["수신", "Received"],
-    ["송신", "Sent"],
-    ["시각", "Time"],
-    ["내용", "Details"],
-    ["구분", "Type"],
-    ["종류", "Type"],
-    ["항목", "Item"],
-    ["상태", "State"],
-    ["포트", "Port"],
-    ["주소", "Address"],
-    ["사용자", "User"],
-    ["시작", "Start"],
-    ["경과", "Elapsed"],
-    ["대기", "Pending"],
-    ["최대", "max"],
-    ["상한", "cap"],
-    ["버전", "Version"],
-    ["저장", "Save"],
-    ["수정", "Edit"],
-    ["삭제", "Delete"],
-    ["찾기", "Find"],
-    ["메모", "Note"],
-    ["판단", "Verdict"],
-    ["파일", "File"],
-    ["서명", "Signature"],
-    ["무시", "Ignore"],
-    ["확인함", "Reviewed"],
-    ["되돌리기", "Restore"],
-    ["닫기", "Close"],
-    ["켜짐", "On"],
-    ["꺼짐", "Off"],
-    ["없음", "None"],
-    ["정상", "OK"],
-    ["위험", "Critical"],
-    ["주의", "Warning"],
-    ["침입", "Intrusion"],
-    ["장애", "Failure"],
-    ["하드웨어", "Hardware"],
-    ["백신", "Antivirus"],
-    ["자동실행", "Autorun"],
-    ["시스템", "System"],
-    ["자원", "Resource"],
-    ["멈춤", "Stall"],
-    ["조치", "Action"],
-    ["앱", "App"],
-    ["원격", "Remote"],
-    ["필수", "Required"],
-    ["안전", "Safe"],
-    ["인터넷", "Internet"],
-    ["내부망", "LAN"],
-    ["방송", "Broadcast"],
-    ["방화벽", "Firewall"],
-    ["계정", "Account"],
-    ["업데이트", "Update"],
-    ["서비스", "Service"],
-    ["수동", "Manual"],
-    ["자동", "Automatic"],
-    ["중지", "Stopped"],
-    ["차단", "Block"],
-    ["추정)", "estimate)"],
-    ["횟수", "Count"],
-    ["출처", "Source"],
-    ["마지막", "Last"],
-    ["원격 세션", "Remote sessions"],
-    ["원격 제어", "Remote control"],
-    ["원격제어", "Remote control"],
-    ["사용자 폴더", "User folder"],
-    ["무엇인지", ""],
-    ["접근 권한이 없습니다", "Access denied"],
-    ["PC 모니터", "PC Monitor"],
-    ["외부에서 들어올 수 있는 원격 접속 기능", "Remote access features reachable from outside"],
-    ["원격 지원 허용", "Remote Assistance allowed"],
-    ["원격 지원 끄기", "Turn off Remote Assistance"],
-    ["원격 데스크톱 켜짐", "Remote Desktop on"],
-    ["원격 데스크톱 끄기", "Turn off Remote Desktop"],
-    ["서명 없는 프로그램 실행", "Unsigned program started"],
-    ["서명 없는 프로그램", "Unsigned program"],
-    ["원격 제어 프로그램 발견", "Remote-control tool found"],
-    ["악성코드 탐지", "Malware detected"],
-    ["과거 악성코드 탐지", "Past malware detections"],
-    ["모두 조치됨", "all remediated"],
-    ["Defender 검사 예외", "Defender exclusions"],
-    ["예외 없음 · 악성코드 탐지 이력 없음", "no exclusions · no detection history"],
-    ["공유 폴더 없음 · SMBv1 꺼짐", "No shared folders · SMBv1 off"],
-    ["hosts 파일·프록시 정상", "hosts file and proxy OK"],
-    ["WMI 구독·Winlogon·로그인 화면 백도어 흔적 없음", "No WMI subscription, Winlogon or sign-in-screen backdoor traces"],
-    ["사용자 폴더의 실행파일", "Executables in user folders:"],
-    ["모두 서명 정상 · 의심 자동실행 없음", "all properly signed · no suspicious autoruns"],
-    ["로그 삭제·계정 생성·원격 로그인·로그인 실패 기록 없음", "No log clearing, account creation, remote sign-in or sign-in failures"],
-    ["보안 로그 보존", "security log kept"],
-    ["이후", "since"],
-    ["사용 중인 계정", "Accounts in use"],
-    ["관리자", "admins"],
-    ["마지막 로그인", "last sign-in"],
-    ["비밀번호 변경", "password changed"],
-    ["KMS 인증 서버가 수동 지정됨", "KMS activation server set manually"],
-    ["불법 인증 흔적", "Piracy-activation traces"],
-    ["숨은 자동실행", "Hidden autorun"],
-    ["의심 프로그램", "Suspicious program"],
-    ["네트워크 변조", "Network tampering"],
-    ["로그 기록", "Logs"],
-    ["원격 접속", "Remote access"],
-    ["공유", "Sharing"],
-    ["흔적 점검에서 발견된 항목입니다.", "Found by the trace scan."],
-    ["아래 버튼으로 바로 조치하거나, 괜찮은 항목이면 '무시'를 누르세요 (무시한 항목 목록에서 다시 표시 가능).", "Act with the buttons below, or press 'Ignore' if it's fine (you can show it again from the ignored list)."],
-    ["사용자 폴더(다운로드·임시 폴더 등)에서 디지털 서명이 없는 프로그램이 실행됐습니다. 악성코드가 흔히 이런 방식으로 실행됩니다.", "A program without a digital signature ran from a user folder (Downloads, Temp…). Malware often runs this way."],
-    ["직접 받은 프로그램이 확실하면 '확인함'. 모르는 프로그램이면 격리하거나 삭제하세요.", "If you downloaded it yourself, mark it reviewed. Otherwise quarantine or delete it."],
-    ["PowerShell(명령 실행 도구)로 해킹에 자주 쓰이는 형태의 명령이 실행됐습니다.", "A PowerShell command of a kind often used in attacks was run."],
-    ["관리 도구나 설치 프로그램이 정상적으로 쓰기도 합니다(예: PC 모니터 설치 명령). 짐작 가는 게 없으면 흔적 점검과 빠른 검사를 하세요.", "Admin tools and installers also use it legitimately (e.g. PC Monitor's installer). If unexpected, run a trace scan and a quick scan."],
-    ["위험한 PowerShell 스크립트 실행", "Dangerous PowerShell script run"],
-    ["Windows 보안(백신)이 악성코드나 해킹 도구를 찾았습니다.", "Windows Security found malware or a hacking tool."],
-    ["아래 '삭제'로 파일을 지우세요. 이미 '조치 완료'면 처리된 것입니다. 남아 있으면 빠른 검사를 다시 하세요.", "Delete the file with the button below. If already remediated, it's handled. If it remains, run a quick scan."],
-    ["격리 (되돌리기 가능)", "Quarantine (undoable)"],
-    ["폴더째 삭제", "Delete folder"],
-    ["종료", "Close"],
-    ["제거", "Uninstall"],
-    ["Windows 필수 구성요소 — 끄거나 지우지 마세요", "Essential Windows component — don't close or delete"],
-    ["정상 동작 중 — 그대로 두세요", "Working normally — keep it"],
-    ["지금 안 쓰면 종료해도 됩니다", "You can close it if not in use"],
-    ["인터넷 뱅킹·공공기관 사이트에서만 필요. 안 쓰면 제거해도 되고, 필요하면 사이트가 다시 설치합니다", "Needed only for internet-banking / government sites. Safe to remove; the site reinstalls it when needed"],
-    ["직접 쓰는 게 아니라면 제거하세요 (원격 제어는 해킹 통로가 될 수 있음)", "Remove it unless you use it (remote control can be an attack path)"],
-    ["출처를 모르면 삭제를 권장합니다", "Delete it if you don't know where it came from"],
-    ["뱅킹 보안 프로그램을 켰습니다", "Banking security programs turned on"],
-    ["뱅킹 보안 프로그램을 껐습니다.", "Banking security programs turned off."],
-    ["설정을 저장했습니다.", "Settings saved."],
-    ["메모를 저장했습니다", "note saved"],
-    ["메모를 지웠습니다", "note deleted"],
-    ["직전 비정상 종료 감지", "Previous abnormal shutdown detected"],
-    ["CPU 사용률 높음", "High CPU usage"],
-    ["메모리 부족", "Low memory"],
-    ["새 서비스가 설치됨", "New service installed"],
-    ["새 예약 작업 추가됨", "New scheduled task added"],
-    ["바이러스 정의가 오래됨", "Virus definitions are outdated"],
-    ["로그인 실패 반복 감지", "Repeated sign-in failures"],
-    ["외부에서 접속 감지", "External connection detected"],
-    ["새 포트 열림", "New port opened"],
-    ["인터넷에서 접속 시도 (차단됨)", "Connection attempt from internet (blocked)"],
-    ["침입 흔적 점검: 위험 항목 발견", "Trace scan: critical items found"],
-    ["앱에서 확인하세요", "check in the app"],
-    ["알림 설정 · 모니터 끄기", "Notifications · Stop monitor"],
-    ["알림 팝업", "Notification pop-ups"],
-    ["모두 보기", "Show all"],
-    ["위험만 보기", "Critical only"],
-    ["잠시 끄기", "Mute for"],
-    ["하루", "1 day"],
-    ["다시 켜기", "Unmute"],
-    ["팝업을 꺼도 감시와 기록은 계속됩니다. 경고는 '전체 이벤트'에서 볼 수 있습니다.", "Monitoring and logging continue while pop-ups are off. Warnings are listed under 'All events'."],
-    ["시험 알림 보내기", "Send test notification"],
-    ["보냈습니다. 화면 오른쪽 아래를 확인하세요.", "Sent. Check the bottom-right corner of your screen."],
-    ["모니터 끄기", "Stop monitor"],
-    ["창을 닫아도 모니터는 뒤에서 계속 돕니다. 완전히 멈추려면 여기서 끄세요. 다음 로그인 때나 PC 모니터 아이콘을 열면 다시 켜집니다.", "Closing the window does not stop the monitor; it keeps running in the background. Stop it here to halt it completely. It starts again at next sign-in or when you open the PC Monitor icon."],
-    ["알림 꺼짐", "Muted"],
-    ["알림: 위험만", "Alerts: critical"],
-    ["PC 모니터를 끕니다. 감시·기록·알림이 모두 멈춥니다.", "PC Monitor will stop. Monitoring, logging and notifications all stop."],
-    ["(뱅킹 보안 프로그램 자동 끄기도 멈춥니다)", "(Automatic turn-off of banking security programs stops too)"],
-    ["다음 로그인 때나 PC 모니터 아이콘을 열면 다시 켜집니다.", "It starts again at next sign-in or when you open the PC Monitor icon."],
-    ["끌까요?", "Stop now?"],
-    ["PC 모니터를 껐습니다", "PC Monitor stopped"],
-    ["감시와 알림이 멈췄습니다. 이 창은 닫아도 됩니다.", "Monitoring and notifications have stopped. You can close this window."],
-    ["다시 켜려면 바탕화면이나 시작 메뉴의", "To start it again, open the"],
-    ["아이콘을 여세요. 다음 로그인 때도 자동으로 켜집니다.", "icon on the desktop or Start menu. It also starts automatically at next sign-in."],
-    ["알림 시험", "Test notification"],
-    ["PC 모니터 알림이 이렇게 보입니다.", "This is how PC Monitor notifications look."],
-    ["알림", "Alerts"],
-    ["PC 모니터", "PC Monitor"]
+    [
+      "사용자 지정 검사",
+      "Custom scan"
+    ],
+    [
+      "전체 검사",
+      "Full scan"
+    ],
+    [
+      "빠른 검사",
+      "Quick scan"
+    ],
+    [
+      "GB 사용",
+      "GB used"
+    ],
+    [
+      "스레드",
+      "threads"
+    ],
+    [
+      "핸들",
+      "handles"
+    ],
+    [
+      "정의",
+      "definitions"
+    ],
+    [
+      "On demand",
+      "On demand"
+    ],
+    [
+      "예약된 유지 관리",
+      "Scheduled maintenance"
+    ],
+    [
+      "모니터 설치 이후 비정상 종료가 없습니다. 생기면 멈추기 직전 5분 기록이 여기에 저장됩니다.",
+      "No abnormal shutdowns since install. If one happens, the 5 minutes before the freeze are saved here."
+    ],
+    [
+      "백도어 계정, 원격 제어 프로그램, 숨은 자동실행, 로그인 화면 백도어, 백신 예외, hosts/프록시 변조, 서명 없는 프로그램, 로그 삭제·원격 로그인 이력을 확인합니다. 하루 한 번 자동 점검합니다.",
+      "Checks backdoor accounts, remote-control tools, hidden autoruns, sign-in screen backdoors, antivirus exclusions, hosts/proxy tampering, unsigned programs, and log-clearing / remote sign-in history. Runs automatically once a day."
+    ],
+    [
+      "실행 중인 프로세스, 설치된 프로그램, 디스크의 실행 파일(PATH·Program Files·AppData·다운로드)을 찾습니다. 인터넷으로는 아무것도 보내지 않습니다.",
+      "Searches running processes, installed programs and executables on disk (PATH, Program Files, AppData, Downloads). Nothing is sent to the internet."
+    ],
+    [
+      "사이트(URL)별로 제한하는 설정은 이 프로그램들에 없어서, 사이트 창이 열릴 때만 켜는 방식으로 같은 효과를 냅니다. 켜진 직후 사이트가 「설치 필요」라고 하면 새로고침(F5) 하세요.",
+      "These programs have no per-site (URL) setting, so the same effect is achieved by turning them on only while a banking site window is open. If the site asks you to install right after they turn on, refresh (F5)."
+    ],
+    [
+      "다른 기기에서 이 프로그램들로 접속하는 것을 방화벽으로 막습니다. 이 PC의 브라우저에서는 그대로 쓸 수 있어 뱅킹에 영향이 없습니다.",
+      "Blocks other devices from connecting to these programs with the firewall. Browsers on this PC still work, so banking is not affected."
+    ],
+    [
+      "평소에는 뱅킹 보안 프로그램을 꺼 두고, 은행·공공기관 사이트 창이 열리면 자동으로 켭니다.",
+      "Keep banking security programs off normally and turn them on automatically when a bank / government site window opens."
+    ],
+    [
+      "초마다 CPU·메모리·디스크·네트워크 사용량과 상위 프로세스를 기록합니다. Windows가 이미 제공하는 정보(성능 카운터)를 읽기만 합니다.",
+      " seconds it records CPU, memory, disk, network usage and top processes — reading only what Windows already provides (performance counters)."
+    ],
+    [
+      "표시를 남깁니다. 재부팅 뒤 이 표시가 끊긴 시각과 Windows 종료 기록(Kernel-Power 41 등)을 맞춰 보고, 멈추기 직전 5분을 장애 기록으로 남깁니다.",
+      " mark. After a reboot it matches when the mark stopped with Windows shutdown records (Kernel-Power 41 etc.) and saves the 5 minutes before the freeze."
+    ],
+    [
+      "이벤트 로그(로그인, 백신, 서비스 설치)와 방화벽 차단 기록을 읽고, 자동실행 목록·열린 포트의 변화를 비교합니다.",
+      "Reads event logs (sign-ins, antivirus, service installs) and firewall block logs, and compares changes in autoruns and open ports."
+    ],
+    [
+      "하루 한 번 계정·원격 접속·백신 예외·숨은 자동실행·서명 없는 프로그램을 확인합니다.",
+      "Once a day it checks accounts, remote access, antivirus exclusions, hidden autoruns and unsigned programs."
+    ],
+    [
+      "사용자가 버튼을 누르고 확인했을 때만 제거·격리·차단을 실행합니다. 자동으로 무언가를 지우지 않습니다.",
+      "Removal, quarantine and blocking run only when you press a button and confirm. Nothing is deleted automatically."
+    ],
+    [
+      "오래된 기록은 스스로 지워서 저장 공간이 일정 크기 이상 늘지 않습니다.",
+      "Old records are deleted automatically, so storage never grows beyond a fixed size."
+    ],
+    [
+      "외부 서버 접속·자동 업데이트·사용 통계 전송이 없습니다. 아래",
+      "No external server, auto-update or usage statistics. The"
+    ],
+    [
+      "이 실제 연결 수를 보여 줍니다.",
+      "below shows the actual connection count."
+    ],
+    [
+      "화면은 127.0.0.1(자기 자신) 주소로만 열려 다른 기기에서 접속할 수 없습니다.",
+      "The screen only listens on 127.0.0.1 (this PC), so other devices cannot connect."
+    ],
+    [
+      "접근 열쇠가 있어야 화면을 볼 수 있고, 다른 사이트가 몰래 조치 버튼을 누를 수 없게 막았습니다.",
+      "An access key is required to view it, and other websites cannot secretly press action buttons."
+    ],
+    [
+      "화면은 점검에서 만든 조치 번호만 보낼 수 있고, Windows 시스템 파일·Microsoft 서명 파일은 지우지 않습니다.",
+      "The screen can only send action IDs created by the scan, and Windows system files / Microsoft-signed files are never deleted."
+    ],
+    [
+      "격리는 되돌리기가, 삭제는 휴지통 복원이 가능합니다.",
+      "Quarantine can be undone; deletions go to the Recycle Bin."
+    ],
+    [
+      "모든 동작을 코드로 확인할 수 있습니다.",
+      "Every behavior can be verified in the source code."
+    ],
+    [
+      "디스크에 데이터가 많아 전체 검사가 오래 걸립니다. 급하면 중지하고 빠른 검사를 하세요.",
+      "There is a lot of data on disk, so a full scan takes long. If urgent, stop it and run a quick scan."
+    ],
+    [
+      "전체 검사는 디스크 전체를 검사해서 몇 시간~수십 시간 걸릴 수 있습니다. 시작할까요?",
+      "A full scan checks every disk and may take hours. Start it?"
+    ],
+    [
+      "설치 중 PC가 느려질 수 있고, 끝나면 재부팅이 필요할 수 있습니다.",
+      "The PC may slow down during installation, and a restart may be needed afterwards."
+    ],
+    [
+      "업데이트 확인·다운로드·설치를 시작합니다.",
+      "Start checking, downloading and installing updates."
+    ],
+    [
+      "진행률은 Windows가 알려 주지 않아 경과 시간만 표시합니다",
+      "Windows does not report progress, so only elapsed time is shown"
+    ],
+    [
+      "검사가 매우 느려 남은 시간을 예측하기 어렵습니다.",
+      "The scan is very slow; remaining time can't be estimated."
+    ],
+    [
+      "를 안 쓸 때만 검사」 설정이 켜져 있어, PC를 쓰는 동안에는 검사가 거의 멈춥니다.",
+      "is idle」 is on, so the scan nearly pauses while you use the PC."
+    ],
+    [
+      "「PC를 안 쓸 때만 검사」",
+      "「Scan only when the PC is idle」"
+    ],
+    [
+      "들어온 외부 연결, 차단된 인터넷 접속 시도, 로그인 실패, 원격 세션이 없습니다.",
+      "No inbound external connections, blocked internet attempts, sign-in failures or remote sessions."
+    ],
+    [
+      "그래프를 클릭하면 그 시점에 자원을 많이 쓴 프로세스를 보여 줍니다.",
+      "Click the chart to see which processes used the most resources at that moment."
+    ],
+    [
+      "관리자 권한으로 설치해야 침입 시도를 볼 수 있습니다",
+      "Install with administrator rights to see intrusion attempts"
+    ],
+    [
+      "관리자 권한이 없어 로그인 기록을 볼 수 없습니다",
+      "No administrator rights, so sign-in records can't be read"
+    ],
+    [
+      "관리자 권한이 아니라 일부 항목을 못 봅니다",
+      "Not running as administrator, so some items can't be checked"
+    ],
+    [
+      "관리자 권한으로 실행 중이 아니라 조치할 수 없습니다",
+      "Not running as administrator, so actions are unavailable"
+    ],
+    [
+      "관리자 권한으로 실행 중이 아니라 할 수 없습니다",
+      "Not running as administrator, so this is unavailable"
+    ],
+    [
+      "관리자 권한으로 실행 중이 아니라 바꿀 수 없습니다",
+      "Not running as administrator, so this can't be changed"
+    ],
+    [
+      "이 항목을 무시합니다.",
+      "Ignore this item."
+    ],
+    [
+      "위험·주의 건수에서 빠지고, 다시 점검해도 계속 숨겨집니다.",
+      "It is removed from the counts and stays hidden after future scans."
+    ],
+    [
+      "같은 제목의 경고를 앞으로 계속 숨깁니다.",
+      "Keep hiding warnings with the same title from now on."
+    ],
+    [
+      "이번 경고만 확인함으로 처리합니다. (같은 경고가 또 생기면 다시 표시됩니다)",
+      "Mark only this warning as reviewed. (It will show again if it happens again)"
+    ],
+    [
+      "무시한 항목 목록에서 언제든 다시 표시할 수 있습니다.",
+      "You can show it again any time from the ignored list."
+    ],
+    [
+      "흔적 점검 항목은 조치하거나 다시 점검해야 사라집니다)",
+      "scan findings disappear only after you act on them or rescan)"
+    ],
+    [
+      "해결되지 않은 위험·주의 항목이 없습니다.",
+      "No unresolved critical/warning items."
+    ],
+    [
+      "이 파일을 원래 위치로 되돌리고, 지웠던 방화벽 규칙·자동실행 등록도 복구합니다.",
+      "Restore this file to its original location, including the firewall rules and autoruns that were removed."
+    ],
+    [
+      "뱅킹 보안 프로그램을 설치 때 설정(항상 자동 실행)으로 되돌릴까요?",
+      "Restore banking security programs to their installed settings (always start automatically)?"
+    ],
+    [
+      "뱅킹 보안 프로그램의 외부(다른 기기) 접속을 막을까요?",
+      "Block external (other device) access to banking security programs?"
+    ],
+    [
+      "이 PC의 브라우저에서는 그대로 쓸 수 있습니다.",
+      "Browsers on this PC can still use them."
+    ],
+    [
+      "뱅킹 보안 프로그램을 꺼 둡니다. 필요할 때",
+      "Turn banking security programs off. When needed press"
+    ],
+    [
+      "보안 검사 정보를 읽을 수 없습니다 (다른 백신 사용 중일 수 있음)",
+      "Security scan info can't be read (another antivirus may be in use)"
+    ],
+    [
+      "보안(Defender)이 설치되어 있지 않습니다",
+      "Security (Defender) is not installed"
+    ],
+    [
+      "보안은 보조(수동) 모드",
+      "Security is in passive mode"
+    ],
+    [
+      "찾는 게 없거나 처음 보는 프로그램이면",
+      "Not found, or never seen this program?"
+    ],
+    [
+      "찾는 중… (디스크 검색은 최대 몇 초)",
+      "Searching… (disk search takes a few seconds)"
+    ],
+    [
+      "아직 메모가 없습니다. 위에서 찾은 프로그램의",
+      "No notes yet. Press"
+    ],
+    [
+      "를 누르거나 직접 입력하세요.",
+      "on a program found above, or type one."
+    ],
+    [
+      "프로그램에 남긴 메모는 프로세스 목록 등에서 설명 대신 표시됩니다",
+      "Notes replace the description wherever the program appears"
+    ],
+    [
+      "무시한 점검 항목·경고 기록.",
+      "Record of ignored findings and warnings."
+    ],
+    [
+      "격리한 파일은 여기서 원래 위치로 되돌릴 수 있습니다",
+      "Quarantined files can be restored to their original location here"
+    ],
+    [
+      "방화벽이 막은 접속 시도 (24시간, 10분 단위)",
+      "Connection attempts blocked by firewall (24 h, 10-min bins)"
+    ],
+    [
+      "방화벽이 막은 접속 시도가 없습니다",
+      "No connection attempts blocked by the firewall"
+    ],
+    [
+      "로그인 시도 (24시간 실패 · 7일 원격 성공)",
+      "Sign-in attempts (24 h failures · 7 d remote successes)"
+    ],
+    [
+      "로그인 성공/실패 감사 켜기 (침입 시도 기록용)",
+      "Turn on sign-in success/failure auditing (to record intrusion attempts)"
+    ],
+    [
+      "그 밖의 설정은 버튼을 눌러 확인한 경우에만 바꿉니다",
+      "Other settings change only when you press a button and confirm"
+    ],
+    [
+      "켜기 (최대 4MB, 접속 시도 감시용)",
+      "turned on (max 4 MB, to watch connection attempts)"
+    ],
+    [
+      "은행·공공기관 사이트를 열 때만 자동으로 켜기",
+      "Turn on automatically only when a bank / government site is open"
+    ],
+    [
+      "로그인 없이 실행 중이라 사용 불가)",
+      "unavailable when running without sign-in)"
+    ],
+    [
+      "창 제목에 들어 있으면 켜는 단어",
+      "words in window titles that turn them on"
+    ],
+    [
+      "사이트 창이 닫힌 뒤",
+      "Turn off again"
+    ],
+    [
+      "분 지나면 다시 끕니다.",
+      "minutes after the site window closes."
+    ],
+    [
+      "꺼 둠 (필요할 때 직접 켜기)",
+      "Keep off (turn on manually when needed)"
+    ],
+    [
+      "항상 켜 둠 (원래대로)",
+      "Always on (original)"
+    ],
+    [
+      "진행 중인 검사를 중지할까요?",
+      "Stop the running scan?"
+    ],
+    [
+      "재부팅하면 업데이트 설치가 끝납니다",
+      "Restart to finish installing updates"
+    ],
+    [
+      "모니터에 연결할 수 없음 (실행 중인지 확인)",
+      "Can't reach the monitor (check that it is running)"
+    ],
+    [
+      "모니터 아이콘으로 다시 열어 주세요.",
+      "Monitor icon to open it again."
+    ],
+    [
+      "이름 일부 입력 (예: agy, nosstarter, teamviewer)",
+      "Type part of a name (e.g. agy, nosstarter, teamviewer)"
+    ],
+    [
+      "프로그램 이름 (예: agy.exe)",
+      "Program name (e.g. agy.exe)"
+    ],
+    [
+      "메모 (예: Antigravity CLI, 내가 설치함)",
+      "Note (e.g. Antigravity CLI, installed by me)"
+    ],
+    [
+      "메모를 지울까요?",
+      "Delete this note?"
+    ],
+    [
+      "이벤트 항목을 모두 확인함 처리",
+      "Mark all events as reviewed"
+    ],
+    [
+      "점검 중입니다 (30초~2분)",
+      "Scanning (30 s – 2 min)"
+    ],
+    [
+      "더 지켜본 뒤 표시합니다",
+      "more before showing"
+    ],
+    [
+      "진행률 계산 중",
+      "Calculating progress"
+    ],
+    [
+      "검사 속도를",
+      "Watching scan speed"
+    ],
+    [
+      "으로 처리할까요?",
+      "?"
+    ],
+    [
+      "건을 모두",
+      " items as"
+    ],
+    [
+      "외부에서 들어온 연결 없음",
+      "No inbound external connections"
+    ],
+    [
+      "외부에서 접속 가능한 열린 포트",
+      "Open ports reachable from outside"
+    ],
+    [
+      "지금 인터넷과 통신 중인 프로그램",
+      "Programs talking to the internet now"
+    ],
+    [
+      "지금 내 PC로 들어온 연결",
+      "Inbound connections right now"
+    ],
+    [
+      "원격 세션 · 원격 제어 프로그램",
+      "Remote sessions · remote-control tools"
+    ],
+    [
+      "직전 상위 프로세스 · 관련 이벤트",
+      "Top processes before · related events"
+    ],
+    [
+      "비정상 종료 · 멈춤 기록",
+      "Abnormal shutdowns · freezes"
+    ],
+    [
+      "PC 모니터가 지금 쓰는 자원",
+      "Resources PC Monitor is using now"
+    ],
+    [
+      "Windows 설정에 하는 일",
+      "Changes made to Windows settings"
+    ],
+    [
+      "Windows 보안 백신 검사",
+      "Windows Security antivirus scan"
+    ],
+    [
+      "Windows 업데이트",
+      "Windows Update"
+    ],
+    [
+      "인터넷뱅킹 보안 프로그램",
+      "Internet-banking security programs"
+    ],
+    [
+      "공동인증서 도구 등",
+      "certificate tools, etc."
+    ],
+    [
+      "프로그램 바로 찾기",
+      "Find a program"
+    ],
+    [
+      "침입 흔적 점검",
+      "Intrusion trace scan"
+    ],
+    [
+      "방화벽 차단 기록 감시 중",
+      "Watching firewall block log"
+    ],
+    [
+      "설치된 구성 요소 보기",
+      "Show installed components"
+    ],
+    [
+      "원래대로 되돌리기",
+      "Restore original"
+    ],
+    [
+      "실행 방식 저장",
+      "Save run mode"
+    ],
+    [
+      "외부 접속 차단 중",
+      "external access blocked"
+    ],
+    [
+      "외부 접속 차단",
+      "Block external access"
+    ],
+    [
+      "꺼 두는 동안 보관",
+      "kept while off"
+    ],
+    [
+      "마지막 감지",
+      "last detected"
+    ],
+    [
+      "대기 목록 보기",
+      "Show pending list"
+    ],
+    [
+      "목록 새로 고침",
+      "Refresh list"
+    ],
+    [
+      "목록 확인 중…",
+      "Checking list…"
+    ],
+    [
+      "설정에서 열기",
+      "Open in Settings"
+    ],
+    [
+      "업데이트 시작",
+      "Start update"
+    ],
+    [
+      "빠른 검사 시작",
+      "Start quick scan"
+    ],
+    [
+      "전체 검사 시작",
+      "Start full scan"
+    ],
+    [
+      "진행 중인 검사 없음",
+      "No scan running"
+    ],
+    [
+      "최근 검사",
+      "Recent scans"
+    ],
+    [
+      "검사 중지",
+      "Stop scan"
+    ],
+    [
+      "검사한 양",
+      "Scanned"
+    ],
+    [
+      "전체 디스크 사용량",
+      "total disk usage"
+    ],
+    [
+      "남은 시간 약",
+      "about"
+    ],
+    [
+      "최신 상태",
+      "Up to date"
+    ],
+    [
+      "마지막 확인",
+      "Last check"
+    ],
+    [
+      "마지막 설치",
+      "Last install"
+    ],
+    [
+      "일시중지됨",
+      "paused"
+    ],
+    [
+      "무시한 항목",
+      "Ignored items"
+    ],
+    [
+      "무시한 시각",
+      "Ignored at"
+    ],
+    [
+      "펼쳐서 다시 표시",
+      "expand to show again"
+    ],
+    [
+      "무시한 항목이 없습니다",
+      "No ignored items"
+    ],
+    [
+      "격리 보관함",
+      "Quarantine"
+    ],
+    [
+      "격리한 파일이 없습니다",
+      "No quarantined files"
+    ],
+    [
+      "격리 시각",
+      "Quarantined"
+    ],
+    [
+      "원래 위치",
+      "Original location"
+    ],
+    [
+      "함께 지운 것",
+      "Also removed"
+    ],
+    [
+      "위험 · 주의 항목",
+      "Critical · warning items"
+    ],
+    [
+      "모두 확인함",
+      "Mark all reviewed"
+    ],
+    [
+      "확인함 (이번만)",
+      "Reviewed (this time)"
+    ],
+    [
+      "무시 (계속 숨김)",
+      "Ignore (always hide)"
+    ],
+    [
+      "다시 표시",
+      "Show again"
+    ],
+    [
+      "에 무시함",
+      " ignored"
+    ],
+    [
+      "무시됨",
+      "Ignored"
+    ],
+    [
+      "무슨 일?",
+      "What happened?"
+    ],
+    [
+      "어떻게?",
+      "What to do?"
+    ],
+    [
+      "자세히",
+      "Details"
+    ],
+    [
+      "흔적 점검에서 바로 제거",
+      "remove it in Trace scan"
+    ],
+    [
+      "흔적 점검에서 보기",
+      "View in Trace scan"
+    ],
+    [
+      "직접 설치한 게 아니면",
+      "If you didn't install it,"
+    ],
+    [
+      "지금 점검",
+      "Scan now"
+    ],
+    [
+      "점검 중…",
+      "Scanning…"
+    ],
+    [
+      "아직 점검 기록이 없습니다",
+      "No scans yet"
+    ],
+    [
+      "마지막 점검",
+      "Last scan"
+    ],
+    [
+      "지금 CPU 상위",
+      "Top CPU now"
+    ],
+    [
+      "지금 메모리 상위",
+      "Top memory now"
+    ],
+    [
+      "상위 (1분 평균)",
+      "top (1-min average)"
+    ],
+    [
+      "메모리 상위",
+      "Top memory"
+    ],
+    [
+      "최근 알림",
+      "Recent alerts"
+    ],
+    [
+      "알림 없음",
+      "No alerts"
+    ],
+    [
+      "디스크 · 네트워크",
+      "Disk · network"
+    ],
+    [
+      "디스크 사용률",
+      "Disk busy"
+    ],
+    [
+      "CPU · 메모리",
+      "CPU · memory"
+    ],
+    [
+      "데이터 수집 중…",
+      "Collecting data…"
+    ],
+    [
+      "마지막 장애",
+      "Last failure"
+    ],
+    [
+      "모니터 시작 이후",
+      "since monitor start"
+    ],
+    [
+      "모니터 DB",
+      "Monitor DB"
+    ],
+    [
+      "최대 50MB · 오래된 기록 자동 삭제",
+      "max 50 MB · old records auto-deleted"
+    ],
+    [
+      "눌러서 보기",
+      "click to view"
+    ],
+    [
+      "이상 없음",
+      "All clear"
+    ],
+    [
+      "현재 침입 시도 없음",
+      "No intrusion attempts now"
+    ],
+    [
+      "주의가 필요한 항목 있음",
+      "Items need attention"
+    ],
+    [
+      "침입 시도 감지",
+      "Intrusion attempt detected"
+    ],
+    [
+      "들어온 외부 연결",
+      "Inbound external connections"
+    ],
+    [
+      "막은 접속 시도 (1시간)",
+      "Blocked attempts (1 h)"
+    ],
+    [
+      "로그인 실패 (24시간)",
+      "Sign-in failures (24 h)"
+    ],
+    [
+      "인터넷 연결 포함",
+      "includes internet"
+    ],
+    [
+      "인터넷 연결 없음",
+      "none from internet"
+    ],
+    [
+      "인터넷 출처",
+      "internet sources"
+    ],
+    [
+      "보안 로그 감시 중",
+      "security log watched"
+    ],
+    [
+      "보안 로그 권한 없음",
+      "no access to security log"
+    ],
+    [
+      "원격 제어 프로그램 없음",
+      "no remote-control tools"
+    ],
+    [
+      "로그인 실패·원격 로그인 없음",
+      "No sign-in failures or remote sign-ins"
+    ],
+    [
+      "세션 없음",
+      "No sessions"
+    ],
+    [
+      "이 PC 앞(콘솔)",
+      "at this PC (console)"
+    ],
+    [
+      "연결 시도 중",
+      "connecting"
+    ],
+    [
+      "연결됨",
+      "connected"
+    ],
+    [
+      "이 PC 안에서만",
+      "local only"
+    ],
+    [
+      "외부 노출",
+      "exposed"
+    ],
+    [
+      "포트 스캔",
+      "Port scan"
+    ],
+    [
+      "대상 포트",
+      "Target ports"
+    ],
+    [
+      "출처 IP",
+      "Source IP"
+    ],
+    [
+      "출발지",
+      "Source"
+    ],
+    [
+      "내 포트",
+      "Local port"
+    ],
+    [
+      "상대 주소",
+      "Remote addresses"
+    ],
+    [
+      "연결 수",
+      "Connections"
+    ],
+    [
+      "접속 위치",
+      "From"
+    ],
+    [
+      "실시간 바이러스 보호",
+      "Real-time protection"
+    ],
+    [
+      "바이러스 정의",
+      "Virus definitions"
+    ],
+    [
+      "로그인 기록 감시",
+      "Sign-in log monitoring"
+    ],
+    [
+      "모두 켜짐",
+      "all on"
+    ],
+    [
+      "꺼진 프로필 있음",
+      "some profiles off"
+    ],
+    [
+      "보안 이벤트 (30일)",
+      "Security events (30 d)"
+    ],
+    [
+      "기록된 보안 이벤트가 없습니다.",
+      "No security events recorded."
+    ],
+    [
+      "확인 안 됨",
+      "not detected"
+    ],
+    [
+      "다른 백신",
+      "Other antivirus"
+    ],
+    [
+      "작동 원리",
+      "How it works"
+    ],
+    [
+      "안전한 이유",
+      "Why it's safe"
+    ],
+    [
+      "인터넷으로 아무것도 보내지 않습니다.",
+      "Sends nothing to the internet."
+    ],
+    [
+      "이 PC 안에서만 열립니다.",
+      "Opens only inside this PC."
+    ],
+    [
+      "설치한 계정만 볼 수 있습니다.",
+      "Only the installing account can view it."
+    ],
+    [
+      "임의 명령을 실행하지 않습니다.",
+      "Never runs arbitrary commands."
+    ],
+    [
+      "되돌릴 수 있습니다.",
+      "Actions can be undone."
+    ],
+    [
+      "소스가 공개돼 있습니다.",
+      "The source code is public."
+    ],
+    [
+      "자동 실행 작업",
+      "scheduled task"
+    ],
+    [
+      "멈춤 추적",
+      "Freeze tracking"
+    ],
+    [
+      "보안 감시",
+      "Security monitoring"
+    ],
+    [
+      "살아 있음",
+      "alive"
+    ],
+    [
+      "기록할 때마다",
+      "Each time it records, it leaves an"
+    ],
+    [
+      "전체 CPU 대비",
+      "of total CPU"
+    ],
+    [
+      "작업 세트",
+      "working set"
+    ],
+    [
+      "저장 공간",
+      "Storage"
+    ],
+    [
+      "외부 통신",
+      "External traffic"
+    ],
+    [
+      "화면용",
+      "UI on"
+    ],
+    [
+      "만 열림",
+      "only"
+    ],
+    [
+      "으로 실행 중 · 스레드",
+      "· threads"
+    ],
+    [
+      "실행 시작",
+      "started"
+    ],
+    [
+      "점검용 보조 프로세스",
+      "helper processes"
+    ],
+    [
+      "기록 위치",
+      "Data folder"
+    ],
+    [
+      "보관: 10초 기록",
+      "Retention: 10-s data"
+    ],
+    [
+      "일, 5분 요약",
+      "d, 5-min summary"
+    ],
+    [
+      "일, 이벤트",
+      "d, events"
+    ],
+    [
+      "일 (지나면 자동 삭제)",
+      "d (auto-deleted after)"
+    ],
+    [
+      "관리자 권한",
+      "administrator"
+    ],
+    [
+      "일반 권한",
+      "standard user"
+    ],
+    [
+      "서버 모드",
+      "server mode"
+    ],
+    [
+      "판단 없음",
+      "No verdict"
+    ],
+    [
+      "안전 (그대로 둠)",
+      "Safe (keep)"
+    ],
+    [
+      "확인 필요",
+      "Needs review"
+    ],
+    [
+      "삭제 예정",
+      "To remove"
+    ],
+    [
+      "삭제 권장",
+      "Remove recommended"
+    ],
+    [
+      "삭제 가능",
+      "Removable"
+    ],
+    [
+      "종료 가능",
+      "Can close"
+    ],
+    [
+      "그대로 두세요",
+      "Keep"
+    ],
+    [
+      "알고 있는 프로그램",
+      "Known programs"
+    ],
+    [
+      "설치된 프로그램",
+      "Installed programs"
+    ],
+    [
+      "디스크의 실행 파일",
+      "Executables on disk"
+    ],
+    [
+      "시간 제한으로 일부만",
+      "partial due to time limit"
+    ],
+    [
+      "인터넷에서",
+      "Search the internet for"
+    ],
+    [
+      "찾아보기",
+      ""
+    ],
+    [
+      "브라우저에서 열림)",
+      "opens in browser)"
+    ],
+    [
+      "프로그램 무엇",
+      "program what is"
+    ],
+    [
+      "설명 없음",
+      "No description"
+    ],
+    [
+      "서명 없음",
+      "Unsigned"
+    ],
+    [
+      "서명됨",
+      "signed"
+    ],
+    [
+      "실행 중",
+      "Running"
+    ],
+    [
+      "내 메모",
+      "My notes"
+    ],
+    [
+      "설치 필요",
+      "install required"
+    ],
+    [
+      "지금 상태",
+      "Current state"
+    ],
+    [
+      "지금 켜기",
+      "Turn on now"
+    ],
+    [
+      "지금 끄기",
+      "Turn off now"
+    ],
+    [
+      "실행 방식",
+      "Run mode"
+    ],
+    [
+      "자동 켜기 조건",
+      "Auto-on condition"
+    ],
+    [
+      "로그인 시 실행",
+      "Run at sign-in"
+    ],
+    [
+      "사용 안 함",
+      "Disabled"
+    ],
+    [
+      "차단 해제",
+      "Unblock"
+    ],
+    [
+      "진행할까요?",
+      "Proceed?"
+    ],
+    [
+      "확인 중…",
+      "Checking…"
+    ],
+    [
+      "확인 중",
+      "Checking"
+    ],
+    [
+      "진행 중",
+      "running"
+    ],
+    [
+      "취소됨",
+      "cancelled"
+    ],
+    [
+      "완료",
+      "done"
+    ],
+    [
+      "실패",
+      "failed"
+    ],
+    [
+      "성공",
+      "success"
+    ],
+    [
+      "전체 이벤트",
+      "All events"
+    ],
+    [
+      "침입 감시",
+      "Live intrusion"
+    ],
+    [
+      "흔적 점검",
+      "Trace scan"
+    ],
+    [
+      "장애 기록",
+      "Failures"
+    ],
+    [
+      "프로그램",
+      "Programs"
+    ],
+    [
+      "개요",
+      "Overview"
+    ],
+    [
+      "대시보드",
+      "Dashboard"
+    ],
+    [
+      "PC 모니터 · 대시보드",
+      "PC Monitor · Dashboard"
+    ],
+    [
+      "정보",
+      "About"
+    ],
+    [
+      "보안",
+      "Security"
+    ],
+    [
+      "갱신",
+      "updated"
+    ],
+    [
+      "프로세스",
+      "Process"
+    ],
+    [
+      "메모리",
+      "Memory"
+    ],
+    [
+      "커밋",
+      "commit"
+    ],
+    [
+      "사용률",
+      "busy"
+    ],
+    [
+      "여유",
+      "free"
+    ],
+    [
+      "디스크",
+      "Disk"
+    ],
+    [
+      "네트워크",
+      "Network"
+    ],
+    [
+      "수신",
+      "Received"
+    ],
+    [
+      "송신",
+      "Sent"
+    ],
+    [
+      "시각",
+      "Time"
+    ],
+    [
+      "내용",
+      "Details"
+    ],
+    [
+      "구분",
+      "Type"
+    ],
+    [
+      "종류",
+      "Type"
+    ],
+    [
+      "항목",
+      "Item"
+    ],
+    [
+      "상태",
+      "State"
+    ],
+    [
+      "포트",
+      "Port"
+    ],
+    [
+      "주소",
+      "Address"
+    ],
+    [
+      "사용자",
+      "User"
+    ],
+    [
+      "시작",
+      "Start"
+    ],
+    [
+      "경과",
+      "Elapsed"
+    ],
+    [
+      "대기",
+      "Pending"
+    ],
+    [
+      "최대",
+      "max"
+    ],
+    [
+      "상한",
+      "cap"
+    ],
+    [
+      "버전",
+      "Version"
+    ],
+    [
+      "저장",
+      "Save"
+    ],
+    [
+      "수정",
+      "Edit"
+    ],
+    [
+      "삭제",
+      "Delete"
+    ],
+    [
+      "찾기",
+      "Find"
+    ],
+    [
+      "메모",
+      "Note"
+    ],
+    [
+      "판단",
+      "Verdict"
+    ],
+    [
+      "파일",
+      "File"
+    ],
+    [
+      "서명",
+      "Signature"
+    ],
+    [
+      "무시",
+      "Ignore"
+    ],
+    [
+      "확인함",
+      "Reviewed"
+    ],
+    [
+      "되돌리기",
+      "Restore"
+    ],
+    [
+      "닫기",
+      "Close"
+    ],
+    [
+      "켜짐",
+      "On"
+    ],
+    [
+      "꺼짐",
+      "Off"
+    ],
+    [
+      "없음",
+      "None"
+    ],
+    [
+      "정상",
+      "OK"
+    ],
+    [
+      "위험",
+      "Critical"
+    ],
+    [
+      "주의",
+      "Warning"
+    ],
+    [
+      "침입",
+      "Intrusion"
+    ],
+    [
+      "장애",
+      "Failure"
+    ],
+    [
+      "하드웨어",
+      "Hardware"
+    ],
+    [
+      "백신",
+      "Antivirus"
+    ],
+    [
+      "자동실행",
+      "Autorun"
+    ],
+    [
+      "시스템",
+      "System"
+    ],
+    [
+      "자원",
+      "Resource"
+    ],
+    [
+      "멈춤",
+      "Stall"
+    ],
+    [
+      "조치",
+      "Action"
+    ],
+    [
+      "앱",
+      "App"
+    ],
+    [
+      "원격",
+      "Remote"
+    ],
+    [
+      "필수",
+      "Required"
+    ],
+    [
+      "안전",
+      "Safe"
+    ],
+    [
+      "인터넷",
+      "Internet"
+    ],
+    [
+      "내부망",
+      "LAN"
+    ],
+    [
+      "방송",
+      "Broadcast"
+    ],
+    [
+      "방화벽",
+      "Firewall"
+    ],
+    [
+      "계정",
+      "Account"
+    ],
+    [
+      "업데이트",
+      "Update"
+    ],
+    [
+      "서비스",
+      "Service"
+    ],
+    [
+      "수동",
+      "Manual"
+    ],
+    [
+      "자동",
+      "Automatic"
+    ],
+    [
+      "중지",
+      "Stopped"
+    ],
+    [
+      "차단",
+      "Block"
+    ],
+    [
+      "추정)",
+      "estimate)"
+    ],
+    [
+      "횟수",
+      "Count"
+    ],
+    [
+      "출처",
+      "Source"
+    ],
+    [
+      "마지막",
+      "Last"
+    ],
+    [
+      "원격 세션",
+      "Remote sessions"
+    ],
+    [
+      "원격 제어",
+      "Remote control"
+    ],
+    [
+      "원격제어",
+      "Remote control"
+    ],
+    [
+      "사용자 폴더",
+      "User folder"
+    ],
+    [
+      "무엇인지",
+      ""
+    ],
+    [
+      "접근 권한이 없습니다",
+      "Access denied"
+    ],
+    [
+      "PC 모니터",
+      "PC Monitor"
+    ],
+    [
+      "외부에서 들어올 수 있는 원격 접속 기능",
+      "Remote access features reachable from outside"
+    ],
+    [
+      "원격 지원 허용",
+      "Remote Assistance allowed"
+    ],
+    [
+      "원격 지원 끄기",
+      "Turn off Remote Assistance"
+    ],
+    [
+      "원격 데스크톱 켜짐",
+      "Remote Desktop on"
+    ],
+    [
+      "원격 데스크톱 끄기",
+      "Turn off Remote Desktop"
+    ],
+    [
+      "서명 없는 프로그램 실행",
+      "Unsigned program started"
+    ],
+    [
+      "서명 없는 프로그램",
+      "Unsigned program"
+    ],
+    [
+      "원격 제어 프로그램 발견",
+      "Remote-control tool found"
+    ],
+    [
+      "악성코드 탐지",
+      "Malware detected"
+    ],
+    [
+      "과거 악성코드 탐지",
+      "Past malware detections"
+    ],
+    [
+      "모두 조치됨",
+      "all remediated"
+    ],
+    [
+      "Defender 검사 예외",
+      "Defender exclusions"
+    ],
+    [
+      "예외 없음 · 악성코드 탐지 이력 없음",
+      "no exclusions · no detection history"
+    ],
+    [
+      "공유 폴더 없음 · SMBv1 꺼짐",
+      "No shared folders · SMBv1 off"
+    ],
+    [
+      "hosts 파일·프록시 정상",
+      "hosts file and proxy OK"
+    ],
+    [
+      "WMI 구독·Winlogon·로그인 화면 백도어 흔적 없음",
+      "No WMI subscription, Winlogon or sign-in-screen backdoor traces"
+    ],
+    [
+      "사용자 폴더의 실행파일",
+      "Executables in user folders:"
+    ],
+    [
+      "모두 서명 정상 · 의심 자동실행 없음",
+      "all properly signed · no suspicious autoruns"
+    ],
+    [
+      "로그 삭제·계정 생성·원격 로그인·로그인 실패 기록 없음",
+      "No log clearing, account creation, remote sign-in or sign-in failures"
+    ],
+    [
+      "보안 로그 보존",
+      "security log kept"
+    ],
+    [
+      "이후",
+      "since"
+    ],
+    [
+      "사용 중인 계정",
+      "Accounts in use"
+    ],
+    [
+      "관리자",
+      "admins"
+    ],
+    [
+      "마지막 로그인",
+      "last sign-in"
+    ],
+    [
+      "비밀번호 변경",
+      "password changed"
+    ],
+    [
+      "KMS 인증 서버가 수동 지정됨",
+      "KMS activation server set manually"
+    ],
+    [
+      "불법 인증 흔적",
+      "Piracy-activation traces"
+    ],
+    [
+      "숨은 자동실행",
+      "Hidden autorun"
+    ],
+    [
+      "의심 프로그램",
+      "Suspicious program"
+    ],
+    [
+      "네트워크 변조",
+      "Network tampering"
+    ],
+    [
+      "로그 기록",
+      "Logs"
+    ],
+    [
+      "원격 접속",
+      "Remote access"
+    ],
+    [
+      "공유",
+      "Sharing"
+    ],
+    [
+      "흔적 점검에서 발견된 항목입니다.",
+      "Found by the trace scan."
+    ],
+    [
+      "아래 버튼으로 바로 조치하거나, 괜찮은 항목이면 '무시'를 누르세요 (무시한 항목 목록에서 다시 표시 가능).",
+      "Act with the buttons below, or press 'Ignore' if it's fine (you can show it again from the ignored list)."
+    ],
+    [
+      "사용자 폴더(다운로드·임시 폴더 등)에서 디지털 서명이 없는 프로그램이 실행됐습니다. 악성코드가 흔히 이런 방식으로 실행됩니다.",
+      "A program without a digital signature ran from a user folder (Downloads, Temp…). Malware often runs this way."
+    ],
+    [
+      "직접 받은 프로그램이 확실하면 '확인함'. 모르는 프로그램이면 격리하거나 삭제하세요.",
+      "If you downloaded it yourself, mark it reviewed. Otherwise quarantine or delete it."
+    ],
+    [
+      "PowerShell(명령 실행 도구)로 해킹에 자주 쓰이는 형태의 명령이 실행됐습니다.",
+      "A PowerShell command of a kind often used in attacks was run."
+    ],
+    [
+      "관리 도구나 설치 프로그램이 정상적으로 쓰기도 합니다(예: PC 모니터 설치 명령). 짐작 가는 게 없으면 흔적 점검과 빠른 검사를 하세요.",
+      "Admin tools and installers also use it legitimately (e.g. PC Monitor's installer). If unexpected, run a trace scan and a quick scan."
+    ],
+    [
+      "위험한 PowerShell 스크립트 실행",
+      "Dangerous PowerShell script run"
+    ],
+    [
+      "Windows 보안(백신)이 악성코드나 해킹 도구를 찾았습니다.",
+      "Windows Security found malware or a hacking tool."
+    ],
+    [
+      "아래 '삭제'로 파일을 지우세요. 이미 '조치 완료'면 처리된 것입니다. 남아 있으면 빠른 검사를 다시 하세요.",
+      "Delete the file with the button below. If already remediated, it's handled. If it remains, run a quick scan."
+    ],
+    [
+      "격리 (되돌리기 가능)",
+      "Quarantine (undoable)"
+    ],
+    [
+      "폴더째 삭제",
+      "Delete folder"
+    ],
+    [
+      "종료",
+      "Close"
+    ],
+    [
+      "제거",
+      "Uninstall"
+    ],
+    [
+      "Windows 필수 구성요소 — 끄거나 지우지 마세요",
+      "Essential Windows component — don't close or delete"
+    ],
+    [
+      "정상 동작 중 — 그대로 두세요",
+      "Working normally — keep it"
+    ],
+    [
+      "지금 안 쓰면 종료해도 됩니다",
+      "You can close it if not in use"
+    ],
+    [
+      "인터넷 뱅킹·공공기관 사이트에서만 필요. 안 쓰면 제거해도 되고, 필요하면 사이트가 다시 설치합니다",
+      "Needed only for internet-banking / government sites. Safe to remove; the site reinstalls it when needed"
+    ],
+    [
+      "직접 쓰는 게 아니라면 제거하세요 (원격 제어는 해킹 통로가 될 수 있음)",
+      "Remove it unless you use it (remote control can be an attack path)"
+    ],
+    [
+      "출처를 모르면 삭제를 권장합니다",
+      "Delete it if you don't know where it came from"
+    ],
+    [
+      "뱅킹 보안 프로그램을 켰습니다",
+      "Banking security programs turned on"
+    ],
+    [
+      "뱅킹 보안 프로그램을 껐습니다.",
+      "Banking security programs turned off."
+    ],
+    [
+      "설정을 저장했습니다.",
+      "Settings saved."
+    ],
+    [
+      "메모를 저장했습니다",
+      "note saved"
+    ],
+    [
+      "메모를 지웠습니다",
+      "note deleted"
+    ],
+    [
+      "직전 비정상 종료 감지",
+      "Previous abnormal shutdown detected"
+    ],
+    [
+      "CPU 사용률 높음",
+      "High CPU usage"
+    ],
+    [
+      "메모리 부족",
+      "Low memory"
+    ],
+    [
+      "새 서비스가 설치됨",
+      "New service installed"
+    ],
+    [
+      "새 예약 작업 추가됨",
+      "New scheduled task added"
+    ],
+    [
+      "바이러스 정의가 오래됨",
+      "Virus definitions are outdated"
+    ],
+    [
+      "로그인 실패 반복 감지",
+      "Repeated sign-in failures"
+    ],
+    [
+      "외부에서 접속 감지",
+      "External connection detected"
+    ],
+    [
+      "새 포트 열림",
+      "New port opened"
+    ],
+    [
+      "인터넷에서 접속 시도 (차단됨)",
+      "Connection attempt from internet (blocked)"
+    ],
+    [
+      "침입 흔적 점검: 위험 항목 발견",
+      "Trace scan: critical items found"
+    ],
+    [
+      "앱에서 확인하세요",
+      "check in the app"
+    ],
+    [
+      "SMB(파일공유)",
+      "SMB (file sharing)"
+    ],
+    [
+      "원격 데스크톱",
+      "Remote Desktop"
+    ],
+    [
+      "Chrome 원격 데스크톱",
+      "Chrome Remote Desktop"
+    ],
+    [
+      "확인 전",
+      "Not checked"
+    ],
+    [
+      "권한 없음 (관리자 권한 필요)",
+      "No permission (admin required)"
+    ],
+    [
+      "확인 중 (PC가 바빠서 5분 뒤 다시 시도)",
+      "Checking (PC busy, retrying in 5 min)"
+    ],
+    [
+      "Windows 방화벽이 꺼져 있어 차단 기록 없음 (다른 방화벽 사용 중?)",
+      "Windows Firewall is off, so no block log (using another firewall?)"
+    ],
+    [
+      "인터넷에서 원격 접속한 세션이 있음",
+      "Remote session from the internet"
+    ],
+    [
+      "최근 1시간 인터넷에서 접속 시도 (방화벽이 차단함)",
+      "Connection attempts from the internet in the last hour (blocked by firewall)"
+    ],
+    [
+      "최근 1시간 포트 스캔 감지",
+      "Port scan detected in the last hour"
+    ],
+    [
+      "인터넷 IP의 로그인 실패 기록",
+      "Failed logins from internet IPs"
+    ],
+    [
+      "24시간 내 인터넷에서 원격 로그인 성공",
+      "Successful remote login from the internet in the last 24h"
+    ],
+    [
+      "원격 접속 세션 있음",
+      "Remote session active"
+    ],
+    [
+      "최근 1시간 내부망 기기의 반복 접속 시도",
+      "Repeated connection attempts from a LAN device in the last hour"
+    ],
+    [
+      "방화벽 차단 기록 켬 (접속 시도 감시용)",
+      "Firewall block logging enabled (to monitor connection attempts)"
+    ],
+    [
+      "기록 파일 없음 (아직 차단된 접속 없음)",
+      "No log file (no blocked connections yet)"
+    ],
+    [
+      "24시간 로그인 실패 ",
+      "Failed logins (24h): "
+    ],
+    [
+      "회",
+      "x"
+    ],
+    [
+      " 로 연결 중",
+      " connected"
+    ],
+    [
+      "원격 제어 프로그램 실행 중: ",
+      "Remote control software running: "
+    ],
+    [
+      "수집",
+      "Collect"
+    ],
+    [
+      "시스템 정보 수집 실패 (관리자 권한 필요할 수 있음)",
+      "Failed to collect system info (admin may be required)"
+    ],
+    [
+      "Guest(손님) 계정이 켜져 있음",
+      "Guest account is enabled"
+    ],
+    [
+      "누구나 로그인할 수 있는 상태입니다",
+      "Anyone can sign in"
+    ],
+    [
+      "기본 Administrator 계정이 켜져 있음",
+      "Built-in Administrator account is enabled"
+    ],
+    [
+      "공격자가 가장 먼저 노리는 계정입니다",
+      "This is the first account attackers target"
+    ],
+    [
+      "사용 중인 계정 ",
+      "Active accounts: "
+    ],
+    [
+      "개 · 관리자 ",
+      " · Admins: "
+    ],
+    [
+      "개",
+      ""
+    ],
+    [
+      "원격 접속 기능 (서버 관리용이면 정상)",
+      "Remote access feature (OK if used for server management)"
+    ],
+    [
+      "SMBv1(구형 파일공유) 켜짐",
+      "SMBv1 (legacy file sharing) is on"
+    ],
+    [
+      "랜섬웨어(WannaCry 등)가 쓰는 취약한 방식입니다",
+      "A vulnerable protocol used by ransomware (e.g. WannaCry)"
+    ],
+    [
+      "Defender 예외 없음 · 악성코드 탐지 이력 없음",
+      "No Defender exclusions · No malware detections"
+    ],
+    [
+      "프록시 설정됨 (인터넷 트래픽 가로채기 가능)",
+      "Proxy configured (internet traffic can be intercepted)"
+    ],
+    [
+      "Winlogon Shell 변조",
+      "Winlogon Shell tampered"
+    ],
+    [
+      "Winlogon Userinit 변조",
+      "Winlogon Userinit tampered"
+    ],
+    [
+      "회사 KMS 서버가 아니라면 불법 인증 도구(KMSAuto 등)의 흔적입니다",
+      "Unless this is your company KMS server, it is a sign of an illegal activator (e.g. KMSAuto)"
+    ],
+    [
+      " (보안 로그 보존: ",
+      " (security log retained since "
+    ],
+    [
+      " 이후)",
+      ")"
+    ],
+    [
+      "보안 로그를 읽을 수 없음 (관리자 권한 필요)",
+      "Cannot read security log (admin required)"
+    ],
+    [
+      "읽기 실패: ",
+      "Read failed: "
+    ],
+    [
+      "포트 스캔 감지: ",
+      "Port scan detected: "
+    ],
+    [
+      "방식",
+      "Method"
+    ],
+    [
+      "인터넷에서 내 PC로 연결됨: ",
+      "Connected to this PC from the internet: "
+    ],
+    [
+      "내부망 기기가 ",
+      "LAN device "
+    ],
+    [
+      "침입 흔적 점검 완료: 위험 ",
+      "Intrusion trace scan complete: Critical "
+    ],
+    [
+      ", 주의 ",
+      ", Warning "
+    ],
+    [
+      "원격 제어 프로그램 발견: ",
+      "Remote control software found: "
+    ],
+    [
+      "공유 폴더 ",
+      "Shared folders: "
+    ],
+    [
+      "Defender 검사 예외 ",
+      "Defender exclusions: "
+    ],
+    [
+      "hosts 파일에 항목 ",
+      "hosts file entries: "
+    ],
+    [
+      "개 (사이트 주소 바꿔치기 가능)",
+      " (can redirect websites)"
+    ],
+    [
+      "WMI 이벤트 구독 ",
+      "WMI event subscriptions: "
+    ],
+    [
+      "개 (파일 없는 악성코드가 쓰는 방식)",
+      " (technique used by fileless malware)"
+    ],
+    [
+      "프로그램이 켜질 때마다 이 DLL이 강제로 들어갑니다 (불법 인증 도구·악성코드 수법)",
+      "This DLL is injected into every program that starts (illegal activator/malware technique)"
+    ],
+    [
+      "KMS 인증 서버가 수동 지정됨: ",
+      "KMS activation server set manually: "
+    ],
+    [
+      "백신 예외에 불법 인증 도구가 등록돼 있음",
+      "Illegal activator added to antivirus exclusions"
+    ],
+    [
+      "로그인 화면 백도어 의심",
+      "Suspected sign-in screen backdoor"
+    ],
+    [
+      "경로: ",
+      "Path: "
+    ],
+    [
+      "위치: ",
+      "Location: "
+    ],
+    [
+      "서명: ",
+      "Signature: "
+    ],
+    [
+      "서명 없는 프로그램: ",
+      "Unsigned program: "
+    ],
+    [
+      "의심스러운 방식의 자동 실행 ",
+      "Suspicious autoruns: "
+    ],
+    [
+      "개 (스크립트 실행기/인코딩 명령)",
+      " (script host/encoded command)"
+    ],
+    [
+      "사용자 폴더의 실행파일 ",
+      "Executables in user folders: "
+    ],
+    [
+      "개 모두 서명 정상 · 의심 자동실행 없음",
+      " all validly signed · No suspicious autoruns"
+    ],
+    [
+      "이벤트 로그가 지워진 기록 ",
+      "Event log clears: "
+    ],
+    [
+      "건 (흔적 지우기 의심)",
+      " (possible trace wiping)"
+    ],
+    [
+      "포트 수",
+      "Ports"
+    ],
+    [
+      "시도",
+      "Attempts"
+    ],
+    [
+      "포트 스캔 감지",
+      "Port scan detected"
+    ],
+    [
+      "위험 ",
+      "Critical "
+    ],
+    [
+      "건, 주의 ",
+      ", Warning "
+    ],
+    [
+      "건 - 앱에서 확인하세요",
+      " - check in the app"
+    ],
+    [
+      "  (마지막 로그인 ",
+      "  (last login "
+    ],
+    [
+      ", 비밀번호 변경 ",
+      ", password changed "
+    ],
+    [
+      "관리자: ",
+      "Admins: "
+    ],
+    [
+      " 실행 중",
+      " running"
+    ],
+    [
+      " — 직접 설치한 것이 아니라면 즉시 삭제하세요",
+      " — remove it now unless you installed it"
+    ],
+    [
+      " (자동 제거 방법을 찾지 못함: 앱 및 기능에서 제거)",
+      " (no automatic removal found: uninstall from Apps & features)"
+    ],
+    [
+      "※ 인터넷에 직접 노출되지 않았는지, 강한 암호·계정 잠금 정책이 있는지 확인하세요",
+      "※ Make sure it is not exposed to the internet and that strong passwords and account lockout are in place"
+    ],
+    [
+      "원격 데스크톱·원격 제어 프로그램 없음",
+      "No Remote Desktop or remote control software"
+    ],
+    [
+      "과거 악성코드 탐지 ",
+      "Past malware detections: "
+    ],
+    [
+      " (모두 조치됨)",
+      " (all resolved)"
+    ],
+    [
+      "실행 가로채기(IFEO): ",
+      "Execution hijack (IFEO): "
+    ],
+    [
+      "로그인 화면 백도어(고정키/접근성 바꿔치기) 수법",
+      "Sign-in screen backdoor technique (Sticky Keys/accessibility replacement)"
+    ],
+    [
+      "다른 프로그램으로 대체 실행되도록 설정됨",
+      "Set to launch a different program instead"
+    ],
+    [
+      "DLL 주입(VerifierDlls): ",
+      "DLL injection (VerifierDlls): "
+    ],
+    [
+      "접근성 프로그램 ",
+      "Accessibility program "
+    ],
+    [
+      " 서명 이상 (",
+      " has an invalid signature ("
+    ],
+    [
+      "예약 작업 ",
+      "Scheduled task "
+    ],
+    [
+      "방화벽 허용 규칙 '",
+      "Firewall allow rule '"
+    ],
+    [
+      "외부 통신 중: ",
+      "Communicating externally: "
+    ],
+    [
+      " 로그 삭제 by ",
+      " log cleared by "
+    ],
+    [
+      "계정 생성/관리자 그룹 변경 기록 ",
+      "Account creation/admin group changes: "
+    ],
+    [
+      "다른 기기에서 로그인 성공한 기록",
+      "Successful logins from other devices"
+    ],
+    [
+      "로그인 실패 ",
+      "Failed logins: "
+    ],
+    [
+      " 가 1분 동안 포트 ",
+      " probed "
+    ],
+    [
+      "개를 두드림 (방화벽이 차단)",
+      " ports in 1 minute (blocked by firewall)"
+    ],
+    [
+      "인터넷에서 접속 시도 차단: ",
+      "Blocked connection attempt from the internet: "
+    ],
+    [
+      "Guest 끄기",
+      "Disable Guest"
+    ],
+    [
+      "Guest(손님) 계정을 사용 안 함으로 바꿉니다.",
+      "Disables the Guest account."
+    ],
+    [
+      "원격 지원(다른 사람이 이 PC를 원격으로 도와주는 기능)을 끕니다.",
+      "Turns off Remote Assistance (lets others help on this PC remotely)."
+    ],
+    [
+      "원격 데스크톱 접속을 끕니다.\n이 PC에 원격으로 접속해서 쓰고 있다면 누르지 마세요.",
+      "Turns off Remote Desktop.\nDon't click this if you use this PC remotely."
+    ],
+    [
+      "SMBv1 끄기",
+      "Disable SMBv1"
+    ],
+    [
+      "구형 파일공유(SMBv1)를 끕니다. 아주 오래된 NAS/복합기와 공유가 안 될 수 있습니다.",
+      "Turns off legacy file sharing (SMBv1). Very old NAS/printers may stop sharing."
+    ],
+    [
+      "※ 사용자 폴더/드라이브 전체 예외는 악성코드가 자주 쓰는 수법",
+      "※ Excluding a user folder or whole drive is a common malware technique"
+    ],
+    [
+      " (조치 실패 ",
+      " (failed to resolve: "
+    ],
+    [
+      "건)",
+      ")"
+    ],
+    [
+      "KMS 설정 삭제",
+      "Remove KMS setting"
+    ],
+    [
+      "수동으로 지정된 KMS 인증 서버 설정을 지웁니다.\n회사에서 쓰는 KMS 서버라면 누르지 마세요.",
+      "Removes the manually set KMS activation server.\nDon't click this if it is your company's KMS server."
+    ],
+    [
+      "회, 마지막 ",
+      "x, last "
+    ],
+    [
+      " → 포트 ",
+      " → port "
+    ],
+    [
+      "회). 공유기 포트포워딩/DMZ 설정 확인 필요",
+      "x). Check router port forwarding/DMZ settings"
+    ],
+    [
+      "내부망 기기의 반복 접속 시도: ",
+      "Repeated connection attempts from LAN device: "
+    ],
+    [
+      "내부망 기기가 반복 접속 시도",
+      "LAN device making repeated connection attempts"
+    ],
+    [
+      "예외 ",
+      "Remove all "
+    ],
+    [
+      "개 모두 삭제",
+      " exclusions"
+    ],
+    [
+      "Defender 검사 예외를 모두 지워서 이 위치들도 다시 검사하게 합니다.\n\n",
+      "Removes all Defender exclusions so these locations are scanned again.\n\n"
+    ],
+    [
+      "' 삭제",
+      "' remove"
+    ],
+    [
+      "WMI 이벤트 구독 '",
+      "Removes WMI event subscription '"
+    ],
+    [
+      "' 을 지웁니다.",
+      "'."
+    ],
+    [
+      "가로채기 설정 삭제",
+      "Remove hijack setting"
+    ],
+    [
+      "DLL 주입 설정 삭제",
+      "Remove DLL injection setting"
+    ],
+    [
+      "시작프로그램 ",
+      "Startup "
+    ],
+    [
+      "서비스 ",
+      "Service "
+    ],
+    [
+      "시작프로그램 폴더에 스크립트/실행파일 직접 있음: ",
+      "Script/executable placed directly in Startup folder: "
+    ],
+    [
+      "작업 끄기: ",
+      "Disable task: "
+    ],
+    [
+      " 을 사용 안 함으로 바꿉니다.\n\n",
+      " will be disabled.\n\n"
+    ],
+    [
+      "회/분. 그 기기의 감염 여부 확인 필요",
+      "/min. Check that device for infection"
+    ],
+    [
+      " 실행 가로채기 설정을 지웁니다.",
+      ": removes the execution hijack setting."
+    ],
+    [
+      " 의 DLL 주입 설정을 지웁니다.",
+      ": removes the DLL injection setting."
+    ],
+    [
+      "계정 생성",
+      "Account created"
+    ],
+    [
+      "그룹 추가",
+      "Added to group"
+    ],
+    [
+      "  ← 인터넷 IP!",
+      "  ← internet IP!"
+    ],
+    [
+      "원격 관리(WinRM)",
+      "Remote Management (WinRM)"
+    ],
+    [
+      "SSH 서버",
+      "SSH server"
+    ],
+    [
+      "원격 레지스트리",
+      "Remote Registry"
+    ],
+    [
+      "콘솔",
+      "Console"
+    ],
+    [
+      "배치",
+      "Batch"
+    ],
+    [
+      "잠금 해제",
+      "Unlock"
+    ],
+    [
+      "평문 네트워크",
+      "Network cleartext"
+    ],
+    [
+      "새 자격증명",
+      "New credentials"
+    ],
+    [
+      "캐시된 로그인",
+      "Cached login"
+    ],
+    [
+      "시작프로그램 폴더",
+      "Startup folder"
+    ],
+    [
+      "Defender 실시간 보호 꺼짐",
+      "Defender real-time protection off"
+    ],
+    [
+      "바이러스 실시간 보호가 꺼져 있습니다",
+      "Real-time virus protection is off"
+    ],
+    [
+      "Windows 방화벽 서비스가 꺼져 있음",
+      "Windows Firewall service is stopped"
+    ],
+    [
+      "다른 방화벽을 쓰는 게 아니라면 위험합니다",
+      "Risky unless you use another firewall"
+    ],
+    [
+      "회: 계정 ",
+      "x: account "
+    ],
+    [
+      "외부IP",
+      "External IP"
+    ],
+    [
+      "자동실행 기준 목록 갱신 (추가 ",
+      "Autorun baseline updated (added "
+    ],
+    [
+      " · 제거 ",
+      " · removed "
+    ],
+    [
+      "예시",
+      "e.g."
+    ],
+    [
+      "백신이 동작하지 않음",
+      "No antivirus running"
+    ],
+    [
+      "Windows 보안(Defender)도 다른 백신도 확인되지 않습니다",
+      "Neither Windows Security (Defender) nor other antivirus was found"
+    ],
+    [
+      "마지막 업데이트 ",
+      "Last updated "
+    ],
+    [
+      "일 전)",
+      " days ago)"
+    ],
+    [
+      "방화벽 꺼짐",
+      "Firewall off"
+    ],
+    [
+      " 에서 계정 '",
+      ": account '"
+    ],
+    [
+      "' 로그인 실패 ",
+      "' failed login "
+    ],
+    [
+      "회 (",
+      "x ("
+    ],
+    [
+      "블루스크린 0x",
+      "Blue screen 0x"
+    ],
+    [
+      "전원 버튼 강제 종료",
+      "Forced shutdown via power button"
+    ],
+    [
+      "갑작스런 전원 차단",
+      "Sudden power loss"
+    ],
+    [
+      "비정상 종료 (",
+      "Unexpected shutdown ("
+    ],
+    [
+      "예기치 않은 종료 기록",
+      "Unexpected shutdown recorded"
+    ],
+    [
+      "새 ",
+      "New "
+    ],
+    [
+      "값",
+      "Value"
+    ],
+    [
+      " 제거: ",
+      " removed: "
+    ],
+    [
+      "서명 없는 프로그램 실행: ",
+      "Unsigned program running: "
+    ],
+    [
+      " 프로필 방화벽이 꺼져 있습니다",
+      " profile firewall is off"
+    ],
+    [
+      "블루스크린 보고서",
+      "Blue screen report"
+    ],
+    [
+      "새 사용자 계정 생성",
+      "New user account created"
+    ],
+    [
+      " 추가됨",
+      " added"
+    ],
+    [
+      " 경로 변경: ",
+      " path changed: "
+    ],
+    [
+      "이전",
+      "Before"
+    ],
+    [
+      "현재",
+      "Now"
+    ],
+    [
+      " 경로 변경",
+      " path changed"
+    ],
+    [
+      "새 프로그램이 외부 접속 대기 시작: ",
+      "New program listening for connections: "
+    ],
+    [
+      " 가 포트 ",
+      " on port "
+    ],
+    [
+      " 에서 접속 대기",
+      " listening"
+    ],
+    [
+      "하드웨어 오류 보고 (CPU/메모리/PCIe)",
+      "Hardware error reported (CPU/memory/PCIe)"
+    ],
+    [
+      "하드웨어 오류 감지",
+      "Hardware error detected"
+    ],
+    [
+      "원격 로그인 성공: ",
+      "Remote login succeeded: "
+    ],
+    [
+      " 에서 '",
+      ": '"
+    ],
+    [
+      "' 로그인 (",
+      "' logged in ("
+    ],
+    [
+      "새 사용자 계정 생성: ",
+      "New user account created: "
+    ],
+    [
+      "앱 충돌: ",
+      "App crash: "
+    ],
+    [
+      "앱 응답 없음: ",
+      "App not responding: "
+    ],
+    [
+      "위험한 PowerShell 실행",
+      "Dangerous PowerShell executed"
+    ],
+    [
+      "외부에서 내 PC로 접속: ",
+      "External connection to this PC: "
+    ],
+    [
+      "WHEA 이벤트 ",
+      "WHEA event "
+    ],
+    [
+      " - CPU/메모리/메인보드 점검 필요",
+      " - check CPU/memory/motherboard"
+    ],
+    [
+      "그룹에 계정 추가: ",
+      "Account added to group: "
+    ],
+    [
+      "관리자 그룹에 계정 추가됨",
+      "Account added to Administrators"
+    ],
+    [
+      "악성코드 탐지: ",
+      "Malware detected: "
+    ],
+    [
+      "Defender 기능 끄기",
+      "Defender feature disabled"
+    ],
+    [
+      "위험한 PowerShell 스크립트 실행: ",
+      "Dangerous PowerShell script executed: "
+    ],
+    [
+      "새 서비스 설치: ",
+      "New service installed: "
+    ],
+    [
+      "시스템 로그가 지워짐",
+      "System log cleared"
+    ],
+    [
+      "이벤트 로그 삭제 감지",
+      "Event log clear detected"
+    ],
+    [
+      "시스템 로그가 지워졌습니다. 흔적 지우기일 수 있습니다.",
+      "The system log was cleared. This may be trace wiping."
+    ],
+    [
+      "계정 잠김",
+      "Account locked"
+    ],
+    [
+      "악성코드 조치 완료: ",
+      "Malware resolved: "
+    ],
+    [
+      "악성코드 조치 실패",
+      "Malware remediation failed"
+    ],
+    [
+      "계정 활성화: ",
+      "Account enabled: "
+    ],
+    [
+      "비밀번호 재설정: ",
+      "Password reset: "
+    ],
+    [
+      "계정 잠김(로그인 실패 누적): ",
+      "Account locked (too many failed logins): "
+    ],
+    [
+      " - 로그인 실패가 누적되었습니다",
+      " - too many failed logins"
+    ],
+    [
+      "보안 로그가 지워짐",
+      "Security log cleared"
+    ],
+    [
+      "보안 로그 삭제 감지",
+      "Security log clear detected"
+    ],
+    [
+      "보안 로그가 지워졌습니다. 흔적 지우기일 수 있습니다.",
+      "The security log was cleared. This may be trace wiping."
+    ],
+    [
+      "악성코드 조치 실패: ",
+      "Malware remediation failed: "
+    ],
+    [
+      "Defender 보호 기능이 꺼짐",
+      "Defender protection turned off"
+    ],
+    [
+      "Defender 보호 꺼짐",
+      "Defender protection off"
+    ],
+    [
+      "실시간 보호/검사 기능이 비활성화되었습니다",
+      "Real-time protection/scanning was disabled"
+    ],
+    [
+      "서비스 비정상 종료: ",
+      "Service terminated unexpectedly: "
+    ],
+    [
+      "디스크 입출력 오류",
+      "Disk I/O error"
+    ],
+    [
+      "디스크 오류 감지",
+      "Disk error detected"
+    ],
+    [
+      "바이러스 정의 업데이트 실패",
+      "Virus definition update failed"
+    ],
+    [
+      "이벤트 ",
+      "Event "
+    ],
+    [
+      ") - 디스크 상태 점검 필요",
+      ") - check disk health"
+    ],
+    [
+      "그래픽 드라이버 오류/복구",
+      "Graphics driver error/recovery"
+    ],
+    [
+      "Defender 검사 예외 추가/변경",
+      "Defender exclusion added/changed"
+    ],
+    [
+      "Defender 예외 설정 변경",
+      "Defender exclusions changed"
+    ],
+    [
+      "업데이트 확인·다운로드·설치를 시작했습니다. 진행 상황은 아래에 표시됩니다 (몇 분 뒤부터).",
+      "Started checking, downloading and installing updates. Progress will appear below (in a few minutes)."
+    ],
+    [
+      "검사를 중지했습니다",
+      "Scan stopped"
+    ],
+    [
+      " 검사를 시작했습니다",
+      " scan started"
+    ],
+    [
+      "다운로드 중",
+      "Downloading"
+    ],
+    [
+      "설치 중",
+      "Installing"
+    ],
+    [
+      "설치 완료",
+      "Installed"
+    ],
+    [
+      "설치 실패",
+      "Install failed"
+    ],
+    [
+      "빠른",
+      "Quick"
+    ],
+    [
+      "전체",
+      "Full"
+    ],
+    [
+      "보안 인텔리전스",
+      "Security intelligence"
+    ],
+    [
+      "EvtQuery 실패: ",
+      "EvtQuery failed: "
+    ],
+    [
+      "PC 모니터: ",
+      "PC Monitor: "
+    ],
+    [
+      "AhnLab Safe Transaction (뱅킹 보안)",
+      "AhnLab Safe Transaction (banking security)"
+    ],
+    [
+      "AhnLab V3 Lite 백신",
+      "AhnLab V3 Lite antivirus"
+    ],
+    [
+      "Delfino 공동인증서 전자서명",
+      "Delfino digital certificate e-signature"
+    ],
+    [
+      "Veraport 보안 프로그램 설치 관리자",
+      "Veraport security program installer"
+    ],
+    [
+      "IPinside 접속 단말 정보 수집 (뱅킹)",
+      "IPinside device info collection (banking)"
+    ],
+    [
+      "TouchEn 키보드 보안",
+      "TouchEn keyboard security"
+    ],
+    [
+      "nProtect 키보드/온라인 보안",
+      "nProtect keyboard/online security"
+    ],
+    [
+      "MagicLine 공동인증서",
+      "MagicLine digital certificate"
+    ],
+    [
+      "AnySign 전자서명",
+      "AnySign e-signature"
+    ],
+    [
+      "CrossEX 보안 확장",
+      "CrossEX security extension"
+    ],
+    [
+      "Kings 보안",
+      "Kings security"
+    ],
+    [
+      "WizVera 보안",
+      "WizVera security"
+    ],
+    [
+      "INISAFE 전자서명",
+      "INISAFE e-signature"
+    ],
+    [
+      "XecureWeb 보안",
+      "XecureWeb security"
+    ],
+    [
+      "UniSign 전자서명",
+      "UniSign e-signature"
+    ],
+    [
+      "KeySharp 공동인증서",
+      "KeySharp digital certificate"
+    ],
+    [
+      "공동인증서 서명 도우미",
+      "Digital certificate signing helper"
+    ],
+    [
+      "MarkAny 문서 보안(DRM)",
+      "MarkAny document security (DRM)"
+    ],
+    [
+      "Fasoo 문서 보안(DRM)",
+      "Fasoo document security (DRM)"
+    ],
+    [
+      "SoftCamp 문서 보안",
+      "SoftCamp document security"
+    ],
+    [
+      "알약 백신",
+      "ALYac antivirus"
+    ],
+    [
+      "ViRobot 백신",
+      "ViRobot antivirus"
+    ],
+    [
+      "네이버 웨일",
+      "Naver Whale"
+    ],
+    [
+      "Windows 커널 (드라이버·디스크·네트워크 처리)",
+      "Windows kernel (drivers, disk, network)"
+    ],
+    [
+      "레지스트리 저장소",
+      "Registry store"
+    ],
+    [
+      "메모리 압축 (RAM 절약용, 높아도 정상)",
+      "Memory compression (saves RAM; high is normal)"
+    ],
+    [
+      "보안 커널 (VBS)",
+      "Secure kernel (VBS)"
+    ],
+    [
+      "세션 관리자",
+      "Session manager"
+    ],
+    [
+      "Windows 하위 시스템",
+      "Windows subsystem"
+    ],
+    [
+      "Windows 시작 관리",
+      "Windows startup manager"
+    ],
+    [
+      "로그인 화면 관리",
+      "Sign-in screen manager"
+    ],
+    [
+      "서비스 관리자",
+      "Service manager"
+    ],
+    [
+      "로그인·암호 인증",
+      "Sign-in and password authentication"
+    ],
+    [
+      "격리된 인증 보호 (Credential Guard)",
+      "Isolated credential protection (Credential Guard)"
+    ],
+    [
+      "Windows 서비스 실행기",
+      "Windows service host"
+    ],
+    [
+      "화면 그리기 (데스크톱 창 관리자)",
+      "Draws the screen (Desktop Window Manager)"
+    ],
+    [
+      "작업 표시줄·바탕화면·파일 탐색기",
+      "Taskbar, desktop, File Explorer"
+    ],
+    [
+      "글꼴 처리",
+      "Font handling"
+    ],
+    [
+      "셸 인프라 (알림·창)",
+      "Shell infrastructure (notifications, windows)"
+    ],
+    [
+      "입력기 (한글/영문 전환)",
+      "Input method (Korean/English switching)"
+    ],
+    [
+      "예약 작업 실행기",
+      "Scheduled task runner"
+    ],
+    [
+      "앱 권한 관리",
+      "App permission manager"
+    ],
+    [
+      "COM 구성요소 실행기",
+      "COM component host"
+    ],
+    [
+      "콘솔 창 처리",
+      "Console window host"
+    ],
+    [
+      "소리 처리",
+      "Audio processing"
+    ],
+    [
+      "프린터 대기열",
+      "Print spooler"
+    ],
+    [
+      "Windows 검색 색인 (파일 목록 만들기)",
+      "Windows Search indexer (builds file index)"
+    ],
+    [
+      "작업 표시줄 검색",
+      "Taskbar search"
+    ],
+    [
+      "검색 색인 보조",
+      "Search indexer helper"
+    ],
+    [
+      "시작 메뉴",
+      "Start menu"
+    ],
+    [
+      "알림 센터·시계 화면",
+      "Notification center and clock"
+    ],
+    [
+      "터치 키보드·이모지 입력",
+      "Touch keyboard and emoji input"
+    ],
+    [
+      "위젯",
+      "Widgets"
+    ],
+    [
+      "구성요소 패키지 지원",
+      "Component package support"
+    ],
+    [
+      "WMI 관리 정보 제공 (관리 도구가 정보 조회 중)",
+      "WMI provider (a management tool is querying info)"
+    ],
+    [
+      "Windows 업데이트 설치 관리자",
+      "Windows Update installer"
+    ],
+    [
+      "Windows 업데이트 설치 작업 (일시적으로 높음)",
+      "Windows Update installation (temporarily high)"
+    ],
+    [
+      "Windows 업데이트 확인·다운로드",
+      "Windows Update check and download"
+    ],
+    [
+      "업데이트 예약 실행",
+      "Update scheduler"
+    ],
+    [
+      "업데이트 알림",
+      "Update notifications"
+    ],
+    [
+      "Windows 보안 백신 검사 엔진 (검사 중엔 CPU 높음 정상)",
+      "Windows Security antivirus engine (high CPU during scans is normal)"
+    ],
+    [
+      "Windows 보안 바이러스 정의 업데이트",
+      "Windows Security virus definition update"
+    ],
+    [
+      "Windows 보안 네트워크 검사",
+      "Windows Security network inspection"
+    ],
+    [
+      "Windows 보안 핵심 서비스",
+      "Windows Security core service"
+    ],
+    [
+      "Windows 보안 명령 실행 (검사·업데이트)",
+      "Windows Security command line (scans, updates)"
+    ],
+    [
+      "Windows 보안 상태 서비스",
+      "Windows Security health service"
+    ],
+    [
+      "Windows 보안 트레이 아이콘",
+      "Windows Security tray icon"
+    ],
+    [
+      "SmartScreen (위험 파일·사이트 차단)",
+      "SmartScreen (blocks risky files and sites)"
+    ],
+    [
+      "Microsoft Edge 브라우저",
+      "Microsoft Edge browser"
+    ],
+    [
+      "앱 안에 들어간 웹 화면 (WebView2)",
+      "Embedded web view in apps (WebView2)"
+    ],
+    [
+      "Google Chrome 브라우저",
+      "Google Chrome browser"
+    ],
+    [
+      "Firefox 브라우저",
+      "Firefox browser"
+    ],
+    [
+      "네이버 웨일 브라우저",
+      "Naver Whale browser"
+    ],
+    [
+      "Claude (AI 도우미)",
+      "Claude (AI assistant)"
+    ],
+    [
+      "Windows 터미널",
+      "Windows Terminal"
+    ],
+    [
+      "PowerShell 명령 창/스크립트",
+      "PowerShell console/script"
+    ],
+    [
+      "명령 프롬프트",
+      "Command Prompt"
+    ],
+    [
+      "Python 프로그램",
+      "Python program"
+    ],
+    [
+      "Python 프로그램 (창 없음, PC 모니터 포함)",
+      "Python program (windowless, includes PC Monitor)"
+    ],
+    [
+      "PC 모니터 (이 프로그램)",
+      "PC Monitor (this program)"
+    ],
+    [
+      "OneDrive 동기화",
+      "OneDrive sync"
+    ],
+    [
+      "Google 드라이브 동기화",
+      "Google Drive sync"
+    ],
+    [
+      "카카오톡",
+      "KakaoTalk"
+    ],
+    [
+      "Outlook 메일",
+      "Outlook mail"
+    ],
+    [
+      "한글(HWP)",
+      "Hangul (HWP)"
+    ],
+    [
+      "TeamViewer 원격 제어",
+      "TeamViewer remote control"
+    ],
+    [
+      "TeamViewer 원격 제어 서비스",
+      "TeamViewer remote control service"
+    ],
+    [
+      "AnyDesk 원격 제어",
+      "AnyDesk remote control"
+    ],
+    [
+      "nProtect Online Security (인터넷 뱅킹 보안)",
+      "nProtect Online Security (internet-banking security)"
+    ],
+    [
+      "SQL Server 데이터베이스",
+      "SQL Server database"
+    ],
+    [
+      "서버",
+      "Server"
+    ],
+    [
+      "IIS 웹사이트 작업자",
+      "IIS website worker"
+    ],
+    [
+      "IIS 웹 서버",
+      "IIS web server"
+    ],
+    [
+      "DNS 서버",
+      "DNS server"
+    ],
+    [
+      "파일 복제",
+      "File replication"
+    ],
+    [
+      "DFS 복제",
+      "DFS replication"
+    ],
+    [
+      "Hyper-V 가상머신 관리",
+      "Hyper-V VM management"
+    ],
+    [
+      "Hyper-V 가상머신 실행",
+      "Hyper-V VM worker"
+    ],
+    [
+      "대법원 전자소송 스캔 프로그램",
+      "Supreme Court e-Litigation scan program"
+    ],
+    [
+      "사진 앱 (백그라운드에서 메모리 차지)",
+      "Photos app (uses memory in background)"
+    ],
+    [
+      "사진 앱",
+      "Photos app"
+    ],
+    [
+      "휴대폰과 연결 앱",
+      "Phone Link app"
+    ],
+    [
+      "KMPlayer 동영상 플레이어",
+      "KMPlayer video player"
+    ],
+    [
+      "팟플레이어",
+      "PotPlayer"
+    ],
+    [
+      "이니텍 공동인증서 관리 서비스 (뱅킹)",
+      "Initech digital certificate service (banking)"
+    ],
+    [
+      "PC 모니터일 수 있음 — 그대로 두세요",
+      "May be PC Monitor — leave it running"
+    ],
+    [
+      "지금 사용 중인 Claude",
+      "The Claude you are using now"
+    ],
+    [
+      "지금 사용 중인 터미널",
+      "The terminal you are using now"
+    ],
+    [
+      "종료해도 됩니다. 계속 뜨면: 설정 > 앱 > 설치된 앱 > 사진 > 고급 옵션 > 백그라운드 앱 권한 '안 함'",
+      "Safe to end. If it keeps coming back: Settings > Apps > Installed apps > Photos > Advanced options > Background app permissions 'Never'"
+    ],
+    [
+      "OneDrive를 안 쓰면 종료하거나 제거해도 됩니다",
+      "If you don't use OneDrive, you can end or uninstall it"
+    ],
+    [
+      "Google 드라이브 동기화 — 쓰는 중이면 그대로 두세요",
+      "Google Drive sync — leave it if you use it"
+    ],
+    [
+      "백신 — 절대 끄지 마세요. 검사 중엔 CPU가 높은 게 정상입니다",
+      "Antivirus — never turn it off. High CPU during scans is normal"
+    ],
+    [
+      " (서명·출처 확인 권장)",
+      " (verify signature and source)"
+    ],
+    [
+      "서비스: ",
+      "Service: "
+    ],
+    [
+      " 외 ",
+      " and others: "
+    ],
+    [
+      "무시한 점검 항목·경고 기록. [다시 표시]로 되살릴 수 있습니다",
+      "Ignored checks and alerts. Restore them with [Show again]"
+    ],
+    [
+      "사용 · 커밋",
+      "Used · Committed"
+    ],
+    [
+      "작동 중",
+      "Running"
+    ],
+    [
+      "권한 없음",
+      "No permission"
+    ],
+    [
+      "감사 설정:",
+      "Audit policy:"
+    ],
+    [
+      "내 PC",
+      "This PC"
+    ],
+    [
+      "위험 목록 경고",
+      "Threat list alerts"
+    ],
+    [
+      "다른 기기에서 접속 가능한 포트",
+      "Ports reachable from other devices"
+    ],
+    [
+      "설치 안 된 보안 업데이트",
+      "Missing security updates"
+    ],
+    [
+      "방화벽 규칙",
+      "Firewall rules"
+    ],
+    [
+      "언어",
+      "Language"
+    ],
+    [
+      "개 — 펼쳐서 다시 표시",
+      " — expand to show again"
+    ],
+    [
+      "회 · 인터넷 출처",
+      " times · from internet"
+    ],
+    [
+      "일 전",
+      " days ago"
+    ],
+    [
+      "초마다 갱신",
+      "s refresh"
+    ],
+    [
+      "개 · 로그인 시 자동 실행",
+      " · run at sign-in"
+    ],
+    [
+      "개 (다운로드됨",
+      " (downloaded"
+    ],
+    [
+      "건 · 주의",
+      " · warning"
+    ],
+    [
+      "건 모두 확인함",
+      " all checked"
+    ],
+    [
+      "뱅킹 보안 프로그램을 꺼 둡니다. 필요할 때 [지금 켜기]를 누르세요.\n진행할까요?",
+      "Banking security programs will be turned off. Press [Turn on now] when you need them.\nContinue?"
+    ],
+    [
+      "보안 인텔리전스 업데이트",
+      "Security Intelligence Update"
+    ],
+    [
+      "현재 채널(광범위)",
+      "Current Channel (Broad)"
+    ],
+    [
+      "악성 소프트웨어 제거 도구",
+      "Malicious Software Removal Tool"
+    ],
+    [
+      "에 대한 업데이트",
+      " update"
+    ],
+    [
+      "보안 업데이트",
+      "Security update"
+    ],
+    [
+      "누적 업데이트",
+      "Cumulative update"
+    ],
+    [
+      "품질 업데이트",
+      "Quality update"
+    ],
+    [
+      "기능 업데이트",
+      "Feature update"
+    ],
+    [
+      "드라이버 업데이트",
+      "Driver update"
+    ],
+    [
+      "맬웨어 방지 플랫폼 업데이트",
+      "Antimalware platform update"
+    ],
+    [
+      "커널 모드 드라이버",
+      "Kernel-mode driver"
+    ],
+    [
+      "요청 시 시작",
+      "Manual start"
+    ],
+    [
+      "자동 시작",
+      "Automatic start"
+    ],
+    [
+      "초 끊김 (응답 없음 또는 절전)",
+      "s gap (not responding or sleep)"
+    ],
+    [
+      "결과",
+      "Result"
+    ],
+    [
+      "대상",
+      "Target"
+    ],
+    [
+      "경로",
+      "Path"
+    ],
+    [
+      "상위",
+      "Top"
+    ],
+    [
+      "은행",
+      "Bank"
+    ],
+    [
+      "뱅킹",
+      "Banking"
+    ],
+    [
+      "농협",
+      "NongHyup"
+    ],
+    [
+      "새마을금고",
+      "MG Community Credit Cooperatives"
+    ],
+    [
+      "신협",
+      "Shinhyup"
+    ],
+    [
+      "우체국",
+      "Korea Post"
+    ],
+    [
+      "수협",
+      "Suhyup"
+    ],
+    [
+      "카카오뱅크",
+      "KakaoBank"
+    ],
+    [
+      "케이뱅크",
+      "K Bank"
+    ],
+    [
+      "토스뱅크",
+      "Toss Bank"
+    ],
+    [
+      "홈택스",
+      "Hometax"
+    ],
+    [
+      "손택스",
+      "Sontax"
+    ],
+    [
+      "위택스",
+      "Wetax"
+    ],
+    [
+      "정부24",
+      "Gov24"
+    ],
+    [
+      "민원24",
+      "Minwon24"
+    ],
+    [
+      "국민건강보험",
+      "National Health Insurance"
+    ],
+    [
+      "국민연금",
+      "National Pension"
+    ],
+    [
+      "건강보험",
+      "Health Insurance"
+    ],
+    [
+      "전자소송",
+      "e-Court"
+    ],
+    [
+      "인터넷등기소",
+      "Internet Registry Office"
+    ],
+    [
+      "대법원",
+      "Supreme Court"
+    ],
+    [
+      "증권",
+      "Securities"
+    ],
+    [
+      "공동인증서",
+      "digital certificate"
+    ],
+    [
+      "금융인증서",
+      "financial certificate"
+    ],
+    [
+      "인증서",
+      "certificate"
+    ],
+    [
+      "카드",
+      "Card"
+    ],
+    [
+      "보험",
+      "Insurance"
+    ],
+    [
+      "나이스평가",
+      "NICE Rating"
+    ],
+    [
+      "끄는 중",
+      "Turning off"
+    ],
+    [
+      "켜는 중",
+      "Turning on"
+    ],
+    [
+      "원래대로",
+      "Default"
+    ],
+    [
+      "외부 접속 차단 규칙을 지웠습니다.",
+      "External access block rules removed."
+    ],
+    [
+      "잘못된 요청",
+      "Invalid request"
+    ],
+    [
+      "평소 꺼 두기",
+      "Keep off normally"
+    ],
+    [
+      " 은행·공공기관 사이트 창이 열리면 자동으로 켭니다.",
+      " Turns on automatically when a bank or government site window opens."
+    ],
+    [
+      " 필요할 때 '지금 켜기'를 누르세요.",
+      " Click 'Turn on now' when needed."
+    ],
+    [
+      "자동: ",
+      "Auto: "
+    ],
+    [
+      "' 창이 열려서 켰습니다. 사이트가 설치를 요구하면 새로고침(F5) 하세요.",
+      "' window opened, so it was turned on. If the site asks you to install, refresh (F5)."
+    ],
+    [
+      "뱅킹 프로그램 외부 접속 차단 ",
+      "Block external access to banking programs "
+    ],
+    [
+      "뱅킹 프로그램 ",
+      "Banking programs "
+    ],
+    [
+      "개의 외부 접속을 막았습니다. 이 PC 브라우저에서는 그대로 쓸 수 있습니다.",
+      " external access points blocked. They still work in this PC's browser."
+    ],
+    [
+      "뱅킹 보안 프로그램을 켰습니다. 사이트가 '설치 필요'라고 하면 새로고침(F5) 하세요.",
+      "Banking security programs turned on. If the site says 'install required', refresh (F5)."
+    ],
+    [
+      "원래대로 항상 켜 두도록 바꿨습니다. ",
+      "Changed back to always on. "
+    ],
+    [
+      "개 프로그램)",
+      " programs)"
+    ],
+    [
+      "뱅킹 보안 프로그램 끔 (",
+      "Banking security programs off ("
+    ],
+    [
+      "남은 프로세스",
+      "Remaining processes"
+    ],
+    [
+      "뱅킹 보안 프로그램 켬 (",
+      "Banking security programs on ("
+    ],
+    [
+      "켬",
+      "On"
+    ],
+    [
+      "끔",
+      "Off"
+    ],
+    [
+      " (스스로 보호 중이라 남은 것: ",
+      " (still running due to self-protection: "
+    ],
+    [
+      "뱅킹 창 닫힌 지 ",
+      "Banking window closed "
+    ],
+    [
+      "분",
+      " min"
+    ],
+    [
+      "<!doctype html><meta charset=\"utf-8\"><title>PC 모니터</title>\n<body style=\"font-family:'Malgun Gothic',sans-serif;padding:40px;background:#f6f7f9;color:#1d2330\">\n<h2>접근 권한이 없습니다</h2>\n<p>보안 정보가 들어 있어서 PC 모니터를 설치한 계정(또는 관리자)만 볼 수 있습니다.</p>\n<p>바탕화면이나 시작 메뉴의 <b>PC 모니터</b> 아이콘으로 열어 주세요.</p></body>",
+      "<!doctype html><meta charset=\"utf-8\"><title>PC Monitor</title>\n<body style=\"font-family:'Malgun Gothic',sans-serif;padding:40px;background:#f6f7f9;color:#1d2330\">\n<h2>Access denied</h2>\n<p>This page contains security information, so only the account that installed PC Monitor (or an administrator) can view it.</p>\n<p>Please open it from the <b>PC Monitor</b> icon on the desktop or Start menu.</p></body>"
+    ],
+    [
+      "이미 무시 중입니다",
+      "Already ignored"
+    ],
+    [
+      "무시함",
+      "Ignored"
+    ],
+    [
+      "같은 경고 계속 무시",
+      "Keep ignoring this warning"
+    ],
+    [
+      "항목을 찾을 수 없습니다",
+      "Item not found"
+    ],
+    [
+      "다시 표시: ",
+      "Show again: "
+    ],
+    [
+      "' 을 다시 표시합니다",
+      "' will be shown again"
+    ],
+    [
+      "점검 항목 무시",
+      "Ignore check item"
+    ],
+    [
+      "이번 경고만 확인함",
+      "Mark this warning reviewed"
+    ],
+    [
+      "이전 기록",
+      "History"
+    ],
+    [
+      "이전에 확인함 처리한 경고 ",
+      "Previously reviewed warnings: "
+    ],
+    [
+      "건",
+      ""
+    ],
+    [
+      "회)",
+      "x)"
+    ],
+    [
+      "경고",
+      "Warning"
+    ],
+    [
+      "업데이트 목록을 다시 확인합니다 (최대 1~2분)",
+      "Rechecking the update list (up to 1-2 min)"
+    ],
+    [
+      "내가 확인한 안전한 프로그램",
+      "Safe programs I reviewed"
+    ],
+    [
+      "확인 필요로 표시함",
+      "Marked as needs review"
+    ],
+    [
+      "삭제 예정으로 표시함",
+      "Marked for removal"
+    ],
+    [
+      "이름이 없습니다",
+      "No name"
+    ],
+    [
+      "' 메모를 지웠습니다",
+      "' note cleared"
+    ],
+    [
+      "' 메모를 저장했습니다",
+      "' note saved"
+    ],
+    [
+      "두 글자 이상 입력하세요",
+      "Enter at least two characters"
+    ],
+    [
+      "' 제거",
+      "' - uninstall"
+    ],
+    [
+      ") 를 제거합니다.",
+      ") will be uninstalled."
+    ],
+    [
+      "\n제거 창이 뜨면 안내에 따라 진행하세요.",
+      "\nWhen the uninstaller opens, follow its instructions."
+    ],
+    [
+      "<!doctype html><meta charset=\"utf-8\"><title>PC 모니터</title>\n<style>body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:#f6f7f9;color:#1d2330;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}\n@media(prefers-color-scheme:dark){body{background:#0f1218;color:#e6e9ef}}.b{text-align:center;max-width:460px;padding:20px}\n.s{width:36px;height:36px;border:4px solid #8884;border-top-color:#2f6fde;border-radius:50%;animation:r 1s linear infinite;margin:0 auto 16px}\n@keyframes r{to{transform:rotate(360deg)}}.m{color:#667085;font-size:13px;line-height:1.6}</style>\n<div class=\"b\"><div class=\"s\"></div><h3 style=\"margin:0 0 8px\">PC 모니터를 시작하는 중…</h3>\n<div class=\"m\" id=\"m\">준비되면 자동으로 화면이 열립니다.</div></div>\n<script>\nconst go=\"__URL__\",t0=Date.now();\nfunction tick(){fetch(\"__PING__\",{mode:\"no-cors\",cache:\"no-store\"}).then(()=>location.replace(go)).catch(()=>{\n const s=Math.round((Date.now()-t0)/1000),m=document.getElementById(\"m\");\n if(s>20)m.innerHTML=\"PC가 바빠서 시간이 걸리고 있습니다 (\"+s+\"초).<br>백신 전체 검사·업데이트 설치 중이면 몇 분 걸릴 수 있습니다.\";\n if(s>600)m.innerHTML+=\"<br><br>10분이 지나도 열리지 않으면 PC를 다시 시작하거나<br>C:\\\\ProgramData\\\\PCMonitor\\\\pcmon.log 를 확인해 주세요.\";\n setTimeout(tick,2000)})}\ntick();\n</script>",
+      "<!doctype html><meta charset=\"utf-8\"><title>PC Monitor</title>\n<style>body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:#f6f7f9;color:#1d2330;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}\n@media(prefers-color-scheme:dark){body{background:#0f1218;color:#e6e9ef}}.b{text-align:center;max-width:460px;padding:20px}\n.s{width:36px;height:36px;border:4px solid #8884;border-top-color:#2f6fde;border-radius:50%;animation:r 1s linear infinite;margin:0 auto 16px}\n@keyframes r{to{transform:rotate(360deg)}}.m{color:#667085;font-size:13px;line-height:1.6}</style>\n<div class=\"b\"><div class=\"s\"></div><h3 style=\"margin:0 0 8px\">Starting PC Monitor…</h3>\n<div class=\"m\" id=\"m\">The screen will open automatically when ready.</div></div>\n<script>\nconst go=\"__URL__\",t0=Date.now();\nfunction tick(){fetch(\"__PING__\",{mode:\"no-cors\",cache:\"no-store\"}).then(()=>location.replace(go)).catch(()=>{\n const s=Math.round((Date.now()-t0)/1000),m=document.getElementById(\"m\");\n if(s>20)m.innerHTML=\"The PC is busy, so this is taking a while (\"+s+\"s).<br>It may take a few minutes if an antivirus full scan or update install is running.\";\n if(s>600)m.innerHTML+=\"<br><br>If it does not open after 10 minutes, restart the PC or<br>check C:\\\\ProgramData\\\\PCMonitor\\\\pcmon.log .\";\n setTimeout(tick,2000)})}\ntick();\n</script>"
+    ],
+    [
+      "갑작스런 꺼짐",
+      "Sudden shutdown"
+    ],
+    [
+      "직전 기록 없음 (모니터가 실행 중이 아니었음)",
+      "No prior record (monitor was not running)"
+    ],
+    [
+      "마지막 기록 ",
+      "Last record "
+    ],
+    [
+      "직전 5분 최대 CPU ",
+      "Peak CPU in last 5 min "
+    ],
+    [
+      "메모리 ",
+      "Memory "
+    ],
+    [
+      "커밋 ",
+      "Commit "
+    ],
+    [
+      "디스크 사용률 ",
+      "Disk usage "
+    ],
+    [
+      "메모리 부족 의심",
+      "Suspected low memory"
+    ],
+    [
+      "CPU 과부하",
+      "CPU overload"
+    ],
+    [
+      "디스크 과부하",
+      "Disk overload"
+    ],
+    [
+      "자원 사용은 정상 → 드라이버/하드웨어 쪽 의심",
+      "Resource usage normal → suspect driver/hardware"
+    ],
+    [
+      "가상 메모리(커밋) 부족",
+      "Low virtual memory (commit)"
+    ],
+    [
+      "블루스크린",
+      "Blue screen"
+    ],
+    [
+      "멈춤 → 전원 버튼 강제 종료",
+      "Freeze → forced power-off"
+    ],
+    [
+      "갑작스런 전원 차단/리셋",
+      "Sudden power loss/reset"
+    ],
+    [
+      "상위: ",
+      "Top: "
+    ],
+    [
+      "프로세스 메모리 과다",
+      "Excessive process memory"
+    ],
+    [
+      "직전 비정상 종료 감지: ",
+      "Abnormal shutdown detected: "
+    ],
+    [
+      " 가 ",
+      " is using "
+    ],
+    [
+      "MB 사용 중",
+      "MB"
+    ],
+    [
+      "% 상태가 ",
+      "% for "
+    ],
+    [
+      "초 지속. 상위: ",
+      "s. Top: "
+    ],
+    [
+      "수집 ",
+      "Collection "
+    ],
+    [
+      " 드라이브 공간 부족",
+      " drive low on space"
+    ],
+    [
+      "남은 공간 ",
+      "Free space "
+    ],
+    [
+      "완전 삭제",
+      "Delete permanently"
+    ],
+    [
+      "휴지통으로 이동",
+      "Move to Recycle Bin"
+    ],
+    [
+      "제거 프로그램 실행 중…",
+      "Running uninstaller…"
+    ],
+    [
+      " 격리됨 (프로세스 ",
+      " quarantined (processes stopped: "
+    ],
+    [
+      "개 종료, 방화벽 규칙 ",
+      ", firewall rules: "
+    ],
+    [
+      "개·자동실행 ",
+      ", autorun entries: "
+    ],
+    [
+      "개 삭제)",
+      " removed)"
+    ],
+    [
+      "격리 기록을 찾을 수 없습니다",
+      "Quarantine record not found"
+    ],
+    [
+      "알 수 없는 설정",
+      "Unknown setting"
+    ],
+    [
+      "한 기기가 1분 동안 이 PC의 여러 포트를 차례로 두드렸습니다. 침입할 틈을 찾는 전형적인 행동입니다. 방화벽이 막았습니다.",
+      "A device knocked on many ports of this PC within 1 minute. This is typical of looking for a way in. The firewall blocked it."
+    ],
+    [
+      "인터넷 IP라면 공유기의 포트포워딩·DMZ 설정을 끄세요. 내부망 기기라면 그 기기의 악성코드 감염을 의심하세요. 아래 버튼으로 차단할 수 있습니다.",
+      "If it is an internet IP, turn off port forwarding/DMZ on your router. If it is a local device, suspect malware on that device. You can block it with the button below."
+    ],
+    [
+      "Windows 필수 프로세스는 종료하지 않습니다",
+      "Essential Windows processes are not closed"
+    ],
+    [
+      "이미 종료되어 있거나 권한이 없어 종료하지 못했습니다",
+      "Already closed, or could not be closed due to permissions"
+    ],
+    [
+      "조치를 찾을 수 없습니다 (점검을 다시 해 주세요)",
+      "Action not found (please scan again)"
+    ],
+    [
+      "진행 중…",
+      "In progress…"
+    ],
+    [
+      "로그인 없이 실행 중(SYSTEM)이라 제거 창을 띄울 수 없습니다. '앱 및 기능'에서 직접 제거해 주세요.",
+      "Running without a login (SYSTEM), so the uninstaller cannot be shown. Please uninstall it from 'Apps & features'."
+    ],
+    [
+      " (열린 제거 창에서 진행하세요)",
+      " (continue in the uninstaller window)"
+    ],
+    [
+      "제거 프로그램은 끝났지만 '",
+      "The uninstaller finished, but '"
+    ],
+    [
+      "' 가 아직 목록에 있습니다 (취소했거나 재부팅 필요)",
+      "' is still listed (canceled or restart needed)"
+    ],
+    [
+      "이미 삭제되어 없습니다",
+      "Already deleted"
+    ],
+    [
+      "이 위치는 삭제할 수 없습니다",
+      "This location cannot be deleted"
+    ],
+    [
+      "삭제하지 못했습니다 (사용 중인 파일이 있을 수 있음)",
+      "Could not delete (some files may be in use)"
+    ],
+    [
+      "삭제됨 (",
+      "Deleted ("
+    ],
+    [
+      ") · 프로세스 ",
+      ") · processes "
+    ],
+    [
+      "개 삭제",
+      " removed"
+    ],
+    [
+      "격리할 수 없는 파일입니다 (시스템 파일이거나 이미 없음)",
+      "This file cannot be quarantined (system file or already gone)"
+    ],
+    [
+      "Microsoft 서명 파일은 격리하지 않습니다",
+      "Microsoft-signed files are not quarantined"
+    ],
+    [
+      "원격 지원을 껐습니다",
+      "Remote Assistance turned off"
+    ],
+    [
+      "원격 데스크톱을 껐습니다",
+      "Remote Desktop turned off"
+    ],
+    [
+      "Guest 계정을 껐습니다",
+      "Guest account turned off"
+    ],
+    [
+      "SMBv1 을 껐습니다",
+      "SMBv1 turned off"
+    ],
+    [
+      "빠른 검사를 시작했습니다 (진행 상황은 개요 탭에 표시)",
+      "Quick scan started (progress shown on the Overview tab)"
+    ],
+    [
+      " 를 끄고 격리 폴더로 옮깁니다.\n관련 방화벽 허용 규칙과 자동실행 등록도 지웁니다.\n필요하면 '격리 보관함'에서 되돌릴 수 있습니다.\n\n{path}",
+      " will be stopped and moved to the quarantine folder.\nRelated firewall allow rules and autorun entries will also be removed.\nYou can restore it from 'Quarantine' if needed.\n\n{path}"
+    ],
+    [
+      " 를 끄고 삭제(휴지통으로 이동)합니다.\n관련 방화벽 허용 규칙과 자동실행 등록도 지웁니다.\n\n",
+      " will be stopped and deleted (moved to the Recycle Bin).\nRelated firewall allow rules and autorun entries will also be removed.\n\n"
+    ],
+    [
+      " 를 지금 종료합니다.\n저장하지 않은 작업이 있으면 사라질 수 있습니다.",
+      " will be closed now.\nAny unsaved work may be lost."
+    ],
+    [
+      "인터넷의 다른 컴퓨터가 이 PC에 직접 접속하려고 했습니다. 보통 공유기가 막아 주므로 이런 시도가 보이면 공유기 설정에 구멍이 있다는 뜻입니다.",
+      "Another computer on the internet tried to connect directly to this PC. Your router normally blocks this, so seeing it means there is a hole in your router settings."
+    ],
+    [
+      "공유기의 포트포워딩·DMZ·UPnP 설정을 확인하세요. 아래 버튼으로 이 IP를 차단할 수 있습니다.",
+      "Check port forwarding/DMZ/UPnP settings on your router. You can block this IP with the button below."
+    ],
+    [
+      " 종료됨 (",
+      " closed ("
+    ],
+    [
+      "개)",
+      ")"
+    ],
+    [
+      "이미 진행 중",
+      "Already in progress"
+    ],
+    [
+      "조치 완료: ",
+      "Action completed: "
+    ],
+    [
+      "조치 실패: ",
+      "Action failed: "
+    ],
+    [
+      "제거가 15분 넘게 끝나지 않았습니다",
+      "Uninstall did not finish in over 15 minutes"
+    ],
+    [
+      "Microsoft 서명 파일은 삭제하지 않습니다",
+      "Microsoft-signed files are not deleted"
+    ],
+    [
+      "개를 삭제했습니다",
+      " deleted"
+    ],
+    [
+      "KMS 인증 서버 설정을 지웠습니다 (정품 인증은 정식 라이선스로 다시 하세요)",
+      "KMS activation server setting removed (reactivate with a genuine license)"
+    ],
+    [
+      "예약 작업을 끄지 못했습니다",
+      "Could not disable the scheduled task"
+    ],
+    [
+      " 의 실행 가로채기 설정을 지웠습니다",
+      " execution hijack setting removed"
+    ],
+    [
+      "WMI 구독 '",
+      "WMI subscription '"
+    ],
+    [
+      "' 을 지웠습니다",
+      "' removed"
+    ],
+    [
+      "차단 규칙을 만들지 못했습니다",
+      "Could not create the block rule"
+    ],
+    [
+      "서비스를 찾을 수 없습니다 (이미 지워졌을 수 있음)",
+      "Service not found (may already be removed)"
+    ],
+    [
+      "서비스 설정을 바꾸지 못했습니다",
+      "Could not change service settings"
+    ],
+    [
+      "허용되지 않은 위치입니다",
+      "Location not allowed"
+    ],
+    [
+      "자동실행 '",
+      "Autorun '"
+    ],
+    [
+      "잘못된 계정 이름",
+      "Invalid account name"
+    ],
+    [
+      "지금 로그인한 본인 계정은 끌 수 없습니다",
+      "You cannot disable the account you are signed in with"
+    ],
+    [
+      "계정을 바꾸지 못했습니다 (이름 확인)",
+      "Could not change the account (check the name)"
+    ],
+    [
+      "실시간 보호를 켰습니다",
+      "Real-time protection turned on"
+    ],
+    [
+      "켜지 못했습니다 (다른 백신이나 정책이 막고 있을 수 있음)",
+      "Could not turn on (another antivirus or a policy may be blocking it)"
+    ],
+    [
+      " 차단",
+      " block"
+    ],
+    [
+      " 에서 이 PC로 들어오는 모든 접속을 방화벽으로 막습니다.\n(같은 집/회사 기기라면 그 기기의 파일공유·원격 접속도 막힙니다)",
+      " will be blocked from all incoming connections to this PC by the firewall.\n(If it is a home/office device, its file sharing and remote access will be blocked too)"
+    ],
+    [
+      "인터넷에서 접속 시도",
+      "Connection attempt from the internet"
+    ],
+    [
+      "외부에서 내 PC로 접속",
+      "Incoming connection to this PC"
+    ],
+    [
+      "누군가 이 PC 계정으로 로그인하려다 비밀번호가 틀렸습니다. 반복되면 비밀번호를 맞히려는 공격(무차별 대입)입니다.",
+      "Someone tried to sign in to an account on this PC with a wrong password. If it repeats, it is a password-guessing (brute-force) attack."
+    ],
+    [
+      "본인이 틀린 게 아니라면 그 IP를 차단하고, 계정 비밀번호를 길고 복잡하게 바꾸세요.",
+      "If it was not you, block that IP and change the account password to a long, complex one."
+    ],
+    [
+      "오류: ",
+      "Error: "
+    ],
+    [
+      " 제거됨",
+      " removed"
+    ],
+    [
+      "삭제하지 못했습니다 (사용 중인 파일이 있을 수 있음): ",
+      "Could not delete (some files may be in use): "
+    ],
+    [
+      "폴더 ",
+      "Folder "
+    ],
+    [
+      "파일을 옮기지 못했습니다: ",
+      "Could not move file: "
+    ],
+    [
+      "원래 위치에 같은 이름의 파일이 이미 있습니다",
+      "A file with the same name already exists in the original location"
+    ],
+    [
+      "격리 되돌림: ",
+      "Quarantine restored: "
+    ],
+    [
+      " 를 원래 위치로 되돌렸습니다",
+      " restored to its original location"
+    ],
+    [
+      "실패: ",
+      "Failed: "
+    ],
+    [
+      "예약 작업 '",
+      "Scheduled task '"
+    ],
+    [
+      "' 을 사용 안 함으로 바꿨습니다",
+      "' disabled"
+    ],
+    [
+      "' 서비스를 중지하고 사용 안 함으로 바꿨습니다",
+      "' service stopped and disabled"
+    ],
+    [
+      "' 계정을 사용 안 함으로 바꿨습니다",
+      "' account disabled"
+    ],
+    [
+      "프로그램 폴더 전체를 삭제(휴지통으로 이동)합니다.\n파일 ",
+      "The whole program folder will be deleted (moved to the Recycle Bin).\nFiles: "
+    ],
+    [
+      "개 · ",
+      " · "
+    ],
+    [
+      "MB\n폴더 안에서 실행 중인 프로그램은 먼저 종료합니다.\n\n",
+      "MB\nPrograms running from the folder will be closed first.\n\n"
+    ],
+    [
+      "로그인 실패",
+      "Sign-in failure"
+    ],
+    [
+      "다른 기기에서 이 PC 계정으로 로그인에 성공했습니다.",
+      "An account on this PC was signed in to from another device."
+    ],
+    [
+      "본인(또는 아는 사람)이 아니라면 즉시 해당 IP를 차단하고 비밀번호를 바꾸세요.",
+      "If it was not you (or someone you know), block that IP immediately and change your password."
+    ],
+    [
+      "원격 로그인 성공",
+      "Remote sign-in succeeded"
+    ],
+    [
+      "새 서비스 설치",
+      "New service installed"
+    ],
+    [
+      "새 Windows 서비스(백그라운드 프로그램)가 설치됐습니다. 정상 프로그램도 설치하지만 악성코드도 자주 씁니다.",
+      "A new Windows service (background program) was installed. Legitimate programs install these, but malware often does too."
+    ],
+    [
+      "방금 설치한 프로그램 것이면 '확인함'. 모르는 서비스면 중지하고 사용 안 함으로 바꾸세요.",
+      "If it belongs to a program you just installed, mark 'Reviewed'. If you don't recognize it, stop and disable it."
+    ],
+    [
+      "PC가 켜질 때 자동으로 실행되는 프로그램이 새로 등록됐습니다.",
+      "A new program was registered to run automatically when the PC starts."
+    ],
+    [
+      "아는 프로그램이면 '확인함', 모르면 자동실행에서 빼세요.",
+      "If you know the program, mark 'Reviewed'; otherwise remove it from autorun."
+    ],
+    [
+      "알 수 없는 조치",
+      "Unknown action"
+    ],
+    [
+      "서비스 중지·사용 안 함",
+      "Stop and disable service"
+    ],
+    [
+      "새 예약 작업이 등록됐습니다. 정해진 시간마다 프로그램을 실행합니다.",
+      "A new scheduled task was registered. It runs a program at set times."
+    ],
+    [
+      "아는 프로그램 것이면 '확인함', 모르면 사용 안 함으로 바꾸세요.",
+      "If it belongs to a program you know, mark 'Reviewed'; otherwise disable it."
+    ],
+    [
+      "' 서비스를 중지하고 자동 시작을 끕니다.",
+      "' service will be stopped and its automatic start turned off."
+    ],
+    [
+      "레지스트리 자동실행",
+      "Registry autorun"
+    ],
+    [
+      "시작프로그램",
+      "Startup programs"
+    ],
+    [
+      "예약 작업",
+      "Scheduled task"
+    ],
+    [
+      "새 계정이 생겼거나 관리자 권한이 주어졌습니다. 침입자가 뒷문용 계정을 만드는 대표적인 방법입니다.",
+      "A new account was created or given administrator rights. This is a common way for intruders to create a backdoor account."
+    ],
+    [
+      "본인이 한 작업이 아니면 그 계정을 즉시 사용 안 함으로 바꾸고 비밀번호를 모두 바꾸세요.",
+      "If you didn't do this, disable that account immediately and change all passwords."
+    ],
+    [
+      "자동실행에서 빼기",
+      "Remove from autorun"
+    ],
+    [
+      "예약 작업 끄기",
+      "Disable scheduled task"
+    ],
+    [
+      "새 사용자 계정",
+      "New user account"
+    ],
+    [
+      "관리자 그룹에 계정",
+      "Account in Administrators group"
+    ],
+    [
+      "자동실행 항목 '",
+      "Autorun entry '"
+    ],
+    [
+      "' 을 사용 안 함으로 바꿉니다.",
+      "' will be disabled."
+    ],
+    [
+      "그룹에 계정 추가",
+      "Account added to group"
+    ],
+    [
+      "새 사용자",
+      "New user"
+    ],
+    [
+      "백신의 보호 기능이 꺼졌거나 검사 예외가 추가됐습니다. 악성코드가 자신을 숨기려고 자주 하는 일입니다.",
+      "Antivirus protection was turned off or a scan exclusion was added. Malware often does this to hide itself."
+    ],
+    [
+      "직접 바꾼 게 아니면 실시간 보호를 다시 켜고, 흔적 점검에서 예외 목록을 확인하세요.",
+      "If you didn't change it, turn real-time protection back on and check the exclusion list in the trace scan."
+    ],
+    [
+      "탐지",
+      "Detection"
+    ],
+    [
+      "조치 실패",
+      "Action failed"
+    ],
+    [
+      "Windows 보안 빠른 검사를 시작합니다 (몇 분 걸림).",
+      "Start a Windows Security quick scan (takes a few minutes)."
+    ],
+    [
+      "로그가 지워짐",
+      "Log cleared"
+    ],
+    [
+      "Windows 이벤트 기록이 지워졌습니다. 침입자가 흔적을 지울 때 하는 행동입니다.",
+      "The Windows event log was cleared. Intruders do this to cover their tracks."
+    ],
+    [
+      "본인이 지운 게 아니라면 흔적 점검을 하고, 비밀번호를 바꾸고, 전체 검사를 하세요.",
+      "If you didn't clear it, run a trace scan, change your passwords, and run a full scan."
+    ],
+    [
+      "' 계정 사용 안 함",
+      "' disable account"
+    ],
+    [
+      "' 계정을 로그인할 수 없게 합니다.",
+      "' account will be unable to sign in."
+    ],
+    [
+      "예외",
+      "Exclusion"
+    ],
+    [
+      "실시간 보호 켜기",
+      "Turn on real-time protection"
+    ],
+    [
+      "Windows 보안 실시간 보호를 켭니다.",
+      "Turn on Windows Security real-time protection."
+    ],
+    [
+      "자세한 내용을 확인하고, 문제 없으면 '확인함'을 누르세요.",
+      "Review the details, and if there is no problem, click 'Reviewed'."
+    ],
+    [
+      " 의 접속을 차단했습니다 (방화벽 규칙 'PCMonitor 차단 ",
+      " blocked (firewall rule 'PCMonitor 차단 "
+    ],
+    [
+      "PC 모니터 종료 및 백그라운드 제어",
+      "PC Monitor Exit & Background Control"
+    ],
+    [
+      "화면을 닫을 때 백그라운드 동작 방식을 선택하세요.",
+      "Choose background behavior when closing the window."
+    ],
+    [
+      "트레이로 최소화 (백그라운드 감시 유지)",
+      "Minimize to tray (keep background monitoring)"
+    ],
+    [
+      "화면 창만 닫고, 트레이에서 자원 기록·침입 감시·인터넷뱅킹 보호를 계속 유지합니다. 작업 표시줄 오른쪽 트레이 아이콘에서 언제든 다시 열 수 있습니다.",
+      "Closes only the UI window and keeps resource logging, intrusion watch, and banking security active in the tray. Reopen anytime from the taskbar tray icon."
+    ],
+    [
+      "백그라운드 완전 종료",
+      "Exit background completely"
+    ],
+    [
+      "백그라운드 수집기, 감시 장치, 웹 서버를 모두 종료합니다. 다시 시작하려면 바탕화면의 바로가기를 실행하세요.",
+      "Terminates all background processes (sampler, watcher, web server). Run the shortcut to restart."
+    ],
+    [
+      "창 닫을 때(X) 백그라운드까지 항상 종료",
+      "Always exit background when closing window (X)"
+    ],
+    [
+      "종료 및 백그라운드 동작 설정",
+      "Exit & Background Settings"
+    ],
+    [
+      "창 닫을 때(X) 동작",
+      "Window close (X) action"
+    ],
+    [
+      "트레이로 최소화 (백그라운드 감시 유지 - 권장)",
+      "Minimize to tray (keep background monitoring - recommended)"
+    ],
+    [
+      "작업 표시줄 오른쪽 알림 영역에 아이콘 상주 (더블클릭: 화면 열기, 우클릭: 종료 메뉴)",
+      "Icon stays in taskbar notification area (double-click: open window, right-click: exit menu)"
+    ],
+    [
+      "백그라운드 모니터 즉시 종료",
+      "Exit background monitor now"
+    ],
+    [
+      "PC 모니터가 종료되었습니다",
+      "PC Monitor has been terminated"
+    ],
+    [
+      "창을 닫으셔도 됩니다. 다시 실행하려면 바탕화면의 바로가기를 사용하세요.",
+      "You can close this window. To restart, use the desktop shortcut."
+    ],
+    [
+      "트레이 아이콘",
+      "Tray icon"
+    ],
+    [
+      "PC 모니터 백그라운드 프로세스를 모두 종료할까요?\n(종료하면 자원 기록 및 침입 감시가 중단됩니다)",
+      "Completely terminate all PC Monitor background processes?\n(Resource logging and intrusion watch will stop)"
+    ],
+    [
+      "PC 모니터 백그라운드 감시를 완전히 종료할까요?\n(종료하면 자원 기록 및 침입 감시가 중단됩니다)",
+      "Completely terminate PC Monitor background monitoring?\n(Resource logging and intrusion watch will stop)"
+    ],
+    [
+      "트레이에서 백그라운드 감시가 계속 실행 중입니다.",
+      "Background monitoring continues running in the tray."
+    ]
   ]
 }

@@ -234,6 +234,53 @@ class Banking:
         self._refresh_baseline()
         return res
 
+    def kick_all(self):
+        """실행 중인 모든 뱅킹 보안 프로그램을 지금 즉시 강제 종료 (원클릭 차기/Kick)."""
+        inv = self.inventory()
+        procs = inv.get("procs", [])
+        total_rss = sum(p.get("rss", 0) for p in procs)
+        killed_names = []
+        for p in procs:
+            try:
+                psutil.Process(p["pid"]).kill()
+                killed_names.append(p.get("name") or str(p["pid"]))
+            except Exception:
+                pass
+        stopped_svcs = 0
+        for s in inv.get("services", []):
+            try:
+                r = subprocess.run(["sc.exe", "stop", s["name"]], capture_output=True, creationflags=winutil.CREATE_NO_WINDOW)
+                if r.returncode == 0:
+                    stopped_svcs += 1
+            except Exception:
+                pass
+        freed_mb = round(total_rss / 1048576, 1)
+        self.cfg["state"] = "off"
+        self.save()
+        self._refresh_baseline()
+        self.db.add_event(time.time(), "action", "info", "pcmon", 0,
+                          f"뱅킹 보안 프로그램 즉시 차기 (종료 {len(killed_names)}개, {freed_mb}MB 확보)",
+                          {"종료목록": killed_names, "중지된 서비스수": stopped_svcs})
+        return {
+            "ok": True,
+            "killed_count": len(killed_names),
+            "freed_mb": freed_mb,
+            "stopped_services": stopped_svcs,
+            "names": killed_names,
+            "msg": f"⚡ 뱅킹 보안 프로그램 {len(killed_names)}개를 즉시 강제 종료(Kick)하여 약 {freed_mb}MB 메모리를 확보했습니다."
+        }
+
+    def apply_recommended(self):
+        """인터넷 보안 프로그램 권장 설정 원클릭 적용: 사이트 열 때만 켜기(auto) + 외부 차단(True) + 5분 후 동면."""
+        self.set_block_external(True)
+        self.set_mode("auto", idle_min=5)
+        self.db.add_event(time.time(), "action", "info", "pcmon", 0, "뱅킹 보안 프로그램 권장 설정 적용 (사이트 열 때만 켜기, 외부차단 켬, 5분 후 종료)", "")
+        return {
+            "ok": True,
+            "msg": "🌟 인터넷 보안 프로그램 권장 설정이 적용되었습니다!\n- 은행·공공기관 사이트 열 때만 자동 기동\n- 사이트 닫은 후 5분 뒤 자동 동면/종료\n- 방화벽 외부 접속 완벽 차단"
+        }
+
+
     def set_mode(self, mode, keywords=None, idle_min=None):
         if mode not in ("always", "auto", "off"):
             return {"ok": False, "msg": "잘못된 요청"}

@@ -2,13 +2,20 @@
 import base64
 import ctypes
 import json
+import logging
 import os
 import subprocess
 import threading
+import winreg
 import xml.etree.ElementTree as ET
 from ctypes import wintypes
 from datetime import datetime
 from xml.sax.saxutils import escape
+
+import config
+
+log = logging.getLogger("pcmon.winutil")
+
 
 CREATE_NO_WINDOW = 0x08000000
 NS = {"e": "http://schemas.microsoft.com/win/2004/08/events/event"}
@@ -175,31 +182,9 @@ def is_system():
 
 
 def session_message(title, body):
-    """활성 사용자 세션에 메시지 창 (SYSTEM으로 돌 때나 알림 센터가 없을 때). 30초 뒤 자동으로 닫힘."""
-    try:
-        wts = ctypes.WinDLL("wtsapi32")
-        ids = set()
-        cid = ctypes.windll.kernel32.WTSGetActiveConsoleSessionId()
-        if cid != 0xFFFFFFFF:
-            ids.add(cid)
+    """사용자 작업 방해 금지를 위해 모달 Win32 MessageBox(WTSSendMessageW) 팝업을 전면 폐지하고 로그만 기록."""
+    log.info("비간섭 알림 기록 (모달 창 억제됨): %s - %s", title, body.replace("\n", " ") if body else "")
 
-        class WTS_SESSION_INFOW(ctypes.Structure):
-            _fields_ = [("SessionId", wintypes.DWORD), ("pWinStationName", wintypes.LPWSTR), ("State", ctypes.c_int)]
-
-        p, n = ctypes.POINTER(WTS_SESSION_INFOW)(), wintypes.DWORD()
-        if wts.WTSEnumerateSessionsW(None, 0, 1, ctypes.byref(p), ctypes.byref(n)):
-            for i in range(n.value):
-                if p[i].State == 0 and p[i].SessionId != 0:  # 활성 세션
-                    ids.add(p[i].SessionId)
-            wts.WTSFreeMemory(p)
-        resp = wintypes.DWORD()
-        wts.WTSSendMessageW.argtypes = [ctypes.c_void_p, wintypes.DWORD, wintypes.LPWSTR, wintypes.DWORD, wintypes.LPWSTR,
-                                        wintypes.DWORD, wintypes.DWORD, wintypes.DWORD, ctypes.POINTER(wintypes.DWORD), wintypes.BOOL]
-        for sid in ids:
-            wts.WTSSendMessageW(None, sid, title, len(title) * 2, body, len(body) * 2,
-                                0x30 | 0x40000, 30, ctypes.byref(resp), False)  # 경고 아이콘 + 맨 위
-    except Exception:
-        pass
 
 
 def is_admin():
@@ -239,38 +224,72 @@ def _b64(s):
     return base64.b64encode(s.encode("utf-8")).decode()
 
 
-APP_ID = "PCMonitor.App"
-_PS_APP_ID = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe"
-_app_id_ok = None
+_aumid_checked = False
 
 
-def register_app_id(name="PC 모니터"):
-    """알림 센터에 'Windows PowerShell' 대신 'PC 모니터' 이름·아이콘으로 보이게 앱 ID 를 등록 (현재 사용자).
-    실패하면 PowerShell 앱 ID 로 보낸다."""
-    global _app_id_ok
-    try:
-        import winreg
-        import config
-        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\Classes\AppUserModelId" + "\\" + APP_ID) as k:
-            winreg.SetValueEx(k, "DisplayName", 0, winreg.REG_SZ, name)
-            ico = os.path.join(config.RES_DIR, "pcmon.ico")
-            if os.path.exists(ico):
-                winreg.SetValueEx(k, "IconUri", 0, winreg.REG_SZ, ico)
-        _app_id_ok = name
-    except Exception:
-        _app_id_ok = False
-    return _app_id_ok
-
-
-def toast(title, body, app_name="PC 모니터"):
-    """Windows 알림 센터 팝업. SYSTEM 계정이거나 실패하면(서버 코어, 구형 OS) 세션 메시지 창으로 대신."""
-    if is_system():
-        threading.Thread(target=session_message, args=(app_name + ": " + title, body), daemon=True).start()
+def ensure_aumid():
+    r"""HKCU\Software\Classes\AppUserModelId\PCMonitor 등록 (알림 센터에 'PC 모니터' 및 아이콘 표시)."""
+    global _aumid_checked
+    if _aumid_checked:
         return
-    if _app_id_ok != app_name:
-        register_app_id(app_name)
-    app_id = APP_ID if _app_id_ok else _PS_APP_ID
+    try:
+        # 프로세스 레벨 AUMID 설정
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("PCMonitor")
+        except Exception:
+            pass
+
+        icon = os.path.join(config.RES_DIR, "pcmon.ico")
+        if not os.path.isfile(icon):
+            icon = os.path.join(config.BASE_DIR, "pcmon.ico")
+
+        # 1. AppUserModelId 레지스트리 등록
+        key_path = r"Software\Classes\AppUserModelId\PCMonitor"
+        with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
+            winreg.SetValueEx(key, "DisplayName", 0, winreg.REG_SZ, "PC 모니터")
+            if os.path.isfile(icon):
+                winreg.SetValueEx(key, "IconUri", 0, winreg.REG_SZ, icon)
+            winreg.SetValueEx(key, "IconBackgroundColor", 0, winreg.REG_SZ, "FF0078D7")
+
+        # 2. pythonw.exe 및 python.exe FriendlyAppName 을 'PC 모니터'로 통일 (OS 폴백 대비)
+        for app in ("pythonw.exe", "python.exe"):
+            try:
+                with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, rf"Software\Classes\Applications\{app}", 0, winreg.KEY_SET_VALUE) as k:
+                    winreg.SetValueEx(k, "FriendlyAppName", 0, winreg.REG_SZ, "PC 모니터")
+            except Exception:
+                pass
+
+        # 3. 시작 메뉴에 AUMID 바인딩된 바로가기 확보 (윈도우 셸 인덱싱)
+        programs = os.path.join(os.environ.get("APPDATA", ""), r"Microsoft\Windows\Start Menu\Programs")
+        lnk_path = os.path.join(programs, "PC 모니터.lnk")
+        if os.path.isdir(programs) and not os.path.isfile(lnk_path):
+            try:
+                sc_script = (
+                    f"$ws=New-Object -ComObject WScript.Shell;"
+                    f"$s=$ws.CreateShortcut('{lnk_path}');"
+                    f"$s.TargetPath='{os.path.join(config.BASE_DIR, 'launcher.bat')}';"
+                    f"$s.WorkingDirectory='{config.BASE_DIR}';"
+                    f"$s.Description='PC 모니터';"
+                    f"$s.IconLocation='{icon},0';"
+                    f"$s.Save();"
+                )
+                run_ps(sc_script, timeout=10)
+            except Exception:
+                pass
+
+        _aumid_checked = True
+    except Exception as e:
+        log.warning("AUMID 등록 실패: %s", e)
+
+
+def toast(title, body):
+    """Windows 알림 센터 팝업. 발신자 'PC 모니터' 표기. (모달 확인창 팝업 제거하여 단일 알림 보장)"""
+    if is_system():
+        log.info("SYSTEM 세션 감지: 데스크톱 토스트 대신 DB 기록: %s", title)
+        return
+    ensure_aumid()
     t, b = _b64(escape(title)), _b64(escape(body))
+    # AUMID 'PCMonitor'로 ToastNotifier 생성 -> 윈도우 알림 센터에 'PC 모니터'로 표시
     script = (
         "$t=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('%s'));"
         "$b=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('%s'));"
@@ -279,20 +298,22 @@ def toast(title, body, app_name="PC 모니터"):
         "$x=New-Object Windows.Data.Xml.Dom.XmlDocument;"
         "$x.LoadXml(\"<toast><visual><binding template='ToastGeneric'><text>$t</text><text>$b</text></binding></visual></toast>\");"
         "$n=[Windows.UI.Notifications.ToastNotification]::new($x);"
-        "[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('%s').Show($n)"
-    ) % (t, b, app_id)
+        "try { [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('PCMonitor').Show($n) }"
+        "catch { try { [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier().Show($n) } catch {} }"
+    ) % (t, b)
     def run():
         try:
             r = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand",
                                 base64.b64encode(script.encode("utf-16-le")).decode()],
                                creationflags=CREATE_NO_WINDOW, capture_output=True, timeout=60)
-            ok = r.returncode == 0 and not r.stderr.strip()
-        except Exception:
-            ok = False
-        if not ok:
-            session_message(app_name + ": " + title, body)
+            if r.returncode != 0 and r.stderr.strip():
+                log.warning("토스트 출력 경고: %s", r.stderr.strip()[:100])
+        except Exception as e:
+            log.warning("토스트 실행 예외: %s", e)
 
     threading.Thread(target=run, daemon=True).start()
+
+
 
 
 def signature_status(paths):

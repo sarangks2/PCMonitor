@@ -171,8 +171,80 @@ class ProcInfo:
         self.svc_by_pid, self.svc_ts = m, time.time()
         return m
 
+    def resolve_script_name(self, pid, name):
+        """python/powershell/node/cmd 등 스크립트 실행기의 실제 실행 프로그램/스크립트명 및 설명 추출."""
+        low_name = (name or "").lower()
+        if low_name not in ("python.exe", "pythonw.exe", "powershell.exe", "pwsh.exe", "node.exe", "cmd.exe"):
+            return None, None
+        if not pid or pid <= 4:
+            return None, None
+        try:
+            p = psutil.Process(pid)
+            cmdline = p.cmdline()
+        except Exception:
+            return None, None
+        if not cmdline:
+            return None, None
+
+        cmd_str = " ".join(cmdline)
+        low_cmd = cmd_str.lower()
+
+        # 1. Python
+        if "python" in low_name:
+            if "monitor.py" in low_cmd or "pcmon" in low_cmd:
+                return "PC 모니터 (Python)", "PC 모니터 백그라운드 시스템 감시 데몬"
+            if "antigravity" in low_cmd:
+                return "Antigravity CLI (Python)", "Google Antigravity 지능형 개발 도우미"
+            if "pytest" in low_cmd or "run_all_tests" in low_cmd or "test_" in low_cmd:
+                return "테스트 러너 (Python)", "Python 자동화 테스트 스위트 실행기"
+            if "pip" in low_cmd:
+                return "pip 패키지 관리자", "Python 라이브러리 설치/관리 도구"
+            for arg in cmdline[1:]:
+                if arg.lower().endswith(".py"):
+                    base = os.path.basename(arg)
+                    return f"{base} (Python)", f"Python 스크립트: {base}"
+            return "Python 작업 프로세스", "백그라운드에서 실행 중인 Python 프로그램"
+
+        # 2. PowerShell
+        if "powershell" in low_name or "pwsh" in low_name:
+            if "antigravity" in low_cmd or "gemini" in low_cmd:
+                return "Antigravity 터미널 (PowerShell)", "개발 도우미에서 호출한 PowerShell 세션"
+            if "claude" in low_cmd:
+                return "Claude 도구 세션 (PowerShell)", "Claude 데스크톱/CLI 터미널 세션"
+            if "openconnect" in low_cmd or "vpn" in low_cmd:
+                return "OpenConnect VPN (PowerShell)", "VPN 터널 연결 관리 스크립트"
+            for i, arg in enumerate(cmdline):
+                if arg.lower() in ("-file", "-f") and i + 1 < len(cmdline):
+                    base = os.path.basename(cmdline[i + 1])
+                    return f"{base} (PowerShell)", f"PowerShell 스크립트: {base}"
+                if arg.lower().endswith(".ps1"):
+                    base = os.path.basename(arg)
+                    return f"{base} (PowerShell)", f"PowerShell 스크립트: {base}"
+            return "PowerShell 명령 실행기", "명령어 및 관리 스크립트 실행 창"
+
+        # 3. Node.js
+        if "node" in low_name:
+            if "claude" in low_cmd:
+                return "Claude Desktop (Node.js)", "Anthropic Claude 데스크톱 백엔드"
+            if "npm" in low_cmd:
+                return "npm 패키지 도구", "Node.js 패키지 관리자"
+            for arg in cmdline[1:]:
+                if arg.lower().endswith(".js"):
+                    base = os.path.basename(arg)
+                    return f"{base} (Node.js)", f"Node.js 스크립트: {base}"
+            return "Node.js 런타임", "Node.js 기반 백그라운드 프로그램"
+
+        # 4. cmd.exe
+        if "cmd.exe" in low_name:
+            for arg in cmdline[1:]:
+                if arg.lower().endswith((".bat", ".cmd")):
+                    base = os.path.basename(arg)
+                    return f"{base} (배치)", f"Windows 배치 파일: {base}"
+
+        return None, None
+
     def describe(self, pid, name, exe=None):
-        """{'desc','company','cat','path','services'}"""
+        """{'desc','company','cat','path','services','display_name'}"""
         key = (name or "").lower()
         if exe is None:
             try:
@@ -180,6 +252,14 @@ class ProcInfo:
             except Exception:
                 exe = ""
         info = {"path": exe or "", "company": "", "desc": "", "cat": ""}
+
+        # 스크립트 실행기(python, powershell, node 등) 세부 프로그램명 역추적
+        disp_name, disp_desc = self.resolve_script_name(pid, name)
+        if disp_name:
+            info["display_name"] = disp_name
+            if disp_desc:
+                info["desc"] = disp_desc
+
         vs = {}
         if exe:
             with self.lock:
@@ -248,3 +328,137 @@ class ProcInfo:
 
 
 PROCINFO = ProcInfo()
+
+
+def get_memory_breakdown():
+    """물리 RAM의 6대 포션(웹 브라우저군, 뱅킹보안, 사용자앱, Windows시스템, 커널풀, 가용메모리) 상세 분석"""
+    import psutil
+    from winutil import perf_info
+    vm = psutil.virtual_memory()
+    pi = perf_info()
+
+    total_mb = int(vm.total / (1024 * 1024))
+    available_mb = int(vm.available / (1024 * 1024))
+    used_mb = max(0, total_mb - available_mb)
+
+    # 커널 풀 (비페이징 + 페이징)
+    paged_mb = int(pi.get("paged_pool_mb", 0) or 0)
+    nonpaged_mb = int(pi.get("nonpaged_pool_mb", 0) or 0)
+    kernel_mb = max(0, paged_mb + nonpaged_mb)
+
+    banking_names = {
+        "nosstarter.npe", "nprotect", "astx.exe", "astx64.exe", "touchen", "inisafe",
+        "anysign", "crosscert", "deltasecrypt", "veraport", "ipinside", "wizvera"
+    }
+    browser_names = {
+        "msedge.exe", "chrome.exe", "whale.exe", "firefox.exe", "msedgewebview2.exe",
+        "brave.exe", "opera.exe"
+    }
+    system_names = {
+        "system", "registry", "memory compression", "secure system", "smss.exe",
+        "csrss.exe", "wininit.exe", "winlogon.exe", "services.exe", "lsass.exe",
+        "lsaiso.exe", "svchost.exe", "dwm.exe", "explorer.exe", "fontdrvhost.exe",
+        "sihost.exe", "ctfmon.exe", "taskhostw.exe", "runtimebroker.exe", "dllhost.exe",
+        "conhost.exe", "audiodg.exe", "spoolsv.exe", "searchindexer.exe", "searchhost.exe",
+        "msmpeng.exe", "nissrv.exe", "securityhealthservice.exe"
+    }
+
+    cats = {
+        "browser": {"name": "🌐 웹 브라우저군", "mb": 0, "procs": 0, "color": "#3b82f6"},
+        "banking": {"name": "🛡️ 뱅킹·보안 모듈", "mb": 0, "procs": 0, "color": "#f59e0b"},
+        "apps": {"name": "📱 사용자 일반 앱", "mb": 0, "procs": 0, "color": "#8b5cf6"},
+        "system": {"name": "⚙️ Windows 시스템", "mb": 0, "procs": 0, "color": "#10b981"},
+        "kernel": {"name": "🧠 커널·드라이버 풀", "mb": kernel_mb, "procs": 1, "color": "#ec4899"},
+        "available": {"name": "🍃 여유 (Available)", "mb": available_mb, "procs": 0, "color": "#64748b"},
+    }
+
+    proc_list = []
+    seen_pids = set()
+    for p in psutil.process_iter(["pid", "name", "memory_info"]):
+        try:
+            pid = p.info["pid"]
+            if pid in (0, 4) or pid in seen_pids:
+                continue
+            seen_pids.add(pid)
+            name = (p.info["name"] or "").lower()
+            mi = p.info["memory_info"]
+            rss_mb = int(getattr(mi, "rss", 0) / (1024 * 1024))
+            if rss_mb <= 0:
+                continue
+
+            if any(k in name for k in banking_names):
+                cat_key = "banking"
+            elif any(k == name for k in browser_names):
+                cat_key = "browser"
+            elif any(k == name for k in system_names):
+                cat_key = "system"
+            else:
+                cat_key = "apps"
+
+            cats[cat_key]["mb"] += rss_mb
+            cats[cat_key]["procs"] += 1
+            proc_list.append({
+                "pid": pid,
+                "name": p.info["name"] or name,
+                "cat": cat_key,
+                "mem_mb": rss_mb,
+            })
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+
+    for k, v in cats.items():
+        v["pct"] = round((v["mb"] / max(total_mb, 1)) * 100, 1)
+
+    proc_list.sort(key=lambda x: x["mem_mb"], reverse=True)
+    top15 = proc_list[:15]
+    for p in top15:
+        p["info"] = PROCINFO.by_name_only(p["name"])
+
+    return {
+        "total_mb": total_mb,
+        "used_mb": used_mb,
+        "available_mb": available_mb,
+        "commit_pct": pi.get("commit_pct", 0),
+        "commit_total_mb": pi.get("commit_total_mb", 0),
+        "commit_limit_mb": pi.get("commit_limit_mb", 0),
+        "paged_pool_mb": paged_mb,
+        "nonpaged_pool_mb": nonpaged_mb,
+        "portions": cats,
+        "top_procs": top15,
+    }
+
+
+def optimize_memory():
+    """Windows EmptyWorkingSet API를 호출하여 안전하게 비활성 메모리 회수"""
+    import ctypes
+    psapi = ctypes.windll.psapi
+    kernel32 = ctypes.windll.kernel32
+    PROCESS_QUERY_INFORMATION = 0x0400
+    PROCESS_SET_QUOTA = 0x0100
+
+    vm_before = psutil.virtual_memory()
+    trimmed_count = 0
+    for p in psutil.process_iter(['pid', 'name']):
+        try:
+            pid = p.info['pid']
+            if pid in (0, 4):
+                continue
+            h = kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_SET_QUOTA, False, pid)
+            if h:
+                if psapi.EmptyWorkingSet(h):
+                    trimmed_count += 1
+                kernel32.CloseHandle(h)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+
+    vm_after = psutil.virtual_memory()
+    saved_mb = max(0, int((vm_after.available - vm_before.available) / (1024 * 1024)))
+    return {
+        "ok": True,
+        "count": trimmed_count,
+        "saved_mb": saved_mb,
+        "free_before_mb": int(vm_before.available / (1024 * 1024)),
+        "free_after_mb": int(vm_after.available / (1024 * 1024)),
+        "msg": f"안전하게 {saved_mb}MB의 메모리를 즉시 회수했습니다. (최적화 대상: {trimmed_count}개 프로세스)"
+    }
+

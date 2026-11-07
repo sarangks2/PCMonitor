@@ -6,103 +6,304 @@
 <title>PC 모니터</title>
 <link rel="icon" href="/favicon.ico">
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--fg:#1d2330;--mut:#667085;--line:#e4e7ec;--cpu:#2f6fde;--mem:#c2410c;--commit:#9a6700;--disk:#0f8a6c;--rx:#7c3aed;--tx:#64748b;--ok:#15803d;--warn:#b45309;--crit:#c81e1e;--chip:#eef1f5}
-@media (prefers-color-scheme:dark){:root{--bg:#0f1218;--card:#171b23;--fg:#e6e9ef;--mut:#98a2b3;--line:#2a303b;--cpu:#6ea0ff;--mem:#fb8c4a;--commit:#e0b341;--disk:#34c79f;--rx:#a78bfa;--tx:#94a3b8;--ok:#4ade80;--warn:#fbbf24;--crit:#f87171;--chip:#222833}}
+:root{
+  --bg:#f8fafc;--card:#ffffff;--fg:#0f172a;--mut:#64748b;--line:#e2e8f0;
+  --cpu:#2563eb;--mem:#d97706;--commit:#ca8a04;--disk:#059669;--rx:#7c3aed;--tx:#475569;
+  --ok:#16a34a;--warn:#d97706;--crit:#dc2626;--chip:#f1f5f9;
+  --glass:rgba(255,255,255,0.85);--card-hover:#f8fafc;
+  --shadow-sm:0 1px 2px 0 rgba(0,0,0,0.05);
+  --shadow-md:0 4px 12px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.04);
+  --shadow-lg:0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0b0f19;--card:#141b2d;--fg:#f1f5f9;--mut:#94a3b8;--line:#232d43;
+    --cpu:#3b82f6;--mem:#fb923c;--commit:#facc15;--disk:#34d399;--rx:#a78bfa;--tx:#94a3b8;
+    --ok:#4ade80;--warn:#fbbf24;--crit:#f87171;--chip:#1e293b;
+    --glass:rgba(20,27,45,0.88);--card-hover:#19233a;
+    --shadow-sm:0 1px 2px 0 rgba(0,0,0,0.3);
+    --shadow-md:0 4px 12px -1px rgba(0,0,0,0.35);
+    --shadow-lg:0 20px 25px -5px rgba(0,0,0,0.5);
+  }
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 "Segoe UI","Malgun Gothic",sans-serif}
-header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:5;flex-wrap:wrap}
-h1{font-size:17px;margin:0}
-nav button{background:none;border:0;color:var(--mut);padding:6px 10px;border-radius:6px;cursor:pointer;font:inherit}
-nav button.on{background:var(--chip);color:var(--fg);font-weight:600}
-#upd{margin-left:auto;color:var(--mut);font-size:12px}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 "Segoe UI","Malgun Gothic",-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+
+/* Header */
+header{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:10px 20px;border-bottom:1px solid var(--line);
+  background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:50;flex-wrap:wrap;
+  transition:background-color .2s ease;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-icon{
+  width:26px;height:26px;border-radius:7px;
+  background:linear-gradient(135deg,var(--cpu),#6366f1);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:13px;font-weight:700;
+  box-shadow:0 2px 8px rgba(37,99,235,0.35);flex-shrink:0;
+}
+h1{font-size:16px;font-weight:700;margin:0;letter-spacing:-0.2px}
+.tray-badge{
+  display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+  padding:3px 9px;border-radius:12px;background:var(--chip);color:var(--mut);
+  border:1px solid var(--line);cursor:default;user-select:none;transition:all .2s ease;
+}
+.tray-badge.ok{background:rgba(22,163,74,0.12);color:var(--ok);border-color:rgba(22,163,74,0.25)}
+.tray-badge.wn{background:rgba(217,119,6,0.12);color:var(--warn);border-color:rgba(217,119,6,0.25)}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;animation:p-ring 1.8s infinite}
+@keyframes p-ring{0%{box-shadow:0 0 0 0 rgba(34,197,94,0.6)}70%{box-shadow:0 0 0 5px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+
+/* Navigation Tabs */
+nav{
+  display:inline-flex;align-items:center;gap:3px;background:var(--chip);
+  padding:3px;border-radius:8px;border:1px solid var(--line);
+  overflow-x:auto;max-width:100%;scrollbar-width:none;
+}
+nav::-webkit-scrollbar{display:none}
+nav button{
+  background:none;border:0;color:var(--mut);padding:5px 12px;border-radius:6px;
+  cursor:pointer;font:inherit;font-size:13px;font-weight:500;white-space:nowrap;
+  transition:all .15s ease;
+}
+nav button:hover{color:var(--fg)}
+nav button.on{background:var(--card);color:var(--fg);font-weight:600;box-shadow:var(--shadow-sm)}
+
+/* Header Controls */
+.header-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+#upd{color:var(--mut);font-size:12px;white-space:nowrap}
+.hbtn{
+  border:1px solid var(--line);color:var(--fg);background:var(--card);
+  border-radius:6px;padding:4px 10px;font:inherit;font-size:12.5px;font-weight:500;
+  cursor:pointer;transition:all .15s ease;display:inline-flex;align-items:center;gap:5px;
+}
+.hbtn:hover{background:var(--chip);border-color:var(--mut)}
+.hbtn.exit{border-color:rgba(220,38,38,0.3);color:var(--crit);background:rgba(220,38,38,0.04)}
+.hbtn.exit:hover{background:rgba(220,38,38,0.1);border-color:var(--crit)}
+
 main{padding:16px 20px;max-width:1300px;margin:0 auto}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
-.tile .k{color:var(--mut);font-size:12px}.tile .v{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
-.tile .s{color:var(--mut);font-size:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px;box-shadow:var(--shadow-sm);transition:box-shadow .2s ease}
+.tile .k{color:var(--mut);font-size:12px;font-weight:500}.tile .v{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.5px}
+.tile .s{color:var(--mut);font-size:12px;margin-top:2px}
 .row2{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
 .row2.eq{grid-template-columns:1fr 1fr}
 @media (max-width:900px){.row2,.row2.eq{grid-template-columns:1fr}}
-h2{font-size:14px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+h2{font-size:14px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:8px}
 .legend{font-weight:400;color:var(--mut);font-size:12px;display:flex;gap:10px;margin-left:auto}
-.legend i{display:inline-block;width:10px;height:3px;vertical-align:middle;margin-right:4px}
+.legend i{display:inline-block;width:10px;height:3px;vertical-align:middle;margin-right:4px;border-radius:1px}
 canvas{width:100%;height:190px;display:block}
-.ranges button{background:var(--chip);border:0;color:var(--fg);padding:3px 9px;border-radius:5px;margin-right:4px;cursor:pointer;font:inherit;font-size:12px}
-.ranges button.on{background:var(--cpu);color:#fff}
+.ranges button{background:var(--chip);border:1px solid var(--line);color:var(--fg);padding:3px 9px;border-radius:5px;margin-right:4px;cursor:pointer;font:inherit;font-size:12px;transition:all .15s}
+.ranges button:hover{background:var(--card)}
+.ranges button.on{background:var(--cpu);color:#fff;border-color:var(--cpu);box-shadow:0 1px 4px rgba(37,99,235,0.3)}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
-th{color:var(--mut);font-weight:500;font-size:12px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:12px}
 td.n{text-align:right;font-variant-numeric:tabular-nums}
-.sev{display:inline-block;padding:0 7px;border-radius:9px;font-size:11px;font-weight:600}
-.sev.crit{background:rgba(200,30,30,.14);color:var(--crit)}
-.sev.warn{background:rgba(180,83,9,.14);color:var(--warn)}
-.pdesc{font-size:11.5px;color:var(--mut);line-height:1.3}
+.sev{display:inline-block;padding:1px 7px;border-radius:8px;font-size:11px;font-weight:600}
+.sev.crit{background:rgba(220,38,38,.12);color:var(--crit)}
+.sev.warn{background:rgba(217,119,6,.12);color:var(--warn)}
+.sev.ok{background:rgba(22,163,74,.12);color:var(--ok)}
+.sev.info{background:var(--chip);color:var(--mut)}
+.pdesc{font-size:11.5px;color:var(--mut);line-height:1.3;margin-top:1px}
 .cat{display:inline-block;font-size:10.5px;padding:0 5px;border-radius:4px;background:var(--chip);color:var(--mut);margin-right:4px}
 .cat.보안{color:var(--ok)}.cat.사용자.폴더{color:var(--warn)}.cat.원격{color:var(--warn)}
 .osb{font-size:12px;color:var(--mut)}
-.sev.info{background:var(--chip);color:var(--mut)}
+
+@media (max-width:750px){
+  header{padding:8px 14px;gap:8px}
+  .header-actions{width:100%;justify-content:space-between;order:3;margin-top:2px}
+  nav{order:2;width:100%;margin-top:2px}
+  .brand{order:1}
+  .tray-badge{font-size:11px;padding:2px 7px}
+}
 .ok{color:var(--ok)}.bad{color:var(--crit)}.wn{color:var(--warn)}
 .mut{color:var(--mut)}
-details summary{cursor:pointer}
-pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--chip);padding:8px;border-radius:6px;max-height:260px;overflow:auto}
-.hide{display:none}
-#tip{position:fixed;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.15);display:none;z-index:9}
-.filters label{margin-right:10px;font-size:13px}
-.banner{margin-bottom:12px;display:flex;align-items:center;gap:14px;border-width:2px}
-.banner .big{font-size:20px;font-weight:700}
+details summary{cursor:pointer;user-select:none}
+pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--chip);padding:8px;border-radius:6px;max-height:260px;overflow:auto;border:1px solid var(--line)}
+.hide{display:none!important}
+#tip{position:fixed;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;box-shadow:var(--shadow-md);display:none;z-index:99;line-height:1.5}
+.filters label{margin-right:10px;font-size:13px;cursor:pointer}
+.banner{margin-bottom:12px;display:flex;align-items:center;gap:14px;border-width:2px;border-radius:12px}
+.banner .big{font-size:18px;font-weight:700}
 .banner.ok{border-color:var(--ok)}.banner.warn{border-color:var(--warn)}.banner.crit{border-color:var(--crit)}
 .banner ul{margin:4px 0 0;padding-left:18px}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:3px;vertical-align:middle}
 .dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.crit{background:var(--crit)}
-.btn{background:var(--cpu);color:#fff;border:0;border-radius:7px;padding:8px 16px;font:inherit;font-weight:600;cursor:pointer}
-.btn:disabled{opacity:.5;cursor:default}
-.find{border-left:4px solid var(--line);padding:8px 12px;margin:6px 0;background:var(--card);border-radius:6px}
+.btn{background:var(--cpu);color:#fff;border:0;border-radius:7px;padding:8px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn:hover{filter:brightness(1.08);box-shadow:0 2px 8px rgba(37,99,235,0.3)}
+.btn:disabled{opacity:.5;cursor:default;box-shadow:none}
+.find{border-left:4px solid var(--line);padding:9px 12px;margin:6px 0;background:var(--card);border-radius:8px;box-shadow:var(--shadow-sm)}
 .find.crit{border-left-color:var(--crit)}.find.warn{border-left-color:var(--warn)}.find.ok{border-left-color:var(--ok)}.find.info{border-left-color:var(--mut)}
 .find ul{margin:4px 0 0;padding-left:18px;color:var(--mut);font-size:12.5px;word-break:break-all}
 .tag{font-size:11px;color:var(--mut);margin-right:6px}
 .pulse{animation:p 1.2s infinite}@keyframes p{50%{opacity:.35}}
 .acts{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.abtn{border:1px solid var(--crit);color:var(--crit);background:transparent;border-radius:6px;padding:4px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
-.abtn:hover{background:rgba(200,30,30,.08)}
-.abtn.q{border-color:var(--warn);color:var(--warn)}.abtn.s{border-color:var(--cpu);color:var(--cpu)}
-#ntWrap{position:relative}
-#ntPop{position:absolute;right:0;top:calc(100% + 6px);width:300px;max-width:calc(100vw - 32px);z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.18);font-size:13px}
-#ntPop label{display:block;padding:3px 0;cursor:pointer}
-#ntBtn.muted{border-color:var(--mut);color:var(--mut);text-decoration:line-through}
+.abtn{border:1px solid var(--crit);color:var(--crit);background:transparent;border-radius:6px;padding:4px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s}
+.abtn:hover{background:rgba(220,38,38,.08)}
+.abtn.q{border-color:var(--warn);color:var(--warn)}.abtn.q:hover{background:rgba(217,119,6,.08)}
+.abtn.s{border-color:var(--cpu);color:var(--cpu)}.abtn.s:hover{background:rgba(37,99,235,.08)}
 .abtn:disabled{opacity:.45;cursor:default}
 .jmsg{font-size:12px}
-.tile.click{cursor:pointer;transition:box-shadow .15s}.tile.click:hover{box-shadow:0 0 0 2px var(--cpu)}
-.tile.click .s:after{content:' · 눌러서 보기 ›';color:var(--cpu)}
-html[lang=en] .tile.click .s:after{content:' · click to view ›'}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
-.modal.hide{display:none}
-.mbox{background:var(--bg);border-radius:12px;max-width:900px;width:100%;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
-.mhead{display:flex;align-items:center;gap:10px;margin-bottom:10px}.mhead h2{flex:1}
-.mclose{background:none;border:0;font-size:20px;color:var(--mut);cursor:pointer}
+.tile.click{cursor:pointer;transition:all .18s cubic-bezier(0.16,1,0.3,1);user-select:none}
+.tile.click:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(37,99,235,0.16);border-color:var(--cpu)}
+@media (prefers-color-scheme:dark){
+  .tile.click:hover{box-shadow:0 8px 22px rgba(59,130,246,0.25);border-color:var(--cpu)}
+}
+.tile.click .s:after{content:' · 자세히 보기 ›';color:var(--cpu);font-weight:600}
+html[lang=en] .tile.click .s:after{content:' · click for details ›'}
+
+/* AI Explain Button & Modal */
+.abtn.ai{
+  border:1px solid rgba(124,58,237,0.35);color:#7c3aed;background:rgba(124,58,237,0.06);
+  border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600;display:inline-flex;
+  align-items:center;gap:4px;cursor:pointer;transition:all .15s ease;vertical-align:middle;
+}
+.abtn.ai:hover{
+  background:rgba(124,58,237,0.14);border-color:#7c3aed;transform:translateY(-1px);
+  box-shadow:0 2px 6px rgba(124,58,237,0.22);
+}
+@media (prefers-color-scheme:dark){
+  .abtn.ai{border-color:rgba(167,139,250,0.4);color:#c4b5fd;background:rgba(124,58,237,0.15)}
+  .abtn.ai:hover{background:rgba(124,58,237,0.28);border-color:#a78bfa}
+}
+.ai-icon-badge{
+  width:28px;height:28px;border-radius:8px;
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:14px;box-shadow:0 2px 8px rgba(124,58,237,0.35);flex-shrink:0;
+}
+.ai-verdict{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;
+  margin:10px 0 14px;font-size:13.5px;font-weight:600;
+}
+.ai-verdict.safe{background:rgba(22,163,74,0.12);color:var(--ok);border:1px solid rgba(22,163,74,0.25)}
+.ai-verdict.warn{background:rgba(217,119,6,0.12);color:var(--warn);border:1px solid rgba(217,119,6,0.25)}
+.ai-verdict.danger{background:rgba(220,38,38,0.12);color:var(--crit);border:1px solid rgba(220,38,38,0.25)}
+.ai-section{margin-bottom:14px}
+.ai-section h3{font-size:13px;font-weight:700;margin:0 0 6px;color:var(--fg);display:flex;align-items:center;gap:6px}
+.ai-box{
+  background:var(--chip);border:1px solid var(--line);border-radius:8px;
+  padding:12px 14px;font-size:13px;line-height:1.65;color:var(--fg);
+}
+.ai-box ul{margin:4px 0 0;padding-left:18px}
+.ai-box li{margin-bottom:4px}
+.ai-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:14px;border-top:1px solid var(--line);margin-top:14px;
+}
+
+/* Modal Base */
+.modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  z-index:100;display:flex;align-items:center;justify-content:center;
+  padding:20px 16px;overflow:auto;
+}
+#aiModal{z-index:1000}
+.mbox{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  max-width:900px;width:100%;padding:20px 22px;box-shadow:var(--shadow-lg);
+  animation:pop-in .18s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes pop-in{from{transform:scale(0.96);opacity:0}to{transform:scale(1);opacity:1}}
+.mhead{display:flex;align-items:center;gap:10px;margin-bottom:12px}.mhead h2{flex:1;font-size:16px}
+.mclose{background:none;border:0;font-size:20px;color:var(--mut);cursor:pointer;border-radius:4px;padding:2px 6px;transition:all .15s}
+.mclose:hover{background:var(--chip);color:var(--fg)}
+
+/* Exit Modal Action Cards */
+.exit-opt{
+  display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:10px;
+  border:1.5px solid var(--line);background:var(--card);cursor:pointer;text-align:left;
+  transition:all .18s ease;width:100%;font:inherit;color:var(--fg);
+}
+.exit-opt:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.exit-opt.primary{border-color:var(--cpu);background:rgba(37,99,235,0.03)}
+.exit-opt.primary:hover{background:rgba(37,99,235,0.07);border-color:var(--cpu)}
+.exit-opt.danger{border-color:var(--line);background:var(--card)}
+.exit-opt.danger:hover{border-color:var(--crit);background:rgba(220,38,38,0.04)}
+.opt-badge{display:inline-block;font-size:10.5px;padding:1px 6px;border-radius:4px;font-weight:700;margin-left:6px;vertical-align:middle}
+.opt-badge.rec{background:rgba(37,99,235,0.12);color:var(--cpu)}
+
 .howto{margin-top:6px;font-size:13px}.howto b{color:var(--fg)}
-.bar{height:10px;background:var(--chip);border-radius:6px;overflow:hidden;margin:6px 0}
+.bar{height:8px;background:var(--chip);border-radius:6px;overflow:hidden;margin:6px 0}
 .bar>i{display:block;height:100%;background:var(--cpu);border-radius:6px;transition:width .5s}
 .bar.ind>i{width:35%;animation:ind 1.6s infinite ease-in-out}@keyframes ind{0%{margin-left:-35%}100%{margin-left:100%}}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13px;margin:6px 0}.kv span:nth-child(odd){color:var(--mut)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;margin:6px 0}.kv span:nth-child(odd){color:var(--mut)}
 .adv{display:inline-block;font-size:11px;padding:0 6px;border-radius:4px;margin-top:2px;font-weight:600}
 .adv.must,.adv.keep{background:var(--chip);color:var(--mut)}
-.adv.close{background:rgba(47,111,222,.12);color:var(--cpu)}
-.adv.remove,.adv.check{background:rgba(180,83,9,.14);color:var(--warn)}
-.adv.remove_rec{background:rgba(200,30,30,.14);color:var(--crit)}
+.adv.close{background:rgba(37,99,235,.12);color:var(--cpu)}
+.adv.remove,.adv.check{background:rgba(217,119,6,.14);color:var(--warn)}
+.adv.remove_rec{background:rgba(220,38,38,.14);color:var(--crit)}
 .pacts{display:flex;gap:4px;margin-top:3px;flex-wrap:wrap}.pacts .abtn{padding:1px 8px;font-size:11.5px}
 .ul{margin:4px 0 0;padding-left:18px;font-size:12.5px}
 .find.ignored{opacity:.55}.find.ignored:hover{opacity:.85}
-.inp{padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--fg);font:inherit;font-size:13px;min-width:0}
+.inp{padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--fg);font:inherit;font-size:13px;min-width:0;transition:border-color .15s}
+.inp:focus{outline:none;border-color:var(--cpu);box-shadow:0 0 0 2px rgba(37,99,235,0.15)}
 @media (max-width:700px){#noteForm{grid-template-columns:1fr!important}}
-.fsec{margin:12px 0 4px;font-size:13px;font-weight:600}
+.fsec{margin:14px 0 6px;font-size:13px;font-weight:600}
 .notelink{font-size:11px;color:var(--cpu);cursor:pointer;margin-left:4px}
+.tile-detail-card{background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.tile-metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}
+.tile-metric-item{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.tile-metric-item .k{font-size:11px;color:var(--mut);margin-bottom:2px}
+.tile-metric-item .v{font-size:16px;font-weight:700}
+
+/* Modal Layering & z-index */
+#tileDetailModal{z-index:900}
+#aiModal{z-index:1100}
+
+/* Memory Portion Bar */
+.mem-portion-wrap{margin:12px 0 10px}
+.mem-portion-bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--chip);gap:1.5px}
+.mem-portion-bar .p-item{height:100%;transition:width .4s ease;position:relative}
+.mem-portion-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px 12px;margin-top:10px;font-size:12px}
+.mem-portion-legend .leg-item{display:flex;align-items:center;gap:6px}
+.mem-portion-legend .leg-chip{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+
+/* Disk Drive Grid */
+.disk-drive-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:12px}
+.disk-drive-card{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:12px 14px}
+.disk-drive-head{display:flex;align-items:center;justify-content:space-between;font-size:13.5px;margin-bottom:6px}
+.disk-drive-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-top:4px}
+
+/* Incident Deep Cause Badge & View */
+.cause-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700}
+.cause-badge.hw{background:rgba(239,68,68,0.14);color:var(--crit);border:1px solid rgba(239,68,68,0.3)}
+.cause-badge.disk{background:rgba(245,158,11,0.14);color:var(--warn);border:1px solid rgba(245,158,11,0.3)}
+.cause-badge.gpu{background:rgba(139,92,246,0.14);color:#8b5cf6;border:1px solid rgba(139,92,246,0.3)}
+.cause-badge.pwr{background:rgba(220,38,38,0.15);color:var(--crit);border:1px solid rgba(220,38,38,0.3)}
+.cause-badge.safe{background:rgba(16,185,129,0.14);color:var(--ok);border:1px solid rgba(16,185,129,0.3)}
+
+/* Safe Memory Trim Action Banner */
+.trim-banner{display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:7px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:var(--ok);font-size:12.5px;margin-bottom:12px;animation:pop-in .2s ease}
+
+/* Non-blocking Toast Notification System (모달 팝업 확인창 방지) */
+#toastBox{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast-item{pointer-events:auto;background:var(--card);border:1.5px solid var(--line);border-radius:9px;padding:10px 16px;box-shadow:var(--shadow-lg);font-size:13px;display:flex;align-items:center;gap:10px;animation:toast-in .2s cubic-bezier(0.16,1,0.3,1);color:var(--fg);max-width:420px;line-height:1.45}
+.toast-item.ok{border-color:var(--ok);color:var(--ok)}
+.toast-item.bad{border-color:var(--crit);color:var(--crit)}
+.toast-item.info{border-color:var(--cpu);color:var(--cpu)}
+@keyframes toast-in{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes toast-out{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(0.95);margin-top:-20px}}
 </style>
 </head>
 <body>
 <header>
-  <h1>PC 모니터</h1>
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+    </div>
+    <h1>PC 모니터</h1>
+    <div id="trayBadge" class="tray-badge" title="백그라운드 감시 상태">
+      <span class="pulse-dot"></span>
+      <span id="trayBadgeText">트레이 감시 중</span>
+    </div>
+  </div>
   <nav>
-    <button data-t="ov" class="on">개요</button>
+    <button data-t="ov" class="on">대시보드</button>
     <button data-t="live">침입 감시 <span id="liveDot" class="dot"></span></button>
     <button data-t="trace">흔적 점검</button>
     <button data-t="prog">프로그램</button>
@@ -111,31 +312,14 @@ html[lang=en] .tile.click .s:after{content:' · click to view ›'}
     <button data-t="ev">전체 이벤트</button>
     <button data-t="about">정보</button>
   </nav>
-  <span id="upd"></span>
-  <div id="ntWrap">
-    <button id="ntBtn" class="abtn s" style="padding:3px 10px" title="알림 설정 · 모니터 끄기">알림</button>
-    <div id="ntPop" class="card hide">
-      <h2 style="margin:0 0 8px;font-size:14px">알림 팝업</h2>
-      <label><input type="radio" name="ntLv" value="all"> 모두 보기</label>
-      <label><input type="radio" name="ntLv" value="crit"> 위험만 보기</label>
-      <label><input type="radio" name="ntLv" value="off"> 끄기</label>
-      <div class="mut" style="font-size:12px;margin:10px 0 4px">잠시 끄기</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="abtn s ntMute" data-m="60">1시간</button>
-        <button class="abtn s ntMute" data-m="480">8시간</button>
-        <button class="abtn s ntMute" data-m="1440">하루</button>
-        <button class="abtn s ntMute hide" data-m="0" id="ntUnmute">다시 켜기</button>
-      </div>
-      <div id="ntState" class="mut" style="font-size:12px;margin-top:6px"></div>
-      <p class="mut" style="font-size:12px;margin:8px 0 0">팝업을 꺼도 감시와 기록은 계속됩니다. 경고는 '전체 이벤트'에서 볼 수 있습니다.</p>
-      <button id="ntTest" class="abtn s" style="margin-top:8px">시험 알림 보내기</button>
-      <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
-      <h2 style="margin:0 0 6px;font-size:14px">모니터 끄기</h2>
-      <p class="mut" style="font-size:12px;margin:0 0 8px">창을 닫아도 모니터는 뒤에서 계속 돕니다. 완전히 멈추려면 여기서 끄세요. 다음 로그인 때나 PC 모니터 아이콘을 열면 다시 켜집니다.</p>
-      <button id="ntStop" class="abtn">모니터 끄기</button>
-    </div>
+  <div class="header-actions">
+    <span id="upd"></span>
+    <button id="langBtn" class="hbtn" title="Language / 언어">🌐 EN</button>
+    <button id="exitBtn" class="hbtn exit" title="PC 모니터 닫기 / 종료">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" x2="12" y1="2" y2="12"/></svg>
+      <span>종료</span>
+    </button>
   </div>
-  <button id="langBtn" class="abtn s" style="padding:3px 10px" title="Language / 언어">EN</button>
 </header>
 <main>
 <section id="ov">
@@ -156,8 +340,27 @@ html[lang=en] .tile.click .s:after{content:' · click to view ›'}
     <canvas id="c2" style="height:130px"></canvas>
   </div>
   <div class="row2">
-    <div class="card"><h2>최근 알림</h2><table id="alerts"></table></div>
-    <div class="card"><h2>지금 CPU 상위</h2><table id="topcpu"></table><h2 style="margin-top:12px">지금 메모리 상위</h2><table id="topmem"></table></div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+        <h2 style="margin:0">최근 알림</h2>
+        <div class="ranges" id="alertFilters" style="display:inline-flex;gap:3px">
+          <button data-cat="all" class="on">전체</button>
+          <button data-cat="sec">🛡️ 보안/침입</button>
+          <button data-cat="res">⚡ 자원/성능</button>
+          <button data-cat="sys">ℹ️ 시스템</button>
+        </div>
+      </div>
+      <table id="alerts"></table>
+    </div>
+    <div class="card">
+      <h2>지금 CPU 상위</h2>
+      <table id="topcpu"></table>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;margin-bottom:6px">
+        <h2 style="margin:0">지금 메모리 상위</h2>
+        <button class="hbtn" id="btnQuickTrim" style="color:var(--ok);border-color:var(--ok);padding:3px 10px;font-size:12px;font-weight:600" title="Windows Working Set을 즉시 회수하여 여유 메모리를 확보합니다">🧹 원클릭 메모리 최적화</button>
+      </div>
+      <table id="topmem"></table>
+    </div>
   </div>
 </section>
 
@@ -197,9 +400,51 @@ html[lang=en] .tile.click .s:after{content:' · click to view ›'}
 </section>
 
 <section id="prog" class="hide">
+  <!-- 뱅킹 권장 설정 안내 및 원클릭 바로차기 배너 -->
+  <div class="card" style="margin-bottom:12px;border-left:4px solid var(--warn);background:rgba(217,119,6,0.03)">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div style="flex:1;min-width:280px">
+        <div style="font-weight:700;font-size:14px;color:var(--warn);display:flex;align-items:center;gap:6px">
+          <span>💡 뱅킹 보안 프로그램 추천 설정 가이드</span>
+          <span class="opt-badge rec">쾌적한 PC 유지 권장</span>
+        </div>
+        <div class="mut" style="font-size:12.5px;margin-top:4px;line-height:1.55">
+          인터넷뱅킹 프로그램은 평소 꺼 두시고, <b>은행/공공기관 사이트 열 때만 자동 켜기</b>로 설정하는 것을 적극 권장합니다.<br>
+          지금 백그라운드에서 자원을 쓰는 모든 뱅킹 프로그램을 한 번에 끝내려면 아래 [바로 차기]를 누르세요.
+        </div>
+      </div>
+      <div>
+        <button id="btnKillAllBanking" class="btn" type="button" style="background:linear-gradient(135deg,#d97706,#dc2626);color:#fff;border:0;padding:9px 16px;border-radius:8px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(220,38,38,0.25);display:inline-flex;align-items:center;gap:6px">
+          <span>⚡ 뱅킹 보안 프로그램 지금 바로 차기 (전체 종료)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="card" style="margin-bottom:12px" id="bankCard">
     <h2>인터넷뱅킹 보안 프로그램 <span class="mut" style="font-weight:400;font-size:12px">nProtect·CrossEX·TouchEn·Wizvera·IPinside·공동인증서 도구 등</span></h2>
     <div id="bankBody" class="mut">확인 중…</div>
+  </div>
+
+  <!-- 테스트 프로세스 실행 및 바로 차기 테스트 카드 -->
+  <div class="card" style="margin-bottom:12px;border-left:4px solid var(--cpu)">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px">
+          <span>🧪 프로세스 바로 차기(강제종료) 체험 테스트</span>
+          <span class="opt-badge rec" style="background:rgba(37,99,235,0.12);color:var(--cpu)">안전 체험</span>
+        </div>
+        <div class="mut" style="font-size:12.5px;margin-top:4px">
+          안전한 테스트용 프로세스(메모장)를 실행한 뒤, 목록에서 <b>[⚡ 바로 차기]</b>를 눌러 정상적으로 즉시 종료되는지 확인해볼 수 있습니다.
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="btnSpawnTestProc" class="hbtn" type="button" style="border-color:var(--cpu);color:var(--cpu);font-weight:600">
+          <span>🧪 테스트 프로세스 실행</span>
+        </button>
+        <span id="testProcMsg" class="mut" style="font-size:12px"></span>
+      </div>
+    </div>
   </div>
   <div class="card" style="margin-bottom:12px">
     <h2>프로그램 바로 찾기</h2>
@@ -244,6 +489,52 @@ html[lang=en] .tile.click .s:after{content:' · click to view ›'}
   <div class="card" style="margin-top:12px"><h2>Windows 설정에 하는 일</h2>
     <ul class="ul" style="font-size:13px"><li>로그인 성공/실패 감사 켜기 (침입 시도 기록용)</li><li>Windows 방화벽 "차단 기록" 켜기 (최대 4MB, 접속 시도 감시용)</li>
       <li>자동 실행 작업 'PCMonitor' 등록</li><li>그 밖의 설정은 버튼을 눌러 확인한 경우에만 바꿉니다</li></ul></div>
+  <div class="card" style="margin-top:12px" id="alertLevelCard">
+    <h2>알림 및 팝업 방식 설정 <span class="mut" style="font-weight:400;font-size:12px">작업 표시줄 트레이 알림(풍선 도움말)의 동작 방식을 정합니다</span></h2>
+    <div class="kv" style="align-items:start">
+      <span>알림 3대 방식</span>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+          <input type="radio" name="notifyModeRadio" value="instant" checked>
+          <span><b>🔔 발생 즉시 알람 (팝업)</b> <span class="opt-badge rec" style="margin-left:2px">권장</span> <span class="mut" style="font-size:12px">· 이상 감지 즉시 윈도우 알림 배너로 팝업</span></span>
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+          <input type="radio" name="notifyModeRadio" value="silent">
+          <span><b>📋 대시보드 리스트에만 표시 (무음)</b> <span class="mut" style="font-size:12px">· 윈도우 팝업을 띄우지 않고 대시보드 알림 목록에만 조용히 기록</span></span>
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+          <input type="radio" name="notifyModeRadio" value="digest">
+          <span><b>📦 모아서 한 번만 알람 (30분 주기 요약)</b> <span class="mut" style="font-size:12px">· 잦은 알림 방지, 30분 주기로 알림을 묶어서 1회 안내</span></span>
+        </label>
+      </div>
+      <span>경고 필터 수준</span>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+          <input type="radio" name="alertLevelRadio" value="crit" checked>
+          <span><b>위험(치명적) 경고만</b> <span class="mut" style="font-size:12px">· 침입 시도, 블루스크린/비정상 종료 등 심각한 위험만 알림</span></span>
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+          <input type="radio" name="alertLevelRadio" value="all">
+          <span><b>모든 경고 (주의 항목 포함)</b> <span class="mut" style="font-size:12px">· 자원 사용량 주의(CPU 90%), 백신 업데이트 지연 등 포함</span></span>
+        </label>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h2>종료 및 백그라운드 동작 설정</h2>
+    <div class="kv">
+      <span>창 닫을 때(X) 동작</span>
+      <span>
+        <label style="cursor:pointer;margin-right:12px"><input type="radio" name="closeActionRadio" value="tray" checked> 트레이로 최소화 (백그라운드 감시 유지 - 권장)</label><br>
+        <label style="cursor:pointer"><input type="radio" name="closeActionRadio" value="exit"> 백그라운드까지 완전 종료</label>
+      </span>
+      <span>트레이 아이콘</span>
+      <span>작업 표시줄 오른쪽 알림 영역에 아이콘 상주 (더블클릭: 화면 열기, 우클릭: 종료 메뉴)</span>
+    </div>
+    <div class="acts" style="margin-top:10px">
+      <button class="abtn" id="aboutDirectShutdown" data-confirm="PC 모니터 백그라운드 감시를 완전히 종료할까요?\n(종료하면 자원 기록 및 침입 감시가 중단됩니다)">백그라운드 모니터 즉시 종료</button>
+    </div>
+  </div>
 </section>
 
 <section id="ev" class="hide">
@@ -264,6 +555,94 @@ html[lang=en] .tile.click .s:after{content:' · click to view ›'}
     <details id="ignBox" class="hide" style="margin-top:12px"><summary class="mut">무시한 항목 <span id="ignCount"></span>개 — 펼쳐서 다시 표시</summary><table id="ignModalTable" style="margin-top:6px"></table></details>
   </div>
 </div>
+<div id="exitModal" class="modal hide" role="dialog" aria-modal="true">
+  <div class="mbox" style="max-width:540px">
+    <div class="mhead">
+      <h2 style="margin:0">PC 모니터 종료 및 백그라운드 제어</h2>
+      <button class="mclose" id="exitModalClose" aria-label="닫기">✕</button>
+    </div>
+    <div style="font-size:13.5px;color:var(--mut);margin:8px 0 16px;line-height:1.6">
+      화면을 닫을 때 백그라운드 동작 방식을 선택하세요.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+      <button id="btnMinimizeTray" class="exit-opt primary" type="button">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-weight:600;color:var(--cpu);font-size:14px">📌 트레이로 최소화 (백그라운드 감시 유지)</div>
+          <span class="opt-badge rec">권장</span>
+        </div>
+        <div class="mut" style="font-size:12.5px;margin-top:4px;line-height:1.45">화면 창만 닫고, 트레이에서 자원 기록·침입 감시·인터넷뱅킹 보호를 계속 유지합니다. 작업 표시줄 오른쪽 트레이 아이콘에서 언제든 다시 열 수 있습니다.</div>
+      </button>
+      <button id="btnExitAll" class="exit-opt danger" type="button">
+        <div style="font-weight:600;color:var(--crit);font-size:14px">🛑 백그라운드 완전 종료</div>
+        <div class="mut" style="font-size:12.5px;margin-top:4px;line-height:1.45">백그라운드 수집기, 감시 장치, 웹 서버를 모두 종료합니다. 다시 시작하려면 바탕화면의 바로가기를 실행하세요.</div>
+      </button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none">
+        <input type="checkbox" id="chkAutoExit" style="cursor:pointer"> <span>창 닫을 때(X) 백그라운드까지 항상 종료</span>
+      </label>
+      <button class="abtn s" id="exitModalCancel" style="padding:4px 14px">취소</button>
+    </div>
+  </div>
+</div>
+<div id="aiModal" class="modal hide" role="dialog" aria-modal="true">
+  <div class="mbox" style="max-width:620px">
+    <div class="mhead" style="margin-bottom:8px">
+      <div class="ai-icon-badge">🤖</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <h2 style="margin:0;font-size:16px" id="aiItemTitle">AI 분석 요약</h2>
+          <span id="aiItemCat" class="tag" style="margin:0">분석</span>
+        </div>
+        <div id="aiItemSubtitle" class="mut" style="font-size:12px;margin-top:2px;word-break:break-all"></div>
+      </div>
+      <button class="mclose" id="aiModalClose" aria-label="닫기">✕</button>
+    </div>
+    <div id="aiModalBody">
+      <div id="aiVerdictBox" class="ai-verdict safe">
+        <span id="aiVerdictIcon" style="font-size:18px">🟢</span>
+        <span id="aiVerdictText">안전 / 정상 도구입니다</span>
+      </div>
+      <div class="ai-section">
+        <h3>🤖 AI 분석 요약</h3>
+        <div id="aiSummaryBox" class="ai-box">분석 중…</div>
+      </div>
+      <div class="ai-section">
+        <h3>💡 권장 조치 가이드</h3>
+        <div id="aiActionBox" class="ai-box"></div>
+      </div>
+      <div id="aiDetailSection" class="ai-section" style="display:none">
+        <h3>⚙️ 상세 정보</h3>
+        <div id="aiDetailBox" class="ai-box" style="font-size:12px"></div>
+      </div>
+    </div>
+    <div class="ai-footer">
+      <button class="hbtn" id="aiGoogleBtn" style="color:var(--cpu);border-color:var(--cpu)">
+        <span>🔍 Google에서 검색</span>
+      </button>
+      <button class="abtn s" id="aiModalCloseBtn" style="padding:5px 16px">닫기</button>
+    </div>
+  </div>
+</div>
+<div id="tileDetailModal" class="modal hide" role="dialog" aria-modal="true">
+  <div class="mbox" style="max-width:680px">
+    <div class="mhead" style="margin-bottom:12px">
+      <div id="tileModalIcon" class="ai-icon-badge" style="background:linear-gradient(135deg,var(--cpu),#6366f1)">📊</div>
+      <div style="flex:1;min-width:0">
+        <h2 style="margin:0;font-size:16.5px" id="tileModalTitle">상세 분석</h2>
+        <div id="tileModalSubtitle" class="mut" style="font-size:12px;margin-top:2px">실시간 분석 정보 및 상위 점유율 항목</div>
+      </div>
+      <button class="mclose" id="tileModalClose" aria-label="닫기">✕</button>
+    </div>
+    <div id="tileModalBody" style="max-height:70vh;overflow-y:auto;padding-right:2px">
+      <!-- 동적 생성 내용 -->
+    </div>
+    <div class="ai-footer">
+      <div id="tileModalFootTip" class="mut" style="font-size:12px"></div>
+      <button class="abtn s" id="tileModalCloseBtn" style="padding:5px 16px">닫기</button>
+    </div>
+  </div>
+</div>
 <script>
 const $=s=>document.querySelector(s);
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -272,9 +651,95 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const sev=s=>`<span class="sev ${s}">${{crit:'위험',warn:'주의',info:'정보'}[s]||s}</span>`;
 const CAT={action:'조치',intrusion:'침입',crash:'장애',hardware:'하드웨어',security:'보안',defender:'백신',persistence:'자동실행',network:'네트워크',process:'프로그램',app:'앱',system:'시스템',resource:'자원',stall:'멈춤'};
 async function j(u){const r=await fetch(u);if(r.status===401){document.body.innerHTML='<div style="padding:40px"><h2>접근 권한이 없습니다</h2><p>PC 모니터 아이콘으로 다시 열어 주세요.</p></div>';throw new Error('401')}return r.json()}
+
+/* Non-blocking Toast Notification (모달 팝업 확인창 방지) */
+function showToast(msg, type='ok', duration=3200){
+  let box = $('#toastBox');
+  if(!box){
+    box = document.createElement('div');
+    box.id = 'toastBox';
+    document.body.appendChild(box);
+  }
+  const el = document.createElement('div');
+  el.className = `toast-item ${type}`;
+  const icon = type === 'ok' ? '✓' : type === 'bad' ? '⚠️' : 'ℹ️';
+  el.innerHTML = `<span>${icon}</span><span style="flex:1">${esc(msg)}</span>`;
+  box.appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'toast-out .25s ease forwards';
+    setTimeout(() => el.remove(), 250);
+  }, duration);
+}
+
+/* 알림 본문 속 동일 프로세스명(멀티 인스턴스) 그룹화 포맷터 */
+function formatAlertBody(body){
+  if(!body) return '';
+  return body.replace(/상위:\s*([^.\n]+)/, (match, procsStr) => {
+    const items = procsStr.split(/,\s*/);
+    const groups = {};
+    items.forEach(item => {
+      const m = item.match(/^([^(]+)\(([\d.]+)(MB|%)\)/i);
+      if(m){
+        const name = m[1].trim();
+        const val = parseFloat(m[2]);
+        const unit = m[3].toUpperCase();
+        if(!groups[name]) groups[name] = { count: 0, val: 0, unit };
+        groups[name].count += 1;
+        groups[name].val += val;
+      }
+    });
+    if(Object.keys(groups).length === 0) return match;
+    const formatted = Object.entries(groups).map(([name, g]) => {
+      const valStr = g.unit === 'MB' ? Math.round(g.val).toLocaleString() + 'MB' : g.val.toFixed(0) + '%';
+      return g.count > 1 ? `${name} (${g.count}개 합산 ${valStr})` : `${name} (${valStr})`;
+    });
+    return '상위: ' + formatted.join(', ');
+  });
+}
+/* 프로세스 친화적 이름 사전 */
+const PROC_KO_NAMES = {
+  'powershell.exe': 'PowerShell 스크립트 실행기',
+  'pwsh.exe': 'PowerShell Core',
+  'python.exe': 'Python 스크립트 엔진',
+  'pythonw.exe': 'Python 백그라운드 엔진',
+  'cmd.exe': '명령 프롬프트',
+  'conhost.exe': '콘솔 창 호스트',
+  'explorer.exe': 'Windows 탐색기 및 작업표시줄',
+  'svchost.exe': 'Windows 서비스 호스트',
+  'taskhostw.exe': 'Windows 작업 호스트',
+  'searchhost.exe': 'Windows 검색 서비스',
+  'startmenuexperiencehost.exe': '시작 메뉴 호스트',
+  'msedge.exe': 'Microsoft Edge 브라우저',
+  'chrome.exe': 'Google Chrome 브라우저',
+  'whale.exe': '네이버 웨일 브라우저',
+  'brave.exe': 'Brave 브라우저',
+  'code.exe': 'Visual Studio Code',
+  'devenv.exe': 'Visual Studio',
+  'git.exe': 'Git 버전 관리',
+  'node.exe': 'Node.js 런타임',
+  'slack.exe': 'Slack 메신저',
+  'discord.exe': 'Discord 메신저',
+  'kakaotalk.exe': '카카오톡',
+  'teams.exe': 'Microsoft Teams',
+  'pcmonitor.exe': 'PC 모니터'
+};
+function getKoProcName(name){
+  if(!name)return '';
+  return PROC_KO_NAMES[name.toLowerCase()] || '';
+}
+
 /* 프로세스 이름 + 무엇인지 설명 */
-function pcell(r){const tip=[r.path,r.company].filter(Boolean).join('\n');
-  return `<td title="${esc(tip)}"><b style="font-weight:600">${esc(r.name)}</b>${r.desc?`<div class="pdesc">${r.cat?`<span class="cat ${esc(r.cat)}">${esc(r.cat)}</span>`:''}${esc(r.desc)}</div>`:''}</td>`}
+function pcell(r){
+  const tip=[r.path,r.company].filter(Boolean).join('\n');
+  const ko=getKoProcName(r.name);
+  return `<td title="${esc(tip)}">
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <b style="font-weight:600">${esc(r.name)}</b>
+      ${ko?`<span style="font-size:11.5px;color:var(--cpu);font-weight:600">(${esc(ko)})</span>`:''}
+    </div>
+    ${r.desc?`<div class="pdesc">${r.cat?`<span class="cat ${esc(r.cat)}">${esc(r.cat)}</span>`:''}${esc(r.desc)}</div>`:''}
+  </td>`;
+}
 
 /* ---------- 탭 ---------- */
 let tab='ov';
@@ -332,6 +797,47 @@ async function showAt(d){
   $('#atTime').innerHTML=`<div class="row2" style="margin-top:10px"><div><h2>${fmtT(p[0].ts,'s')} CPU 상위 (1분 평균)</h2><table><tr><th>프로세스</th><th class="n">CPU</th><th class="n">메모리</th></tr>${t('cpu')}</table></div><div><h2>메모리 상위</h2><table><tr><th>프로세스</th><th class="n">CPU</th><th class="n">메모리</th></tr>${t('mem')}</table></div></div>`;
 }
 
+/* ---------- 최근 알림 필터링 ---------- */
+let alertCategory = 'all';
+let cachedAlerts = [];
+function renderAlerts(alerts){
+  if(alerts !== undefined) cachedAlerts = alerts || [];
+  let filtered = cachedAlerts;
+  if(alertCategory === 'sec'){
+    filtered = cachedAlerts.filter(a => {
+      const t = (a.title + ' ' + (a.body||'')).toLowerCase();
+      return t.includes('침입') || t.includes('방화벽') || t.includes('로그인') || t.includes('백신') || t.includes('보안') || t.includes('defender') || t.includes('quarantine') || a.severity === 'crit';
+    });
+  } else if(alertCategory === 'res'){
+    filtered = cachedAlerts.filter(a => {
+      const t = (a.title + ' ' + (a.body||'')).toLowerCase();
+      return t.includes('cpu') || t.includes('메모리') || t.includes('커밋') || t.includes('디스크') || t.includes('자원') || t.includes('점유') || t.includes('부하');
+    });
+  } else if(alertCategory === 'sys'){
+    filtered = cachedAlerts.filter(a => {
+      const t = (a.title + ' ' + (a.body||'')).toLowerCase();
+      return t.includes('비정상') || t.includes('업데이트') || t.includes('재부팅') || t.includes('장애') || t.includes('멈춤') || t.includes('오류') || (!t.includes('침입') && !t.includes('cpu') && !t.includes('메모리'));
+    });
+  }
+  $('#alerts').innerHTML = filtered.length ? '<tr><th>시각</th><th></th><th>내용</th><th></th></tr>' + filtered.map(a => {
+    const formattedBody = formatAlertBody(a.body);
+    return `<tr>
+    <td class="mut" style="white-space:nowrap">${fmtT(a.ts,true)}</td>
+    <td>${sev(a.severity)}</td>
+    <td><b>${esc(a.title)}</b><br><span class="mut">${esc(formattedBody)}</span></td>
+    <td style="white-space:nowrap;text-align:right">
+      <button class="abtn ai" data-ai-type="alert" data-ai-name="${esc(a.title)}" data-ai-desc="${esc(formattedBody)}" data-ai-sev="${esc(a.severity)}">🤖 AI 설명</button>
+    </td>
+  </tr>`;}).join('') : `<tr><td class="mut" colspan="4">${alertCategory==='all'?'알림 없음':'해당 카테고리의 알림이 없습니다.'}</td></tr>`;
+}
+document.querySelectorAll('#alertFilters button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#alertFilters button').forEach(x => x.classList.toggle('on', x === b));
+    alertCategory = b.dataset.cat || 'all';
+    renderAlerts();
+  };
+});
+
 /* ---------- 개요 ---------- */
 async function loadSummary(){
   const s=await j('/api/summary');const m=s.latest||{};
@@ -339,23 +845,59 @@ async function loadSummary(){
   const cls=(v,w,c)=>v>=c?'bad':v>=w?'wn':'';
   const li=s.last_incident;
   const rk=s.risks||{crit:0,warn:0},secBad=rk.crit;
+  window._lastSummary = s;
+  const drvs = s.drives || [];
+  let diskKeyName = '디스크 여유';
+  let diskValHtml = '';
+  let diskSubHtml = '';
+  if(drvs.length > 1){
+    diskKeyName = `디스크 여유 (${drvs.length}개)`;
+    diskValHtml = drvs.map(d => `<span class="${d.free_gb<10?'bad':d.free_gb<25?'wn':''}">${d.drive} ${d.free_gb}G</span>`).join(' · ');
+    diskSubHtml = `I/O 사용률 ${m.disk_busy??0}% · 핸들 ${m.handles??'-'}`;
+  } else {
+    diskKeyName = `디스크 ${s.drive||'C:'} 여유`;
+    diskValHtml = `<span class="${s.disk_free_gb<10?'bad':''}">${s.disk_free_gb} GB</span>`;
+    diskSubHtml = `사용률 ${m.disk_busy??0}% · 핸들 ${m.handles??'-'}`;
+  }
+  const cPct = m.commit_pct != null ? m.commit_pct : 0;
+  const commitTag = cPct >= 90 ? ' <span class="sev crit" style="font-size:10px;padding:0 4px">위험</span>' : cPct >= 80 ? ' <span class="sev warn" style="font-size:10px;padding:0 4px">주의</span>' : '';
+  const commitBadge = `<span class="${cPct>=90?'bad':cPct>=80?'wn':''}">커밋 ${cPct.toFixed(0)}%${commitTag}</span>`;
   $('#tiles').innerHTML=[
-    ['CPU',`<span class="${cls(m.cpu,70,90)}">${(m.cpu??0).toFixed(0)}%</span>`,`프로세스 ${m.procs??'-'}개 · 스레드 ${m.threads??'-'}`],
-    ['메모리',`<span class="${cls(m.mem,80,90)}">${(m.mem??0).toFixed(0)}%</span>`,`${((m.mem_used_mb||0)/1024).toFixed(1)} GB 사용 · 커밋 ${m.commit_pct??'-'}%`],
-    [`디스크 ${s.drive||'C:'} 여유`,`<span class="${s.disk_free_gb<10?'bad':''}">${s.disk_free_gb} GB</span>`,`사용률 ${m.disk_busy??0}% · 핸들 ${m.handles??'-'}`],
-    ['마지막 장애',li?`<span class="bad" style="font-size:16px">${esc(li.kind)} ${esc(li.bugcheck)}</span>`:'<span class="ok" style="font-size:18px">없음</span>',li?fmtT(li.last_heartbeat,true):'모니터 시작 이후'],
+    ['CPU',`<span class="${cls(m.cpu,70,90)}">${(m.cpu??0).toFixed(0)}%</span>`,`프로세스 ${m.procs??'-'}개 · 스레드 ${m.threads??'-'}`,'cpu'],
+    ['메모리',`<span class="${cls(m.mem,80,90)}">${(m.mem??0).toFixed(0)}%</span>`,`${((m.mem_used_mb||0)/1024).toFixed(1)} GB · ${commitBadge}`,'mem'],
+    [diskKeyName, diskValHtml, diskSubHtml, 'disk'],
+    ['마지막 장애',li?`<span class="bad" style="font-size:16px">${esc(li.kind)} ${esc(li.bugcheck)}</span>`:'<span class="ok" style="font-size:18px">없음</span>',li?fmtT(li.last_heartbeat,true):'모니터 시작 이후','incident'],
     ['보안',secBad?`<span class="bad">위험 ${secBad}건</span>${rk.warn?` <span class="wn" style="font-size:16px">주의 ${rk.warn}</span>`:''}`:rk.warn?`<span class="wn">주의 ${rk.warn}건</span>`:'<span class="ok" style="font-size:18px">이상 없음</span>',df?`Defender ${df.rtp?'켜짐':'<b class="bad">꺼짐</b>'} · 정의 ${df.sigdays}일 전`:'확인 중…','risks'],
-    ['모니터 DB',`${s.db_mb} MB`,`최대 50MB · 오래된 기록 자동 삭제`],
-  ].map(([k,v,x,open])=>`<div class="card tile${open&&(secBad||rk.warn)?' click':''}" ${open?`data-open="${open}"`:''}><div class="k">${k}</div><div class="v">${v}</div><div class="s">${x}</div></div>`).join('');
-  $('#alerts').innerHTML=s.alerts.length?'<tr><th>시각</th><th></th><th>내용</th></tr>'+s.alerts.map(a=>`<tr><td class="mut" style="white-space:nowrap">${fmtT(a.ts,true)}</td><td>${sev(a.severity)}</td><td><b>${esc(a.title)}</b><br><span class="mut">${esc(a.body)}</span></td></tr>`).join(''):'<tr><td class="mut">알림 없음</td></tr>';
+    ['모니터 DB',`${s.db_mb} MB`,`최대 50MB · 오래된 기록 자동 삭제`,'db'],
+  ].map(([k,v,x,tileKey])=>`<div class="card tile click" data-tile="${tileKey}"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${x}</div></div>`).join('');
+  renderAlerts(s.alerts);
   const ADV={must:'필수',keep:'그대로 두세요',close:'종료 가능',remove:'삭제 가능',remove_rec:'삭제 권장',check:'확인 필요'};
   const pt=(rows,k)=>'<tr><th>프로세스</th><th class="n">CPU</th><th class="n">메모리</th></tr>'+rows.map(r=>{
-    const adv=r.advice?`<div><span class="adv ${r.advice}" title="${esc(r.advice_text)}">${ADV[r.advice]||''}</span> <span class="pdesc">${r.advice==='must'||r.advice==='keep'?'':esc(r.advice_text)}</span><span class="notelink" data-notefor="${esc(r.name)}">메모</span></div>`:'';
+    const aiBtn=`<button class="abtn ai" data-ai-type="proc" data-ai-name="${esc(r.name)}" data-ai-desc="${esc(r.desc||'')}" data-ai-cat="${esc(r.cat||'')}" data-ai-company="${esc(r.company||'')}">🤖 AI 설명</button>`;
+    const killBtn=`<button class="abtn btn-proc-kill" data-proc-kill="${esc(r.name)}" data-proc-pid="${r.pid||''}" style="border-color:var(--crit);color:var(--crit);padding:1px 7px;font-size:11px" title="이 프로세스를 즉시 강제 종료합니다">⚡ 바로 차기</button>`;
+    const adv=r.advice?`<div><span class="adv ${r.advice}" title="${esc(r.advice_text)}">${ADV[r.advice]||''}</span> <span class="pdesc">${r.advice==='must'||r.advice==='keep'?'':esc(r.advice_text)}</span><span class="notelink" data-notefor="${esc(r.name)}">메모</span> ${aiBtn} ${killBtn}</div>`:`<div style="margin-top:2px"><span class="notelink" data-notefor="${esc(r.name)}">메모</span> ${aiBtn} ${killBtn}</div>`;
     const acts=(r.actions||[]).length?`<div class="pacts">${actBtns(r.actions,true)}</div>`:'';
     return `<tr>${pcell(r).replace('</td>',adv+acts+'</td>')}<td class="n">${r.cpu.toFixed(1)}%</td><td class="n">${r.mem_mb.toFixed(0)} MB</td></tr>`}).join('');
   $('#topcpu').innerHTML=pt(s.top_cpu);$('#topmem').innerHTML=pt(s.top_mem);
   $('#upd').innerHTML=`<span class="osb">${esc(s.os&&s.os.name||'')}${s.os&&s.os.server?' · 서버 모드':''}</span> · 갱신 ${fmtT(s.now,'s')}`;
   window._status=s.status;
+  const qTrim = $('#btnQuickTrim');
+  if(qTrim){
+    qTrim.onclick = async () => {
+      qTrim.disabled = true;
+      const orig = qTrim.innerHTML;
+      qTrim.innerHTML = '<span>⏳ 최적화 중…</span>';
+      try {
+        const res = await post('/api/mem/trim', {});
+        showToast(res.msg || '메모리 최적화가 완료되었습니다.', 'ok');
+        await loadSummary();
+      } catch(err) {
+        showToast('메모리 최적화 실패: ' + err, 'bad');
+      }
+      qTrim.disabled = false;
+      qTrim.innerHTML = orig;
+    };
+  }
 }
 
 /* ---------- 장애 ---------- */
@@ -419,7 +961,7 @@ async function loadLive(){
   $('#fwStatus').innerHTML=L.fw.status==='ok'?'<span class="ok">방화벽 차단 기록 감시 중</span>':'<span class="wn">'+esc(L.fw.status)+'</span>';
   chart($('#cfw'),L.fw.series,[{k:'n',c:'--crit',n:'차단',u:'회'}],{gap:1e9});
   $('#fwSrc').innerHTML=tbl(['출처 IP','구분','대상 포트','24시간','마지막'],L.fw.sources.map(s=>`<tr><td>${esc(s.src)}</td><td>${KIND[s.kind]||s.kind}</td><td>${esc(s.ports.join(', '))}${s.nports>12?` 외 ${s.nports-12}개`:''}${s.nports>=10?' <span class="sev crit">포트 스캔</span>':''}</td><td class="n">${s.n}</td><td class="mut">${fmtT(s.last,true)}</td></tr>`),'방화벽이 막은 접속 시도가 없습니다');
-  $('#inbound').innerHTML=tbl(['출발지','구분','내 포트','프로그램','상태'],L.inbound.map(i=>`<tr><td>${esc(i.rip)}:${i.rport}</td><td>${KIND[i.kind]}</td><td>${i.lport} ${esc(i.svc)}</td>${pcell({name:i.proc,desc:i.desc})}<td class="mut">${i.state==='SYN_RECV'?'<span class="wn">연결 시도 중</span>':'연결됨'}</td></tr>`),'외부에서 들어온 연결 없음');
+  $('#inbound').innerHTML=tbl(['출발지','구분','내 포트','프로그램','상태',''],L.inbound.map(i=>`<tr><td>${esc(i.rip)}:${i.rport}</td><td>${KIND[i.kind]}</td><td>${i.lport} ${esc(i.svc)}</td>${pcell({name:i.proc,desc:i.desc})}<td class="mut">${i.state==='SYN_RECV'?'<span class="wn">연결 시도 중</span>':'연결됨'}</td><td style="white-space:nowrap;text-align:right"><button class="abtn ai" data-ai-type="inbound" data-ai-name="${esc(i.proc)}" data-ai-desc="${esc(i.desc||'')}" data-ai-rip="${esc(i.rip)}" data-ai-lport="${esc(i.lport)}" data-ai-svc="${esc(i.svc)}" data-ai-kind="${esc(i.kind)}">🤖 AI 설명</button></td></tr>`),'외부에서 들어온 연결 없음');
   $('#logins').innerHTML=tbl(['출발지','계정','횟수','마지막'],[
     ...L.failed.map(f=>`<tr><td>${esc(f.ip)} ${f.kind==='ext'?KIND.ext:''}</td><td>${esc(f.user)} <span class="mut">${esc(f.how)}</span></td><td class="n"><span class="wn">실패 ${f.n}</span></td><td class="mut">${fmtT(f.last,true)}</td></tr>`),
     ...L.remote_ok.map(r=>`<tr><td>${esc(r.ip)}</td><td colspan=2><span class="bad">성공</span> ${esc(r.title)}</td><td class="mut">${fmtT(r.ts,true)}</td></tr>`)],
@@ -461,20 +1003,63 @@ let actPoll=null;
 function afterAction(){clearTimeout(actPoll);let n=0;const tick=()=>{refresh();if(!$('#riskModal').classList.contains('hide'))openRisks(true);if(++n<20)actPoll=setTimeout(tick,3000)};actPoll=setTimeout(tick,1500)}
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');
-  if(b&&!b.disabled){if(!confirm(b.dataset.confirm+'\n\n진행할까요?'))return;
+  if(b&&!b.disabled){
     b.disabled=true;const res=await post('/api/action/run',{id:b.dataset.act});
-    if(!res.ok&&res.msg)alert(res.msg);afterAction();return}
+    if(res.msg)showToast(res.msg, res.ok?'ok':'bad');afterAction();return}
   const g=e.target.closest('[data-ign]');
   if(g){const q=JSON.parse(g.dataset.ign);
-    const msg={finding:'이 항목을 무시합니다.\n위험·주의 건수에서 빠지고, 다시 점검해도 계속 숨겨집니다.',event_rule:'같은 제목의 경고를 앞으로 계속 숨깁니다.',event_once:'이번 경고만 확인함으로 처리합니다. (같은 경고가 또 생기면 다시 표시됩니다)'}[q.type];
-    if(!confirm(msg+'\n\n「'+q.title+'」\n\n무시한 항목 목록에서 언제든 다시 표시할 수 있습니다.'))return;
-    g.disabled=true;await post('/api/ignore',q);afterIgnore();return}
+    g.disabled=true;await post('/api/ignore',q);
+    showToast(`'${q.title}' 항목을 무시 처리했습니다.`, 'info');
+    afterIgnore();return}
   const u=e.target.closest('[data-unign]');
-  if(u){u.disabled=true;const res=await post('/api/ignore/restore',{id:u.dataset.unign});if(!res.ok)alert(res.msg);afterIgnore();return}
+  if(u){u.disabled=true;const res=await post('/api/ignore/restore',{id:u.dataset.unign});
+    if(res.msg)showToast(res.msg, res.ok?'ok':'bad');afterIgnore();return}
   const o=e.target.closest('[data-open="risks"]');if(o){openRisks();return}
+  const tile = e.target.closest('[data-tile]');
+  if(tile){
+    const k = tile.dataset.tile;
+    if(k === 'risks') openRisks();
+    else openTileDetailModal(k);
+    return;
+  }
   const c=e.target.closest('[data-cmd]');
-  if(c&&!c.disabled){if(c.dataset.confirm&&!confirm(c.dataset.confirm))return;c.disabled=true;
-    const res=await post(c.dataset.cmd,c.dataset.kind?{kind:c.dataset.kind}:{});if(res.msg)alert(res.msg);setTimeout(loadMaint,2000);return}
+  if(c&&!c.disabled){c.disabled=true;
+    const res=await post(c.dataset.cmd,c.dataset.kind?{kind:c.dataset.kind}:{});
+    if(res.msg)showToast(res.msg, 'info');setTimeout(loadMaint,2000);return}
+  const ai=e.target.closest('[data-ai-type]');
+  if(ai){
+    openAiModal({
+      type: ai.dataset.aiType,
+      name: ai.dataset.aiName,
+      desc: ai.dataset.aiDesc,
+      cat: ai.dataset.aiCat,
+      company: ai.dataset.aiCompany,
+      sev: ai.dataset.aiSev,
+      rip: ai.dataset.aiRip,
+      lport: ai.dataset.aiLport,
+      svc: ai.dataset.aiSvc,
+      kind: ai.dataset.aiKind
+    });
+    return;
+  }
+  const pk = e.target.closest('[data-proc-kill]');
+  if(pk && !pk.disabled){
+    const name = pk.dataset.procKill;
+    const pid = pk.dataset.procPid;
+    pk.disabled = true;
+    const origText = pk.textContent;
+    pk.textContent = '종료 중…';
+    try {
+      const res = await post('/api/proc/kill', { name, pid });
+      showToast(res.msg || `'${name}' 프로세스를 종료했습니다.`, res.ok ? 'ok' : 'bad');
+    } catch(err) {
+      showToast('종료 요청 실패: ' + err, 'bad');
+    }
+    pk.disabled = false;
+    pk.textContent = origText;
+    setTimeout(() => refresh(), 600);
+    return;
+  }
 });
 
 /* ---------- 위험 목록 (보안 칸을 누르면) ---------- */
@@ -496,10 +1081,762 @@ async function openRisks(quiet){const r=await j('/api/risks');
 function closeRisks(){$('#riskModal').classList.add('hide')}
 $('#riskClose').onclick=closeRisks;
 $('#riskModal').onclick=e=>{if(e.target.id==='riskModal')closeRisks()};
-addEventListener('keydown',e=>{if(e.key==='Escape')closeRisks()});
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    const aiModal = $('#aiModal');
+    if(aiModal && !aiModal.classList.contains('hide')){
+      closeAiModal();
+      return;
+    }
+    const tileModal = $('#tileDetailModal');
+    if(tileModal && !tileModal.classList.contains('hide')){
+      closeTileDetailModal();
+      return;
+    }
+    closeRisks();
+    closeExitModal();
+  }
+});
+
+/* ---------- 타일 상세 분석 모달 (CPU, 메모리, 디스크, 장애, DB) ---------- */
+function openTileDetailModal(key){
+  const s = window._lastSummary || {};
+  const m = s.latest || {};
+  const modal = $('#tileDetailModal');
+  if(!modal) return;
+  
+  const iconEl = $('#tileModalIcon');
+  const titleEl = $('#tileModalTitle');
+  const subEl = $('#tileModalSubtitle');
+  const bodyEl = $('#tileModalBody');
+  const footTipEl = $('#tileModalFootTip');
+  
+  const makeProcTable = (procs, sortKey) => {
+    if(!procs || !procs.length) return '<p class="mut" style="padding:10px">실시간 프로세스 정보가 없습니다.</p>';
+    return `<table style="width:100%;margin-top:8px">
+      <thead>
+        <tr>
+          <th>프로세스명</th>
+          <th class="n" style="width:75px">CPU</th>
+          <th class="n" style="width:85px">메모리</th>
+          <th style="width:160px;text-align:right">작업</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${procs.slice(0, 5).map(r => {
+          const aiBtn = `<button class="abtn ai" data-ai-type="proc" data-ai-name="${esc(r.name)}" data-ai-desc="${esc(r.desc||'')}" data-ai-cat="${esc(r.cat||'')}" data-ai-company="${esc(r.company||'')}">🤖 AI</button>`;
+          const killBtn = `<button class="abtn btn-proc-kill" data-proc-kill="${esc(r.name)}" data-proc-pid="${r.pid||''}" style="border-color:var(--crit);color:var(--crit);padding:1px 7px;font-size:11px" title="즉시 강제 종료">⚡ 바로 차기</button>`;
+          return `<tr>
+            ${pcell(r)}
+            <td class="n ${r.cpu>50?'bad':r.cpu>20?'wn':''}">${(r.cpu||0).toFixed(1)}%</td>
+            <td class="n">${(r.mem_mb||0).toFixed(0)} MB</td>
+            <td style="text-align:right;white-space:nowrap">${aiBtn} ${killBtn}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+  };
+
+  if(key === 'cpu'){
+    iconEl.textContent = '📊';
+    iconEl.style.background = 'linear-gradient(135deg, var(--cpu), #3b82f6)';
+    titleEl.textContent = 'CPU 실시간 분석 및 프로세스 TOP 5';
+    subEl.textContent = '전체 프로세서 코어 사용률 및 부하 유발 항목 점검';
+    const cpuVal = (m.cpu || 0);
+    const cpuCls = cpuVal >= 90 ? 'danger' : cpuVal >= 70 ? 'warn' : 'safe';
+    const cpuStatusMsg = cpuVal >= 90 
+      ? '🔴 CPU 점유율이 90% 이상으로 극심한 부하 상태입니다. 아래 부하 프로세스를 확인하고 종료하세요.'
+      : cpuVal >= 70
+      ? '🟡 CPU 사용량이 70% 이상으로 다소 높습니다. 불필요한 백그라운드 작업을 확인하세요.'
+      : '🟢 CPU 사용량이 안정적입니다. 시스템 연산이 원활하게 분산 처리되고 있습니다.';
+    
+    bodyEl.innerHTML = `
+      <div class="tile-detail-card">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:13px;font-weight:600;color:var(--mut)">현재 CPU 총 점유율</span>
+          <span style="font-size:24px;font-weight:800;color:${cpuVal>=90?'var(--crit)':cpuVal>=70?'var(--warn)':'var(--cpu)'}">${cpuVal.toFixed(1)}%</span>
+        </div>
+        <div class="bar" style="height:10px;margin:8px 0 12px">
+          <i style="width:${Math.min(100, Math.max(2, cpuVal))}%;background:${cpuVal>=90?'var(--crit)':cpuVal>=70?'var(--warn)':'var(--cpu)'}"></i>
+        </div>
+        <div class="ai-verdict ${cpuCls}" style="margin:0">
+          <span>${cpuStatusMsg}</span>
+        </div>
+        <div class="tile-metric-grid">
+          <div class="tile-metric-item"><div class="k">총 프로세스 수</div><div class="v">${m.procs || '-'} <span style="font-size:11px;font-weight:400;color:var(--mut)">개</span></div></div>
+          <div class="tile-metric-item"><div class="k">활성 스레드 수</div><div class="v">${m.threads || '-'} <span style="font-size:11px;font-weight:400;color:var(--mut)">개</span></div></div>
+          <div class="tile-metric-item"><div class="k">시스템 핸들 수</div><div class="v">${m.handles ? m.handles.toLocaleString() : '-'}</div></div>
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <h3 style="margin:0;font-size:14px;font-weight:700">⚡ CPU 부하 상위 프로세스 (TOP 5)</h3>
+          <span class="mut" style="font-size:12px">정체 원인 분석 및 즉시 종료 가능</span>
+        </div>
+        ${makeProcTable(s.top_cpu, 'cpu')}
+      </div>
+    `;
+    footTipEl.innerHTML = '💡 팁: 알 수 없는 프로세스가 CPU를 과도하게 점유하면 <b>[🤖 AI]</b> 버튼으로 안전도를 확인하세요.';
+  }
+  else if(key === 'mem'){
+    iconEl.textContent = '💾';
+    iconEl.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+    titleEl.textContent = '메모리(RAM) 포션 분석 및 안전 최적화';
+    subEl.textContent = '물리 메모리 점유 구성비, 실시간 Working Set 회수 및 누수 점검';
+    const memVal = (m.mem || 0);
+    const commitVal = (m.commit_pct || 0);
+    const memUsedMb = (m.mem_used_mb || 0);
+    const memUsedGb = (memUsedMb / 1024).toFixed(1);
+    const totalMemMb = memVal > 0 ? (memUsedMb / (memVal / 100)) : (memUsedMb > 0 ? memUsedMb * 1.3 : 16384);
+    const totalMemGb = (totalMemMb / 1024).toFixed(1);
+    const freeMemMb = Math.max(0, totalMemMb - memUsedMb);
+    const freeMemGb = (freeMemMb / 1024).toFixed(1);
+
+    // 프로세스 그룹별 메모리 포션 집계
+    const BROWSER_PROCS = ['chrome.exe', 'msedge.exe', 'whale.exe', 'firefox.exe', 'brave.exe', 'opera.exe'];
+    const BANK_PROCS = ['anysign4pc.exe', 'npkcsvc.exe', 'touchennxkey.exe', 'veraport.exe', 'astx.exe', 'delfino.exe', 'initech.exe', 'crosscert.exe', 'wizvera.exe', 'ipinside.exe', 'kings.exe'];
+    const SYS_PROCS = ['system', 'svchost.exe', 'explorer.exe', 'dwm.exe', 'csrss.exe', 'lsass.exe', 'services.exe', 'searchhost.exe', 'runtimebroker.exe'];
+
+    let browserMb = 0, bankMb = 0, sysMb = 0, appsMb = 0;
+    (s.top_mem || []).forEach(p => {
+      const pn = (p.name || '').toLowerCase();
+      const pmb = p.mem_mb || 0;
+      if(BROWSER_PROCS.includes(pn)) browserMb += pmb;
+      else if(BANK_PROCS.includes(pn)) bankMb += pmb;
+      else if(SYS_PROCS.includes(pn)) sysMb += pmb;
+      else appsMb += pmb;
+    });
+
+    const identifiedMb = browserMb + bankMb + sysMb + appsMb;
+    const kernelMb = Math.max(0, memUsedMb - identifiedMb);
+
+    const pct = val => Math.max(0, Math.min(100, (val / totalMemMb) * 100)).toFixed(1);
+    const pBrowser = pct(browserMb);
+    const pBank = pct(bankMb);
+    const pSys = pct(sysMb);
+    const pApps = pct(appsMb);
+    const pKernel = pct(kernelMb);
+    const pFree = pct(freeMemMb);
+
+    const memCls = memVal >= 90 ? 'danger' : memVal >= 80 ? 'warn' : 'safe';
+    const memStatusMsg = memVal >= 90
+      ? '🔴 물리 메모리가 90% 이상 차서 앱이 튕기거나 멈출 위험이 높습니다.'
+      : memVal >= 80
+      ? '🟡 메모리 사용량이 80%를 초과했습니다. 유휴 메모리 최적화를 실행하세요.'
+      : '🟢 물리 메모리 용량이 넉넉하여 시스템이 원활하게 동작 중입니다.';
+
+    // 누수 의심 탐지 (단일 700MB 이상 지속 점유)
+    const leakSuspects = (s.top_mem || []).filter(p => (p.mem_mb || 0) >= 700);
+
+    bodyEl.innerHTML = `
+      <div id="memTrimBanner" class="trim-banner hide"></div>
+      <div class="tile-detail-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--mut)">물리 RAM 점유 현황</div>
+            <div style="font-size:24px;font-weight:800;color:${memVal>=90?'var(--crit)':memVal>=80?'var(--warn)':'var(--ok)'}">
+              ${memVal.toFixed(1)}% <span style="font-size:14px;font-weight:500;color:var(--mut)">(${memUsedGb} GB / ${totalMemGb} GB)</span>
+            </div>
+          </div>
+          <div>
+            <button class="hbtn" id="btnTrimMem" style="color:var(--ok);border-color:var(--ok);padding:6px 14px;font-weight:600;display:inline-flex;align-items:center;gap:6px" title="Windows 표준 EmptyWorkingSet API로 비활성 유휴 메모리를 즉시 반환합니다">
+              <span>🧹 안전 메모리 최적화 (Working Set 회수)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 물리 RAM 구성 포션 바 -->
+        <div class="mem-portion-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--mut)">
+            <span>📊 물리 RAM 구성 포션 (Memory Portion)</span>
+            <span>여유 ${freeMemGb} GB (${pFree}%)</span>
+          </div>
+          <div class="mem-portion-bar">
+            <div class="p-item" style="width:${pBrowser}%;background:#3b82f6" title="🌐 웹 브라우저: ${(browserMb/1024).toFixed(1)} GB (${pBrowser}%)"></div>
+            <div class="p-item" style="width:${pBank}%;background:#f59e0b" title="🛡️ 뱅킹/보안: ${(bankMb/1024).toFixed(1)} GB (${pBank}%)"></div>
+            <div class="p-item" style="width:${pSys}%;background:#8b5cf6" title="⚙️ Windows 시스템: ${(sysMb/1024).toFixed(1)} GB (${pSys}%)"></div>
+            <div class="p-item" style="width:${pApps}%;background:#06b6d4" title="📱 일반 사용자앱: ${(appsMb/1024).toFixed(1)} GB (${pApps}%)"></div>
+            <div class="p-item" style="width:${pKernel}%;background:#64748b" title="🧠 커널/기타 캐시: ${(kernelMb/1024).toFixed(1)} GB (${pKernel}%)"></div>
+            <div class="p-item" style="width:${pFree}%;background:rgba(16,185,129,0.3)" title="🍃 여유 메모리: ${freeMemGb} GB (${pFree}%)"></div>
+          </div>
+          <div class="mem-portion-legend">
+            <div class="leg-item"><span class="leg-chip" style="background:#3b82f6"></span> 🌐 브라우저군 ${(browserMb/1024).toFixed(1)}G (${pBrowser}%)</div>
+            <div class="leg-item"><span class="leg-chip" style="background:#f59e0b"></span> 🛡️ 뱅킹/보안 ${(bankMb/1024).toFixed(1)}G (${pBank}%)</div>
+            <div class="leg-item"><span class="leg-chip" style="background:#8b5cf6"></span> ⚙️ Win시스템 ${(sysMb/1024).toFixed(1)}G (${pSys}%)</div>
+            <div class="leg-item"><span class="leg-chip" style="background:#06b6d4"></span> 📱 사용자앱 ${(appsMb/1024).toFixed(1)}G (${pApps}%)</div>
+            <div class="leg-item"><span class="leg-chip" style="background:#64748b"></span> 🧠 커널/기타 ${(kernelMb/1024).toFixed(1)}G (${pKernel}%)</div>
+            <div class="leg-item"><span class="leg-chip" style="background:rgba(16,185,129,0.5)"></span> 🍃 여유 공간 ${freeMemGb}G (${pFree}%)</div>
+          </div>
+        </div>
+        
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px">
+          <span style="font-size:12.5px;font-weight:600;color:var(--mut)">가상 메모리 커밋 (Commit Charge)</span>
+          <span style="font-size:16px;font-weight:700;color:${commitVal>=85?'var(--crit)':commitVal>=70?'var(--warn)':'var(--fg)'}">${commitVal}%</span>
+        </div>
+        <div class="bar" style="height:6px;margin:4px 0 12px">
+          <i style="width:${Math.min(100, Math.max(2, commitVal))}%;background:${commitVal>=85?'var(--crit)':commitVal>=70?'var(--warn)':'var(--mem)'}"></i>
+        </div>
+
+        <div class="ai-verdict ${memCls}" style="margin:0">
+          <span>${memStatusMsg}</span>
+        </div>
+      </div>
+
+      <!-- 누수 의심 프로세스 탐지 카드 -->
+      <div class="ai-box" style="margin-bottom:14px;border-color:${leakSuspects.length?'rgba(217,119,6,0.3)':'var(--line)'}">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <h4 style="margin:0;font-size:13.5px;color:var(--fg);display:flex;align-items:center;gap:6px">
+            <span>${leakSuspects.length ? '⚠️ 메모리 누수 의심(Leak Suspect) 프로세스 탐지' : '✓ 메모리 누수 징후 없음'}</span>
+          </h4>
+          <span class="mut" style="font-size:11.5px">단일 프로세스 700MB 이상 지속 점유 기준</span>
+        </div>
+        ${leakSuspects.length ? `
+          <div style="margin-top:8px;font-size:12.5px;line-height:1.6">
+            ${leakSuspects.map(p => `
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--line)">
+                <span><b>${esc(p.name)}</b> <span class="mut">(${(p.mem_mb||0).toFixed(0)} MB 점유)</span></span>
+                <span>
+                  <button class="abtn ai" data-ai-type="proc" data-ai-name="${esc(p.name)}" data-ai-desc="${esc(p.desc||'')}">🤖 AI</button>
+                  <button class="abtn btn-proc-kill" data-proc-kill="${esc(p.name)}" data-proc-pid="${p.pid||''}" style="border-color:var(--crit);color:var(--crit);padding:1px 7px;font-size:11px">⚡ 바로 차기</button>
+                </span>
+              </div>
+            `).join('')}
+            <div class="mut" style="margin-top:6px;font-size:12px">💡 장시간 켜둔 브라우저 단일 탭이나 백그라운드 프로그램이 메모리를 놓아주지 않고 있을 수 있습니다. 불필요한 탭을 닫거나 '⚡ 바로 차기'를 권장합니다.</div>
+          </div>
+        ` : `
+          <p class="mut" style="margin:6px 0 0;font-size:12px">비정상적으로 메모리를 과도하게 점유하거나 지속 누수 중인 프로세스가 없습니다.</p>
+        `}
+      </div>
+
+      <div style="margin-top:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <h3 style="margin:0;font-size:14px;font-weight:700">💾 메모리 점유 상위 프로세스 (TOP 5)</h3>
+          <span class="mut" style="font-size:12px">점유 자원 확인 및 조치</span>
+        </div>
+        ${makeProcTable(s.top_mem, 'mem')}
+      </div>
+    `;
+
+    const trimBtn = $('#btnTrimMem');
+    if(trimBtn){
+      trimBtn.onclick = async () => {
+        trimBtn.disabled = true;
+        const origText = trimBtn.innerHTML;
+        trimBtn.innerHTML = '<span>⏳ 안전 최적화 진행 중…</span>';
+        try {
+          const res = await post('/api/mem/trim', {});
+          const banner = $('#memTrimBanner');
+          if(banner){
+            banner.classList.remove('hide');
+            banner.innerHTML = `✓ ${esc(res.msg || '메모리 최적화가 완료되었습니다.')}`;
+          }
+          await loadSummary();
+          openTileDetailModal('mem');
+          showToast(res.msg || '메모리 최적화가 완료되었습니다.', 'ok');
+        } catch(e) {
+          showToast('최적화 요청 실패: ' + e, 'bad');
+        }
+      };
+    }
+
+    footTipEl.innerHTML = '💡 팁: 안전 메모리 최적화는 윈도우 OS의 공식 API를 사용하여 안전하게 유휴 작업 세트를 정리합니다.';
+  }
+  else if(key === 'disk'){
+    iconEl.textContent = '💽';
+    iconEl.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+    titleEl.textContent = '디스크 및 저장소 상태 분석 (모든 드라이브)';
+    subEl.textContent = 'PC에 마운트된 모든 로컬 드라이브 잔여 공간 및 실시간 디스크 활성 시간(Busy Rate)';
+    const freeGb = s.disk_free_gb || 0;
+    const busyVal = (m.disk_busy || 0);
+    const drvs = s.drives || [];
+
+    const hasLowDisk = drvs.some(d => d.free_gb < 10) || freeGb < 10;
+    const hasWarnDisk = drvs.some(d => d.free_gb < 25) || freeGb < 25;
+    const diskCls = hasLowDisk ? 'danger' : hasWarnDisk ? 'warn' : busyVal >= 90 ? 'warn' : 'safe';
+    const diskStatusMsg = hasLowDisk
+      ? '🔴 여유 공간이 10GB 미만인 드라이브가 있습니다! 업데이트 실패 및 시스템 멈춤의 위험이 높습니다.'
+      : hasWarnDisk
+      ? '🟡 여유 공간이 25GB 미만인 드라이브가 있습니다. 임시 파일 정리 및 공간 확보를 권장합니다.'
+      : busyVal >= 90
+      ? '🟡 디스크 활성 시간이 90% 이상으로 디스크 I/O 병목이 발생하고 있습니다.'
+      : '🟢 모든 저장 드라이브의 여유 공간과 실시간 디스크 I/O 상태가 안정적입니다.';
+
+    const drivesHtml = drvs.length ? `
+      <div class="disk-drive-grid">
+        ${drvs.map(d => {
+          const isSys = d.drive === (s.drive || 'C:');
+          const isCrit = d.free_gb < 10;
+          const isWarn = d.free_gb < 25;
+          return `
+            <div class="disk-drive-card" style="border-color:${isCrit?'rgba(220,38,38,0.4)':isWarn?'rgba(217,119,6,0.3)':'var(--line)'}">
+              <div class="disk-drive-head">
+                <div>
+                  <b style="font-size:15px">${esc(d.mount)}</b>
+                  <span class="tag" style="margin-left:4px">${isSys ? '시스템 OS' : '데이터 저장소'}</span>
+                </div>
+                <div class="${isCrit?'bad':isWarn?'wn':'ok'}" style="font-weight:700">
+                  ${d.free_gb} GB 여유
+                </div>
+              </div>
+              <div class="bar" style="height:10px;margin:8px 0">
+                <i style="width:${Math.max(2, Math.min(100, d.pct))}%;background:${d.pct>=90?'var(--crit)':d.pct>=80?'var(--warn)':'var(--cpu)'}"></i>
+              </div>
+              <div class="disk-drive-meta">
+                <span>사용: ${d.used_gb} GB (${d.pct}%)</span>
+                <span>전체: ${d.total_gb} GB</span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    ` : `
+      <div class="tile-detail-card">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:13px;font-weight:600;color:var(--mut)">시스템 드라이브 (${esc(s.drive||'C:')}) 여유 공간</span>
+          <span style="font-size:24px;font-weight:800;color:${freeGb<10?'var(--crit)':freeGb<25?'var(--warn)':'var(--ok)'}">${freeGb} GB <span style="font-size:13px;font-weight:500;color:var(--mut)">남음</span></span>
+        </div>
+      </div>
+    `;
+
+    bodyEl.innerHTML = `
+      <div class="tile-detail-card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:13.5px;font-weight:700">💾 로컬 드라이브 전체 현황 (${drvs.length || 1}개 감지됨)</span>
+          <span class="mut" style="font-size:12px">실시간 I/O 활성률: <b class="${busyVal>=90?'bad':busyVal>=70?'wn':''}">${busyVal}%</b></span>
+        </div>
+        ${drivesHtml}
+        <div class="ai-verdict ${diskCls}" style="margin:12px 0 0">
+          <span>${diskStatusMsg}</span>
+        </div>
+        <div class="tile-metric-grid" style="margin-top:10px">
+          <div class="tile-metric-item"><div class="k">실시간 I/O 활성률</div><div class="v ${busyVal>=90?'bad':busyVal>=70?'wn':''}">${busyVal} <span style="font-size:11px;font-weight:400;color:var(--mut)">%</span></div></div>
+          <div class="tile-metric-item"><div class="k">시스템 열린 핸들</div><div class="v">${m.handles ? m.handles.toLocaleString() : '-'}</div></div>
+          <div class="tile-metric-item"><div class="k">기본 시스템 드라이브</div><div class="v">${esc(s.drive||'C:')}</div></div>
+        </div>
+      </div>
+      <div class="ai-box" style="margin-top:14px">
+        <h4 style="margin:0 0 8px;font-size:13.5px;color:var(--fg)">💡 빠른 디스크 공간 확보 가이드</h4>
+        <ul style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.7;color:var(--mut)">
+          <li><b>Windows 저장소 센스</b>: 시작 > 설정 > 시스템 > 저장소에서 '임시 파일'을 1클릭으로 비울 수 있습니다.</li>
+          <li><b>다운로드 폴더 정리</b>: <code>C:\\Users\\...\\Downloads</code> 폴더에 쌓인 대용량 설치 파일(exe, zip)을 삭제하세요.</li>
+          <li><b>최대 절전 모드 파일 정리</b>: 관리자 명령 프롬프트에서 <code>powercfg -h off</code> 실행 시 RAM 크기만큼의 공간이 즉시 확보됩니다.</li>
+        </ul>
+      </div>
+    `;
+    footTipEl.innerHTML = '💡 팁: SSD 사용 시 전체 용량의 최소 15% 이상을 빈 공간으로 유지해야 쓰기 성능 저하와 수명 단축을 방지할 수 있습니다.';
+  }
+  else if(key === 'incident'){
+    iconEl.textContent = '💥';
+    iconEl.style.background = 'linear-gradient(135deg, #ef4444, #b91c1c)';
+    titleEl.textContent = '비정상 종료 및 시스템 장애 심층 추적';
+    subEl.textContent = '하드웨어 오류(WHEA), 디스크 I/O 장애, GPU 충돌, 전원 차단 원인 정밀 감시';
+    const li = s.last_incident;
+
+    // 원인 심층 추적 분석기
+    const detectCause = (kind, bugcheck, summary) => {
+      const text = ((kind||'') + ' ' + (bugcheck||'') + ' ' + (summary||'')).toUpperCase();
+      if(text.includes('WHEA') || text.includes('0X124') || text.includes('MACHINE_CHECK') || text.includes('0X9C')){
+        return { cls: 'hw', icon: '🚨', label: '하드웨어 불량 / WHEA 오류', desc: 'CPU 코어 전압 불안정, 메인보드 전원부 또는 과열로 인한 치명적 하드웨어 예외입니다. 쿨러 밀착 상태와 CPU 전압 설정을 점검하세요.' };
+      }
+      if(text.includes('INPAGE') || text.includes('0X7A') || text.includes('STORE_EXCEPTION') || text.includes('0X77') || text.includes('DISK') || text.includes('0X24')){
+        return { cls: 'disk', icon: '💽', label: '디스크 / SSD I/O 오류', desc: 'SSD/HDD 읽기 실패, SATA/NVMe 케이블 접촉 불량, 또는 파일 시스템(NTFS) 손상입니다. 디스크 SMART 점검 및 케이블 재장착이 필요합니다.' };
+      }
+      if(text.includes('VIDEO') || text.includes('0X116') || text.includes('0X117') || text.includes('NVLDDMKM') || text.includes('ATIKMPAG') || text.includes('DWM')){
+        return { cls: 'gpu', icon: '🎮', label: 'GPU 그래픽 드라이버 충돌', desc: '그래픽 카드 응답 지연(TDR) 또는 GPU 과열로 드라이버가 복구되지 못했습니다. 최신 그래픽 드라이버 클린 설치(DDU)를 권장합니다.' };
+      }
+      if(text.includes('MEMORY') || text.includes('0X1A') || text.includes('PAGE_FAULT') || text.includes('0X50') || text.includes('IRQL') || text.includes('0XA')){
+        return { cls: 'hw', icon: '💾', label: 'RAM 메모리 결함 / 접촉 불량', desc: '물리 메모리 슬롯 접촉 불량, XMP 오버클럭 불안정, 또는 잘못된 커널 주소 참조입니다. 메모리 단자 청소 및 재장착을 권장합니다.' };
+      }
+      if(text.includes('WATCHDOG') || text.includes('0X133')){
+        return { cls: 'disk', icon: '⏱️', label: '드라이버 / SSD 펌웨어 타임아웃', desc: 'DPC 루틴이 제한 시간을 초과했습니다. SSD 펌웨어 업데이트 및 메인보드 칩셋 드라이버 갱신이 필요합니다.' };
+      }
+      return { cls: 'pwr', icon: '⚡', label: '전원 강제 차단 / 심박 정지', desc: '정전, 본체 전원 버튼 강제 끔, 또는 파워서플라이 순간 전압 강하(Power Loss)로 비정상 종료되었습니다.' };
+    };
+
+    if(li){
+      const cause = detectCause(li.kind, li.bugcheck, li.summary);
+      bodyEl.innerHTML = `
+        <div class="tile-detail-card" style="border-color:rgba(220,38,38,0.3)">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="sev crit" style="font-size:13px;padding:3px 9px">${esc(li.kind)}</span>
+              <span style="font-size:16px;font-weight:700;color:var(--crit)">${esc(li.bugcheck || '원인 코드 없음')}</span>
+            </div>
+            <span class="cause-badge ${cause.cls}">${cause.icon} ${cause.label}</span>
+          </div>
+
+          <!-- 원인 심층 추적 카드 -->
+          <div class="ai-box" style="margin-bottom:12px;background:rgba(220,38,38,0.04);border-color:rgba(220,38,38,0.25)">
+            <div style="font-weight:700;color:var(--crit);margin-bottom:4px">🔍 원인 정밀 추적 진단</div>
+            <div style="font-size:13px;line-height:1.6">${cause.desc}</div>
+            <div style="margin-top:8px;font-size:12px;color:var(--mut)"><b>시스템 기록 요약:</b> ${esc(li.summary || '상세 내용 없음')}</div>
+          </div>
+
+          <div class="tile-metric-grid">
+            <div class="tile-metric-item"><div class="k">마지막 정상 심박 시각</div><div class="v" style="font-size:13.5px">${fmtT(li.last_heartbeat, true)}</div></div>
+            <div class="tile-metric-item"><div class="k">재부팅 확인 시각</div><div class="v" style="font-size:13.5px">${fmtT(li.boot_time, true)}</div></div>
+          </div>
+
+          <!-- 직전 이벤트 및 메트릭 결합 분석 -->
+          <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center">
+            <span class="mut" style="font-size:12px">직전 5분간의 CPU/메모리/디스크 스냅샷이 보존되어 있습니다.</span>
+            <button class="hbtn" onclick="closeTileDetailModal();tab('inc')" style="color:var(--crit);border-color:var(--crit);padding:6px 14px;font-weight:700">
+              💥 [장애] 탭으로 이동하여 직전 5분 차트 보기 →
+            </button>
+          </div>
+        </div>
+      `;
+      footTipEl.innerHTML = '💡 PC 모니터는 10초마다 링버퍼에 직전 상태를 기록하여 멈추기 전 원인을 역추적합니다.';
+    } else {
+      bodyEl.innerHTML = `
+        <div class="tile-detail-card">
+          <div class="ai-verdict safe" style="margin:0 0 12px">
+            <span>✓ 모니터 설치 이후 기록된 비정상 종료(블루스크린/전원 차단)가 없습니다.</span>
+          </div>
+          <div class="ai-box" style="margin-bottom:12px">
+            <div style="font-weight:700;margin-bottom:8px;color:var(--fg)">🛡️ 시스템 무장애 실시간 감시 항목 (Zero-Crash Watch)</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;font-size:12px;color:var(--mut)">
+              <div><span class="ok">✓</span> <b>WHEA 하드웨어 결함</b>: CPU/전압 정상</div>
+              <div><span class="ok">✓</span> <b>디스크/SSD I/O</b>: 입출력 타임아웃 없음</div>
+              <div><span class="ok">✓</span> <b>GPU 그래픽 서브시스템</b>: TDR 충돌 없음</div>
+              <div><span class="ok">✓</span> <b>RAM 메모리 무결성</b>: 페이징 실패 없음</div>
+              <div><span class="ok">✓</span> <b>시스템 심박 링버퍼</b>: 10초 주기 유지 중</div>
+            </div>
+          </div>
+          <p style="font-size:12.5px;line-height:1.7;color:var(--mut);margin:0">
+            향후 예기치 않은 시스템 멈춤이나 블루스크린이 발생하면, 재부팅 직후 <b>멈추기 전 5분간의 CPU/메모리/디스크 상태와 상위 프로세스</b>가 자동으로 이곳에 복원됩니다.
+          </p>
+          <div style="margin-top:14px;text-align:right">
+            <button class="hbtn" onclick="closeTileDetailModal();tab('inc')" style="padding:6px 14px">
+              장애 분석 탭 바로가기 →
+            </button>
+          </div>
+        </div>
+      `;
+      footTipEl.innerHTML = '💡 비정상 종료가 감지되면 대시보드 알림과 작업표시줄 트레이 알림으로 즉시 안내해 드립니다.';
+    }
+  }
+  else if(key === 'db'){
+    iconEl.textContent = '🗄️';
+    iconEl.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)';
+    titleEl.textContent = '모니터 로컬 데이터베이스 현황';
+    subEl.textContent = 'SQLite 초경량 저장소 크기 및 자동 수명 주기(롤링) 관리';
+    const dbMb = s.db_mb || 0;
+    const dbPct = Math.min(100, (dbMb / 50.0) * 100);
+
+    bodyEl.innerHTML = `
+      <div class="tile-detail-card">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:13px;font-weight:600;color:var(--mut)">현재 DB 파일 사용량</span>
+          <span style="font-size:24px;font-weight:800;color:var(--fg)">${dbMb} MB <span style="font-size:13px;font-weight:500;color:var(--mut)">/ 최대 50.0 MB (${dbPct.toFixed(1)}%)</span></span>
+        </div>
+        <div class="bar" style="height:10px;margin:8px 0 14px">
+          <i style="width:${Math.max(2, dbPct)}%;background:var(--cpu)"></i>
+        </div>
+        <div class="ai-verdict safe" style="margin:0">
+          <span>✓ DB 크기가 안전 한도 내에서 최적의 상태로 관리되고 있습니다.</span>
+        </div>
+      </div>
+      <div class="ai-box" style="margin-top:14px">
+        <h4 style="margin:0 0 8px;font-size:13.5px;color:var(--fg)">📦 데이터 자동 정리 및 보관 정책 (Zero-Maintenance)</h4>
+        <ul style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.7;color:var(--mut)">
+          <li><b>초 단위 정밀 메트릭 (10초 주기)</b>: 최근 24시간 동안 보관되며 이후 자동 회전 삭제됩니다.</li>
+          <li><b>장기 추세 집계 메트릭 (5분 주기)</b>: 최근 30일간 보관되어 장기적 자원 사용 패턴을 분석합니다.</li>
+          <li><b>보안 및 외부 침입 이벤트</b>: 최근 90일간 보관되며 언제든 검색 가능합니다.</li>
+          <li><b>자동 정리 알고리즘 (Prune)</b>: DB 파일이 50MB에 접근하면 주기적으로 오래된 메트릭을 압축 청소(VACUUM)하여 시스템 용량을 낭비하지 않습니다.</li>
+        </ul>
+      </div>
+    `;
+    footTipEl.innerHTML = '💡 PC 모니터는 사용자의 개인 파일이나 키 입력을 일절 수집하지 않으며, 모든 통계는 내 PC에만 저장됩니다.';
+  }
+  
+  modal.classList.remove('hide');
+}
+
+function closeTileDetailModal(){
+  const modal = $('#tileDetailModal');
+  if(modal) modal.classList.add('hide');
+}
+$('#tileModalClose').onclick = closeTileDetailModal;
+$('#tileModalCloseBtn').onclick = closeTileDetailModal;
+$('#tileDetailModal').onclick = e => { if(e.target.id === 'tileDetailModal') closeTileDetailModal(); };
+
+/* ---------- AI 설명 모달 & 분석 엔진 ---------- */
+let currentAiQuery = '';
+function openAiModal(info){
+  const m = $('#aiModal');
+  if(!m)return;
+  const typ = info.type || 'proc';
+  const name = info.name || '';
+  const desc = info.desc || '';
+  const cat = info.cat || '';
+  const company = info.company || '';
+  const sev = info.sev || '';
+  const ko = getKoProcName(name);
+
+  $('#aiItemTitle').textContent = ko ? `${name} (${ko})` : name;
+  $('#aiItemCat').textContent = typ === 'proc' ? (cat || '프로그램') : typ === 'alert' ? '알림' : '외부 연결';
+  $('#aiItemSubtitle').textContent = desc || (company ? `제조사: ${company}` : '');
+
+  currentAiQuery = ko ? `${name} ${ko}` : name;
+  const analysis = generateAiAnalysis(typ, { name, desc, cat, company, sev, ko, info });
+
+  const vBox = $('#aiVerdictBox');
+  vBox.className = 'ai-verdict ' + analysis.verdict;
+  $('#aiVerdictIcon').textContent = analysis.verdictIcon;
+  $('#aiVerdictText').textContent = analysis.verdictText;
+
+  $('#aiSummaryBox').innerHTML = analysis.summaryHtml;
+  $('#aiActionBox').innerHTML = analysis.actionHtml;
+
+  const detSec = $('#aiDetailSection');
+  if(analysis.detailHtml){
+    detSec.style.display = 'block';
+    $('#aiDetailBox').innerHTML = analysis.detailHtml;
+  } else {
+    detSec.style.display = 'none';
+  }
+
+  m.classList.remove('hide');
+}
+function closeAiModal(){
+  const m = $('#aiModal');
+  if(m)m.classList.add('hide');
+}
+$('#aiModalClose').onclick = closeAiModal;
+$('#aiModalCloseBtn').onclick = closeAiModal;
+$('#aiModal').onclick = e => { if(e.target.id === 'aiModal') closeAiModal(); };
+$('#aiGoogleBtn').onclick = () => {
+  if(currentAiQuery){
+    window.open('https://www.google.com/search?q=' + encodeURIComponent(currentAiQuery + ' 프로그램 무엇'), '_blank', 'noopener');
+  }
+};
+
+function generateAiAnalysis(type, d){
+  const n = (d.name||'').toLowerCase();
+  if(type === 'proc'){
+    if(n.includes('powershell') || n.includes('pwsh')){
+      return {
+        verdict: 'warn', verdictIcon: '🟡', verdictText: '정상 시스템 도구이지만 실행 주체 확인 권장',
+        summaryHtml: `<b>Windows PowerShell</b>은 시스템 관리와 자동화 작업을 위해 널리 쓰이는 고급 명령 셸입니다.<br>
+          개발자 작업이나 Windows 백그라운드 관리 시 정상 구동되지만, 악성 스크립트가 몰래 다운로드되거나 실행되는 통로로 악용될 수도 있습니다.`,
+        actionHtml: `<ul>
+          <li><b>직접 실행 여부:</b> 현재 VS Code 터미널, 터미널 창, 설치 스크립트 등을 본인이 실행했는지 확인하세요.</li>
+          <li><b>불필요 시 종료:</b> 내가 실행한 것이 아니고 자원을 많이 점유하고 있다면 작업 관리자에서 종료하세요.</li>
+          <li><b>보안 점검:</b> 의심스러운 경우 대시보드 <b>[흔적 점검]</b> 탭에서 침입 점검을 수행하세요.</li>
+        </ul>`,
+        detailHtml: `실행 파일: <code>${esc(d.name)}</code> · 표준 위치: <code>C:\\Windows\\System32\\WindowsPowerShell</code>`
+      };
+    }
+    if(n.includes('python')){
+      return {
+        verdict: 'safe', verdictIcon: '🟢', verdictText: '안전한 프로그래밍 언어 환경 (Python)',
+        summaryHtml: `<b>Python</b>은 데이터 분석, AI 머신러닝, 자동화 스크립트 구동에 사용되는 오픈소스 런타임입니다.<br>
+          현재 본인이 실행한 프로젝트, 개발 도구 또는 로컬 유틸리티(예: PC 모니터 또는 AI 도구)를 정상적으로 실행 중입니다.`,
+        actionHtml: `<ul>
+          <li><b>실행 스크립트 확인:</b> 본인이 에디터(VS Code, PyCharm 등)나 콘솔에서 실행한 작업인지 확인하세요.</li>
+          <li><b>자원 점유율 관찰:</b> 장시간 CPU나 메모리를 90% 이상 점유하고 있다면 스크립트의 무한 루프 여부를 확인하세요.</li>
+        </ul>`,
+        detailHtml: `프로세스명: <code>${esc(d.name)}</code> · 설명: ${esc(d.desc || 'Python Language Runtime')}`
+      };
+    }
+    if(n.includes('cmd.exe') || n.includes('conhost.exe')){
+      return {
+        verdict: 'safe', verdictIcon: '🟢', verdictText: 'Windows 기본 콘솔 도구',
+        summaryHtml: `Windows의 명령 프롬프트(CMD) 및 콘솔 창 호스트 프로세스입니다. 터미널 명령이나 배치 파일(.bat)을 실행할 때 표시됩니다.`,
+        actionHtml: `<ul><li>본인이 직접 실행한 터미널이나 빌드 스크립트가 있다면 그대로 두셔도 안전합니다.</li></ul>`,
+        detailHtml: `프로세스명: <code>${esc(d.name)}</code>`
+      };
+    }
+    if(n.includes('svchost') || n.includes('explorer') || n.includes('taskhost')){
+      return {
+        verdict: 'safe', verdictIcon: '🟢', verdictText: 'Windows 필수 핵심 시스템 프로세스',
+        summaryHtml: `Windows 운영체제의 필수 구성 요소입니다. 윈도우 탐색기, 시스템 서비스, 백그라운드 작업을 관장합니다.`,
+        actionHtml: `<ul><li><b>종료 금지:</b> 시스템 필수 프로세스이므로 강제로 종료하지 마세요.</li></ul>`,
+        detailHtml: `프로세스: <code>${esc(d.name)}</code> (Microsoft Windows OS)`
+      };
+    }
+    const isSafeCompany = (d.company||'').includes('Microsoft') || (d.company||'').includes('Google') || (d.company||'').includes('Apple');
+    return {
+      verdict: isSafeCompany ? 'safe' : 'warn',
+      verdictIcon: isSafeCompany ? '🟢' : '🟡',
+      verdictText: isSafeCompany ? '알려진 신뢰 제조사 프로그램' : '사용자 확인 권장 프로그램',
+      summaryHtml: `<b>${esc(d.name)}</b>${d.ko ? ` (${esc(d.ko)})` : ''} 프로그램입니다.<br>${esc(d.desc || '상세 설명이 등록되지 않은 일반 실행 파일입니다.')}`,
+      actionHtml: `<ul>
+        <li>자주 사용하는 정상 애플리케이션이라면 안심하고 이용하세요.</li>
+        <li>처음 보는 프로그램이거나 원치 않는 프로그램으로 의심되면 [프로그램 바로 찾기] 또는 Google 검색으로 확인하세요.</li>
+      </ul>`,
+      detailHtml: `제조사: ${esc(d.company || '알 수 없음')} · 카테고리: ${esc(d.cat || '일반')}`
+    };
+  } else if(type === 'alert'){
+    let verdict = 'warn', vIcon = '🟡', vText = '시스템 자원 주의 알림';
+    if(d.sev === 'crit' || n.includes('장애') || n.includes('침입') || n.includes('비정상') || n.includes('차단')){
+      verdict = 'danger'; vIcon = '🔴'; vText = '높은 주의 또는 보안 점검 필요';
+    }
+    return {
+      verdict: verdict, verdictIcon: vIcon, verdictText: vText,
+      summaryHtml: `<b>${esc(d.name)}</b> 알림이 발생했습니다.<br>${esc(d.desc)}`,
+      actionHtml: `<ul>
+        <li><b>원인 분석:</b> 시스템 자원 과열 또는 비정상적인 접근 시도가 감지되었습니다.</li>
+        <li><b>권장 조치:</b> '대시보드' 및 '침입 감시' 탭에서 실시간 지표를 점검하세요.</li>
+        <li>자주 반복되는 정상 알림이라면 '알림 팝업 수준 설정'에서 팝업 범위를 조절할 수 있습니다.</li>
+      </ul>`,
+      detailHtml: `심각도: <b>${esc(d.sev || '정보')}</b> · 알림 제목: ${esc(d.name)}`
+    };
+  } else if(type === 'inbound'){
+    const isExt = d.info && d.info.kind === 'ext';
+    return {
+      verdict: isExt ? 'danger' : 'safe',
+      verdictIcon: isExt ? '🔴' : '🟢',
+      verdictText: isExt ? '외부 인터넷에서 내 PC로 들어온 연결 (주의)' : '내부망(LAN) 또는 로컬 연결',
+      summaryHtml: `프로세스 <b>${esc(d.name)}</b>(포트 ${esc(d.info.lport || '-')})에 대해 <b>${esc(d.info.rip || '원격 IP')}</b>에서 연결을 요청했습니다.<br>
+        ${isExt ? '인터넷 외부 공인망에서 내 PC로 접속한 연결입니다.' : '동일한 공유기(내부 네트워크) 안에서의 정상적인 로컬 통신입니다.'}`,
+      actionHtml: `<ul>
+        <li>${isExt ? '<b>보안 점검:</b> 공용 Wi-Fi나 외부망에서 허가하지 않은 인터넷 연결이라면 즉시 방화벽을 점검하거나 네트워크를 차단하세요.' : '내부망 기기 간 파일 공유나 프린터, 로컬 스트리밍 연결일 수 있습니다.'}</li>
+        <li>'침입 감시' 탭의 [열린 포트] 목록을 확인하세요.</li>
+      </ul>`,
+      detailHtml: `출발지: <code>${esc(d.info.rip)}</code> · 내 포트: <code>${esc(d.info.lport)} (${esc(d.info.svc || '-')})</code>`
+    };
+  }
+  return {
+    verdict: 'safe', verdictIcon: '🟢', verdictText: '확인 완료',
+    summaryHtml: esc(d.name),
+    actionHtml: '대시보드 상세 내역을 확인하세요.',
+    detailHtml: ''
+  };
+}
+
+/* ---------- 종료 및 백그라운드 & 알림 옵션 ---------- */
+let closeAction='tray';
+let alertLevel='crit';
+let notifyMode='instant';
+function updateTrayBadgeUI(ca){
+  const tb=$('#trayBadge'),txt=$('#trayBadgeText');
+  if(!tb||!txt)return;
+  if(ca==='tray'){
+    tb.className='tray-badge ok';
+    txt.textContent='트레이 감시 중';
+    tb.title='백그라운드 감시가 활성화되어 있습니다. 화면을 닫아도 트레이에서 계속 실행됩니다.';
+  }else{
+    tb.className='tray-badge wn';
+    txt.textContent='창 닫을 때 종료';
+    tb.title='창을 닫으면 백그라운드 모니터도 함께 종료됩니다.';
+  }
+}
+async function loadCloseSettings(){
+  try{
+    const s=await j('/api/settings');
+    closeAction=s.close_action||'tray';
+    alertLevel=s.alert_level||'crit';
+    notifyMode=s.notify_mode||'instant';
+    const r=document.querySelector(`input[name="closeActionRadio"][value="${closeAction}"]`);
+    if(r)r.checked=true;
+    const chk=$('#chkAutoExit');
+    if(chk)chk.checked=(closeAction==='exit');
+    updateTrayBadgeUI(closeAction);
+    const al=document.querySelector(`input[name="alertLevelRadio"][value="${alertLevel}"]`);
+    if(al)al.checked=true;
+    const nm=document.querySelector(`input[name="notifyModeRadio"][value="${notifyMode}"]`);
+    if(nm)nm.checked=true;
+  }catch(e){}
+}
+function openExitModal(){$('#exitModal').classList.remove('hide')}
+function closeExitModal(){$('#exitModal').classList.add('hide')}
+$('#exitBtn').onclick=openExitModal;
+$('#exitModalClose').onclick=closeExitModal;
+$('#exitModalCancel').onclick=closeExitModal;
+$('#exitModal').onclick=e=>{if(e.target.id==='exitModal')closeExitModal()};
+
+$('#chkAutoExit').onchange=async e=>{
+  const ca=e.target.checked?'exit':'tray';
+  await post('/api/settings',{close_action:ca});
+  closeAction=ca;
+  updateTrayBadgeUI(ca);
+  const r=document.querySelector(`input[name="closeActionRadio"][value="${ca}"]`);
+  if(r)r.checked=true;
+};
+document.querySelectorAll('input[name="closeActionRadio"]').forEach(el=>{
+  el.onchange=async()=>{
+    closeAction=el.value;
+    await post('/api/settings',{close_action:el.value});
+    updateTrayBadgeUI(el.value);
+    const chk=$('#chkAutoExit');
+    if(chk)chk.checked=(el.value==='exit');
+  };
+});
+document.querySelectorAll('input[name="alertLevelRadio"]').forEach(el=>{
+  el.onchange=async()=>{
+    alertLevel=el.value;
+    await post('/api/settings',{alert_level:el.value});
+  };
+});
+document.querySelectorAll('input[name="notifyModeRadio"]').forEach(el=>{
+  el.onchange=async()=>{
+    notifyMode=el.value;
+    await post('/api/settings',{notify_mode:el.value});
+  };
+});
+
+const btnKillBank = $('#btnKillAllBanking');
+if(btnKillBank){
+  btnKillBank.onclick = async () => {
+    btnKillBank.disabled = true;
+    const originalText = btnKillBank.innerHTML;
+    btnKillBank.innerHTML = '<span>⚡ 뱅킹 프로그램 종료 중…</span>';
+    try {
+      const res = await post('/api/banking', { action: 'off' });
+      showToast(res.msg || '뱅킹 보안 프로그램이 모두 종료되었습니다.', res.ok !== false ? 'ok' : 'bad');
+    } catch(err) {
+      showToast('종료 요청 실패: ' + err, 'bad');
+    }
+    btnKillBank.disabled = false;
+    btnKillBank.innerHTML = originalText;
+    if(typeof loadBank === 'function') loadBank();
+  };
+}
+
+const btnSpawnTest = $('#btnSpawnTestProc');
+if(btnSpawnTest){
+  btnSpawnTest.onclick = async () => {
+    const msgEl = $('#testProcMsg');
+    btnSpawnTest.disabled = true;
+    if(msgEl) msgEl.textContent = '실행 중…';
+    const res = await post('/api/proc/test_spawn');
+    if(res.ok){
+      if(msgEl) msgEl.innerHTML = `<span class="ok">✓ ${esc(res.name)} (PID: ${res.pid}) 실행됨!</span>`;
+      showToast(`테스트 프로세스 '${res.name}' (PID: ${res.pid}) 실행됨`, 'ok');
+      setTimeout(() => refresh(), 800);
+    } else {
+      if(msgEl) msgEl.innerHTML = `<span class="bad">실패: ${esc(res.msg)}</span>`;
+      showToast(res.msg, 'bad');
+    }
+    btnSpawnTest.disabled = false;
+  };
+}
+$('#btnMinimizeTray').onclick=async()=>{
+  closeExitModal();
+  await post('/api/tray/balloon',{title:'PC 모니터',msg:'트레이에서 백그라운드 감시가 계속 실행 중입니다.'});
+  window.close();
+};
+async function doShutdown(){
+  await post('/api/shutdown');
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center"><div><h2>PC 모니터가 종료되었습니다</h2><p class="mut">창을 닫으셔도 됩니다. 다시 실행하려면 바탕화면의 바로가기를 사용하세요.</p></div></div>';
+  setTimeout(()=>window.close(),800);
+}
+$('#btnExitAll').onclick=doShutdown;
+const abtSd=$('#aboutDirectShutdown');
+if(abtSd)abtSd.onclick=doShutdown;
+
+window.addEventListener('pagehide',()=>{
+  if(closeAction==='exit'){
+    fetch('/api/ui_closed',{method:'POST',keepalive:true,headers:{'X-PCMon':'1'}});
+  }
+});
 $('#ackAll').onclick=async()=>{const r=await j('/api/risks');const ids=r.items.filter(i=>i.type==='event').flatMap(i=>i.eids||[i.eid]);
-  if(!ids.length||!confirm(`이벤트 ${ids.length}건을 모두 '확인함'으로 처리할까요?\n(흔적 점검 항목은 조치하거나 다시 점검해야 사라집니다)`))return;
-  await post('/api/ignore',{type:'event_once',title:`위험 목록 경고 ${ids.length}건 모두 확인함`,check:'보안',eids:ids});afterIgnore()};
+  if(!ids.length)return;
+  await post('/api/ignore',{type:'event_once',title:`위험 목록 경고 ${ids.length}건 모두 확인함`,check:'보안',eids:ids});
+  showToast(`경고 ${ids.length}건을 모두 확인함 처리했습니다.`, 'ok');
+  afterIgnore()};
 function ignBtn(q,label){return `<button class="abtn s" data-ign="${esc(JSON.stringify(q))}">${esc(label||'무시')}</button>`}
 function afterIgnore(){if(!$('#riskModal').classList.contains('hide'))openRisks(true);if(tab==='trace')loadTrace();refresh()}
 async function loadIgnored(sel){const L=await j('/api/ignored');const el=$(sel);if(!el)return;
@@ -510,7 +1847,7 @@ async function loadIgnored(sel){const L=await j('/api/ignored');const el=$(sel);
 async function loadBank(){const b=await j('/api/banking');const I=b.inventory;
   const ext=I.ports.filter(p=>p.external);
   const MODE={always:'항상 켜 둠 (원래대로)',auto:'은행·공공기관 사이트를 열 때만 자동으로 켜기',off:'꺼 둠 (필요할 때 직접 켜기)'};
-  let h=`<div class="kv"><span>지금 상태</span><span>${b.busy?`<span class="pulse wn">${esc(b.busy)}…</span>`:b.state==='on'?'<b class="wn">켜짐</b>':'<b class="ok">꺼짐</b>'}
+  let h=`<div class="kv"><span>지금 상태</span><span>${b.busy?`<span class="pulse wn">${esc(b.busy)}…</span>`:b.state==='on'?'<span class="sev warn">켜짐</span>':'<span class="sev ok">꺼짐</span>'}
      ${b.mode==='auto'&&b.last_match?` <span class="mut" style="font-size:12px">· 마지막 감지: ${esc(b.last_match.slice(0,40))} (${fmtT(b.last_seen,true)})</span>`:''}</span>
     <span>프로그램</span><span>서비스 ${I.services.length}개 · 로그인 시 자동 실행 ${I.runs.length}개${b.saved_runs?` (+ 꺼 두는 동안 보관 ${b.saved_runs}개)`:''} · 실행 중 ${I.procs.length}개</span>
     <span>외부 노출</span><span>${ext.length?`<b class="bad">다른 기기에서 접속 가능한 포트 ${ext.length}개</b> (${esc(ext.map(p=>p.proc+':'+p.port).join(', '))})`:'<span class="ok">없음</span>'}${b.block_external?' · <b class="ok">외부 접속 차단 중</b>':''}</span></div>`;
@@ -528,12 +1865,12 @@ async function loadBank(){const b=await j('/api/banking');const I=b.inventory;
     ${I.runs.map(r=>`<li>로그인 시 실행: ${esc(r.name)}</li>`).join('')}${I.ports.map(p=>`<li>포트 ${p.port} (${esc(p.proc)}) ${p.external?'<b class="bad">외부 노출</b>':'이 PC 안에서만'}</li>`).join('')}</ul></details>`;
   $('#bankBody').className='';$('#bankBody').innerHTML=h;
   $('#bankSave').onclick=async()=>{const m=(document.querySelector('input[name=bankMode]:checked')||{}).value;if(!m)return;
-    if(m!=='always'&&!confirm(m==='auto'?'평소에는 뱅킹 보안 프로그램을 꺼 두고, 은행·공공기관 사이트 창이 열리면 자동으로 켭니다.\n진행할까요?':'뱅킹 보안 프로그램을 꺼 둡니다. 필요할 때 [지금 켜기]를 누르세요.\n진행할까요?'))return;
-    $('#bankSave').disabled=true;const r=await post('/api/banking',{action:'mode',mode:m,keywords:$('#bankKw').value.split(/[,\n]/),idle_min:+$('#bankIdle').value||10});alert(r.msg);loadBank()};
+    $('#bankSave').disabled=true;const r=await post('/api/banking',{action:'mode',mode:m,keywords:$('#bankKw').value.split(/[,\n]/),idle_min:+$('#bankIdle').value||10});
+    showToast(r.msg, 'ok');loadBank()};
   if(b.busy)setTimeout(()=>tab==='prog'&&loadBank(),2500)}
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-bank]');if(!b||b.disabled)return;
-  if(b.dataset.confirm&&!confirm(b.dataset.confirm))return;b.disabled=true;b.textContent+='…';
-  const r=await post('/api/banking',{action:b.dataset.bank});alert(r.msg);loadBank()});
+  b.disabled=true;b.textContent+='…';
+  const r=await post('/api/banking',{action:b.dataset.bank});showToast(r.msg, 'ok');loadBank()});
 
 /* ---------- 프로그램 찾기 · 내 메모 ---------- */
 const VERD={safe:'안전',check:'확인 필요',remove:'삭제 예정'};
@@ -545,7 +1882,7 @@ $('#findForm').onsubmit=async e=>{e.preventDefault();const q=$('#findQ').value.t
   const note=n=>`<span class="notelink" data-notefor="${esc(n)}">메모</span>`;
   let h='';
   if(r.notes.length)h+='<div class="fsec">📝 내 메모</div>'+r.notes.map(n=>`<div class="find info"><b>${esc(n.name)}</b> ${n.verdict?`<span class="tag">${VERD[n.verdict]}</span>`:''} ${esc(n.note)}</div>`).join('');
-  h+=`<div class="fsec">실행 중 (${r.running.length})</div>`+(r.running.length?'<table><tr><th>프로세스</th><th class="n">메모리</th><th></th></tr>'+r.running.map(p=>`<tr>${pcell(p)}<td class="n">${p.mem_mb} MB<div class="mut" style="font-size:11px">${p.pids.length}개</div></td><td>${adv(p)}${note(p.name)}<div class="pacts">${actBtns(p.actions,true)}</div></td></tr>`).join('')+'</table>':'<div class="mut">없음</div>');
+  h+=`<div class="fsec">실행 중 (${r.running.length})</div>`+(r.running.length?'<table><tr><th>프로세스</th><th class="n">메모리</th><th></th></tr>'+r.running.map(p=>`<tr>${pcell(p)}<td class="n">${p.mem_mb} MB<div class="mut" style="font-size:11px">${p.pids.length}개</div></td><td>${adv(p)}${note(p.name)}<button class="abtn btn-proc-kill" data-proc-kill="${esc(p.name)}" data-proc-pid="${(p.pids&&p.pids[0])||''}" style="border-color:var(--crit);color:var(--crit);padding:1px 7px;font-size:11px;margin-left:4px" title="이 프로세스를 즉시 강제 종료합니다">⚡ 바로 차기</button><div class="pacts">${actBtns(p.actions,true)}</div></td></tr>`).join('')+'</table>':'<div class="mut">없음</div>');
   h+=`<div class="fsec">설치된 프로그램 (${r.installed.length})</div>`+(r.installed.length?'<table>'+r.installed.map(p=>`<tr><td><b>${esc(p.name)}</b> <span class="mut">${esc(p.version||'')}</span><div class="pdesc">${esc(p.publisher||'')}</div></td><td><div class="pacts">${actBtns(p.actions,true)}</div></td></tr>`).join('')+'</table>':'<div class="mut">없음</div>');
   h+=`<div class="fsec">디스크의 실행 파일 (${r.files.length}${r.files_partial?', 시간 제한으로 일부만':''})</div>`+(r.files.length?'<table><tr><th>파일</th><th>서명</th><th></th></tr>'+r.files.map(f=>`<tr><td><b>${esc(f.name)}</b>${f.running?' <span class="tag ok">실행 중</span>':''}<div class="pdesc">${esc(f.desc||'설명 없음')}${f.company?' · '+esc(f.company):''} · ${f.size_mb}MB</div><div class="pdesc" style="word-break:break-all">${esc(f.path)}</div></td>
       <td class="${f.sig==='Valid'?'ok':'wn'}" style="font-size:12px">${f.sig==='Valid'?'✓ '+esc(f.signer||'서명됨'):f.sig==='NotSigned'?'서명 없음':esc(f.sig||'-')}</td><td>${note(f.name)}<div class="pacts">${actBtns(f.actions,true)}</div></td></tr>`).join('')+'</table>':'<div class="mut">없음</div>');
@@ -556,14 +1893,19 @@ async function loadNotes(){const L=await j('/api/notes');
   $('#noteTable').innerHTML=L.length?'<tr><th>프로그램</th><th>판단</th><th>메모</th><th>저장</th><th></th></tr>'+L.map(n=>`<tr><td><b>${esc(n.name)}</b></td><td>${n.verdict?`<span class="tag">${VERD[n.verdict]}</span>`:''}</td><td>${esc(n.note)}</td><td class="mut" style="white-space:nowrap">${fmtT(n.ts,true)}</td>
     <td style="white-space:nowrap"><button class="abtn s" data-noteedit="${esc(JSON.stringify(n))}">수정</button> <button class="abtn" data-notedel="${esc(n.name)}">삭제</button></td></tr>`).join(''):'<tr><td class="mut">아직 메모가 없습니다. 위에서 찾은 프로그램의 [메모]를 누르거나 직접 입력하세요.</td></tr>'}
 $('#noteForm').onsubmit=async e=>{e.preventDefault();const name=$('#noteName').value.trim();if(!name)return;
-  const r=await post('/api/notes',{name,note:$('#noteText').value,verdict:$('#noteVerdict').value});alert(r.msg);
+  const r=await post('/api/notes',{name,note:$('#noteText').value,verdict:$('#noteVerdict').value});
+  showToast(r.msg || '메모가 저장되었습니다.', 'ok');
   $('#noteText').value='';$('#noteVerdict').value='';loadNotes()};
 function editNote(name,note,verdict){if(tab!=='prog')document.querySelector('nav button[data-t="prog"]').click();
   $('#noteName').value=name;$('#noteText').value=note||'';$('#noteVerdict').value=verdict||'';$('#noteText').focus();$('#noteForm').scrollIntoView({behavior:'smooth',block:'center'})}
 document.addEventListener('click',async e=>{
   const n=e.target.closest('[data-notefor]');if(n){editNote(n.dataset.notefor);return}
   const ed=e.target.closest('[data-noteedit]');if(ed){const v=JSON.parse(ed.dataset.noteedit);editNote(v.name,v.note,v.verdict);return}
-  const d=e.target.closest('[data-notedel]');if(d){if(!confirm(`「${d.dataset.notedel}」 메모를 지울까요?`))return;await post('/api/notes',{name:d.dataset.notedel,note:'',verdict:''});loadNotes()}
+  const d=e.target.closest('[data-notedel]');if(d){
+    const delName=d.dataset.notedel;
+    await post('/api/notes',{name:delName,note:'',verdict:''});
+    showToast(`'${delName}' 메모를 삭제했습니다.`, 'info');
+    loadNotes()}
 });
 
 /* ---------- 정보 ---------- */
@@ -624,8 +1966,8 @@ async function loadMaint(){let M;try{M=await j('/api/maint')}catch(e){return}
 async function loadQuar(){const q=await j('/api/quarantine');
   $('#quar').innerHTML=q.length?'<tr><th>격리 시각</th><th>원래 위치</th><th>함께 지운 것</th><th></th></tr>'+q.map(x=>`<tr><td class="mut">${fmtT(x.ts,true)}</td><td style="word-break:break-all">${esc(x.orig)}</td><td class="mut">방화벽 규칙 ${x.fw} · 자동실행 ${x.run}</td><td><button class="abtn s" data-qid="${esc(x.qid)}">되돌리기</button></td></tr>`).join(''):'<tr><td class="mut">격리한 파일이 없습니다</td></tr>'}
 $('#quar').onclick=async e=>{const b=e.target.closest('[data-qid]');if(!b)return;
-  if(!confirm('이 파일을 원래 위치로 되돌리고, 지웠던 방화벽 규칙·자동실행 등록도 복구합니다.\n진행할까요?'))return;
-  b.disabled=true;const res=await post('/api/quarantine/restore',{qid:b.dataset.qid});alert(res.msg);loadTrace()};
+  b.disabled=true;const res=await post('/api/quarantine/restore',{qid:b.dataset.qid});
+  showToast(res.msg || '격리된 파일이 복구되었습니다.', res.ok ? 'ok' : 'bad');loadTrace()};
 $('#runTrace').onclick=async()=>{await post('/api/trace/run');loadTrace()};
 function goTrace(){document.querySelector('nav button[data-t="trace"]').click()}
 
@@ -659,31 +2001,7 @@ async function initLang(){try{LANG=(await j('/api/settings')).lang||'ko'}catch(e
   document.title=trText(document.title)}
 $('#langBtn').onclick=async()=>{await post('/api/settings',{lang:LANG==='en'?'ko':'en'});location.reload()};
 
-/* ---------- 알림 설정 · 모니터 끄기 ---------- */
-function showNotify(n,now){
-  document.querySelectorAll('input[name=ntLv]').forEach(r=>r.checked=r.value===n.level);
-  const muted=n.mute_until>now;
-  $('#ntUnmute').classList.toggle('hide',!muted);
-  const until=new Date(n.mute_until*1000).toLocaleString(LANG==='en'?'en-US':'ko-KR');
-  $('#ntState').textContent=!muted?'':LANG==='en'?`Muted until ${until}`:`${until} 까지 꺼 둠`;
-  const off=muted||n.level==='off';
-  $('#ntBtn').classList.toggle('muted',off);
-  $('#ntBtn').textContent=off?'알림 꺼짐':n.level==='crit'?'알림: 위험만':'알림'}
-async function loadNotify(){try{const s=await j('/api/settings');showNotify(s.notify,s.now)}catch(e){}}
-$('#ntBtn').onclick=e=>{e.stopPropagation();$('#ntPop').classList.toggle('hide');if(!$('#ntPop').classList.contains('hide'))loadNotify()};
-$('#ntPop').onclick=e=>e.stopPropagation();
-document.addEventListener('click',()=>$('#ntPop').classList.add('hide'));
-document.querySelectorAll('input[name=ntLv]').forEach(r=>r.onchange=async()=>{await post('/api/settings',{level:r.value});loadNotify()});
-document.querySelectorAll('.ntMute').forEach(b=>b.onclick=async()=>{await post('/api/settings',{mute_min:+b.dataset.m});loadNotify()});
-$('#ntTest').onclick=async()=>{await post('/api/notify/test');$('#ntState').textContent='보냈습니다. 화면 오른쪽 아래를 확인하세요.'};
-$('#ntStop').onclick=async()=>{
-  if(!confirm('PC 모니터를 끕니다. 감시·기록·알림이 모두 멈춥니다.\n(뱅킹 보안 프로그램 자동 끄기도 멈춥니다)\n\n다음 로그인 때나 PC 모니터 아이콘을 열면 다시 켜집니다.\n끌까요?'))return;
-  try{await post('/api/monitor/stop')}catch(e){}
-  document.body.innerHTML='<div style="padding:40px;font-family:inherit"><h2>PC 모니터를 껐습니다</h2><p>감시와 알림이 멈췄습니다. 이 창은 닫아도 됩니다.</p><p class="mut">다시 켜려면 바탕화면이나 시작 메뉴의 <b>PC 모니터</b> 아이콘을 여세요. 다음 로그인 때도 자동으로 켜집니다.</p></div>';
-  if(TR)trNode(document.body)};
-loadNotify();
-
-initLang().finally(()=>j('/api/incidents').then(r=>{incMarks=r.map(x=>x.last_heartbeat)}).finally(()=>{if(location.hash.length>1&&location.hash!=='#ov')openHashTab();else{document.title='PC 모니터 · 개요';refresh()}}));
+initLang().finally(()=>{loadCloseSettings();j('/api/incidents').then(r=>{incMarks=r.map(x=>x.last_heartbeat)}).finally(()=>{if(location.hash.length>1&&location.hash!=='#ov')openHashTab();else{document.title='PC 모니터 · 대시보드';refresh()}})});
 setInterval(()=>{if(tab==='ov'||tab==='about')refresh()},10000);
 setInterval(()=>{if(tab==='live')refresh()},3000);
 setInterval(()=>{if(tab!=='live')j('/api/live').then(L=>$('#liveDot').className='dot '+L.level).catch(()=>{})},15000);

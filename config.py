@@ -2,7 +2,7 @@
 import os
 import sys
 
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 GITHUB_URL = "https://github.com/sarangks2/PCMonitor"   # 저장소 주소 (정보 화면에 표시)
 
 if getattr(sys, "frozen", False):
@@ -51,11 +51,18 @@ CPU_ALERT_PCT = 90       # 이 값 이상이
 CPU_ALERT_SECS = 120     # 이 시간 동안 지속되면 경고
 MEM_ALERT_PCT = 90
 MEM_ALERT_SECS = 60
-COMMIT_ALERT_PCT = 90
+COMMIT_ALERT_PCT = 95    # 가상 메모리 임계치 (90 -> 95%로 상향하여 정상 작업 중 과도한 알람 방지)
+COMMIT_ALERT_SECS = 120  # 지속 시간 (60 -> 120초로 상향)
 PROC_MEM_ALERT_MB = 3000     # 한 프로세스가 이만큼 넘게 쓰면 경고
 DISK_FREE_ALERT_GB = 10      # C: 남은 공간
 STALL_SECS = 60              # 수집 간격이 이보다 길게 끊기면 '응답 없음' 기록
-DEFENDER_SIG_MAX_DAYS = 3    # 바이러스 정의가 이보다 오래되면 경고
+DEFENDER_SIG_MAX_DAYS = 7    # 바이러스 정의가 이보다 오래되면 경고 (3 -> 7일로 완화)
 FAILED_LOGON_ALERT = 5       # 1분 안에 로그인 실패가 이 횟수 이상이면 경고
 
-ALERT_COOLDOWN_SECS = 1800   # 같은 알림은 30분에 한 번만 팝업
+ALERT_COOLDOWN_SECS = 1800        # 같은 알림은 30분에 한 번만 팝업
+ALERT_GLOBAL_COOLDOWN_SECS = 120  # 전체 팝업 최소 간격: 2분 동안 최대 1번만 팝업
+ALERT_LEVEL = "crit"              # 기본 팝업 수준: 'crit'(치명적 위험만 팝업), 'all'(주의 포함 모두), 'mute'(무음, DB에만 기록)
+ALERT_MODE = "popup"              # 알림 방식: 'popup'(즉시 알람), 'list_only'(대시보드 리스트만 기록), 'digest'(모아서 한 번만 요약 알람)
+ALERT_DIGEST_INTERVAL_SECS = 1800 # 모아서 알람 주기 (30분)
+
+

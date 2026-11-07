@@ -8,6 +8,7 @@
 import logging
 import logging.handlers
 import os
+import subprocess
 import sys
 import threading
 import time
@@ -35,6 +36,25 @@ logging.basicConfig(
 log = logging.getLogger("pcmon")
 
 
+BUGCHECK_INFO = {
+    0x1A: ("MEMORY_MANAGEMENT", "물리 RAM 메모리 손상 또는 불량 메모리 모듈 / 페이징 파일 손상"),
+    0xD1: ("DRIVER_IRQL_NOT_LESS_OR_EQUAL", "장치 드라이버가 부적절한 메모리 주소에 접근 (드라이버 버그/충돌)"),
+    0x9F: ("DRIVER_POWER_STATE_FAILURE", "절전 모드 전환/복귀 중 특정 드라이버 응답 불가"),
+    0x7E: ("SYSTEM_THREAD_EXCEPTION_NOT_HANDLED", "시스템 스레드에서 처리되지 않은 예외 발생"),
+    0x3B: ("SYSTEM_SERVICE_EXCEPTION", "그래픽 카드 드라이버 또는 파일시스템 드라이버 실행 예외"),
+    0x116: ("VIDEO_TDR_FAILURE", "GPU 그래픽카드 응답 지연 후 디스플레이 드라이버 충돌"),
+    0x119: ("VIDEO_SCHEDULER_INTERNAL_ERROR", "GPU 비디오 스케줄러 내부 오류 (GPU 과부하/드라이버 충돌)"),
+    0x77: ("KERNEL_DATA_INPAGE_ERROR", "스토리지(SSD/HDD)에서 페이징 데이터를 읽는 중 디스크 I/O 오류 발생"),
+    0x7A: ("KERNEL_DATA_INPAGE_ERROR", "디스크 케이블 접촉 불량, SSD 컨트롤러 오류 또는 배드 블록"),
+    0x124: ("WHEA_UNCORRECTABLE_ERROR", "치명적인 하드웨어 오류 (CPU 전압 부족, 캐시 불량, 마더보드/RAM 전압 불량)"),
+    0x50: ("PAGE_FAULT_IN_NONPAGED_AREA", "비페이징 메모리 참조 실패 (불량 램 또는 손상된 드라이버)"),
+    0xEF: ("CRITICAL_PROCESS_DIED", "Windows 필수 시스템 프로세스 강제 종료"),
+    0xC2: ("BAD_POOL_CALLER", "장치 드라이버의 잘못된 메모리 풀 해제 요청"),
+    0xC5: ("DRIVER_CORRUPTED_EXPOOL", "드라이버에 의한 메모리 풀 손상"),
+    0x133: ("DPC_WATCHDOG_VIOLATION", "특정 드라이버(SSD/NVMe 또는 그래픽)가 시스템을 장시간 점유"),
+}
+
+
 class Monitor:
     def __init__(self):
         self.db = DB()
@@ -60,6 +80,28 @@ class Monitor:
         self.self_cpu = 0.0
         self.token = ""
         self.stop = threading.Event()
+        self.tray = None
+
+    def shutdown(self):
+        log.info("PC 모니터 백그라운드 종료 요청")
+        self.stop.set()
+        try:
+            # 작업 스케줄러 자동 재시작 방지 (작업 즉시 종료)
+            subprocess.run(["schtasks", "/end", "/tn", "PCMonitor"],
+                           capture_output=True, timeout=5,
+                           creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000))
+        except Exception as e:
+            log.warning("작업 스케줄러 중지 예외: %s", e)
+        if self.tray:
+            try:
+                self.tray.stop()
+            except Exception:
+                pass
+        try:
+            self.db.add_event(time.time(), "system", "info", "pcmon", 0, "사용자 요청으로 PC 모니터 백그라운드 감시 종료", "")
+        except Exception:
+            pass
+        threading.Timer(0.3, lambda: os._exit(0)).start()
 
     # ------------------------------------------------------------------ 알림
     def alert(self, key, severity, title, body):
@@ -70,30 +112,59 @@ class Monitor:
         self.db.execute("INSERT INTO alerts(ts,key,severity,title,body) VALUES(?,?,?,?,?)",
                         (int(now), key, severity, title, body))
         log.warning("ALERT [%s] %s - %s", severity, title, body.replace("\n", " "))
-        if not self.popup_allowed(severity, now):
-            return  # 기록은 남기고 팝업만 생략 (앱의 이벤트 화면에서 볼 수 있음)
+
+        # 3대 알림 전송 모드 (instant | silent | digest)
+        notify_mode = self.db.get("notify_mode") or getattr(config, "ALERT_MODE", "instant")
+        alert_level = self.db.get("alert_level") or config.ALERT_LEVEL  # 'crit' | 'all' | 'mute'
+
+        # 1. 무음 / 리스트만 기록 모드
+        if notify_mode == "silent" or alert_level == "mute":
+            return  # 팝업 알림 생략하고 대시보드 리스트에만 기록
+
+        # 2. 모아서 한 번만 알람 (다이제스트 요약 모드)
+        if notify_mode == "digest":
+            if not hasattr(self, "digest_buffer"):
+                self.digest_buffer = []
+            self.digest_buffer.append({"ts": now, "severity": severity, "title": title, "body": body})
+            return
+
+        # 3. 즉시 팝업 알람 (instant 모드)
+        if alert_level == "crit" and severity != "crit":
+            return  # 'crit' 모드에서는 주의(warn) 등은 팝업 제외
+
+        # 전체 팝업 쿨다운 (연속 스팸 방지: 최소 간격 120초 적용)
+        global_cd = getattr(config, "ALERT_GLOBAL_COOLDOWN_SECS", 120)
+        last_toast = getattr(self, "_last_toast_ts", 0)
+        if now - last_toast < global_cd:
+            return
+        self._last_toast_ts = now
+
         lang = self.db.get("ui_lang") or "ko"
-        winutil.toast(("⚠ " if severity == "crit" else "") + i18n.tr(title, lang), i18n.tr(body, lang),
-                      app_name="PC Monitor" if lang == "en" else "PC 모니터")
+        winutil.toast(("⚠ " if severity == "crit" else "") + i18n.tr(title, lang), i18n.tr(body, lang))
 
-    def notify_settings(self):
-        n = self.db.get("notify") or {}
-        return {"level": n.get("level") if n.get("level") in ("all", "crit", "off") else "all",
-                "mute_until": int(n.get("mute_until") or 0)}
+    def check_digest(self):
+        """다이제스트 모드일 때 주기(기본 30분)마다 누적된 알림 요약 발송."""
+        mode = self.db.get("notify_mode") or getattr(config, "ALERT_MODE", "instant")
+        if mode != "digest":
+            return
+        now = time.time()
+        interval = getattr(config, "ALERT_DIGEST_INTERVAL_SECS", 1800)
+        last_d = getattr(self, "last_digest_ts", 0)
+        if not last_d:
+            self.last_digest_ts = now
+            return
+        if now - last_d >= interval:
+            self.last_digest_ts = now
+            buf = getattr(self, "digest_buffer", [])
+            if buf:
+                cnt = len(buf)
+                top_item = buf[-1]["title"]
+                lang = self.db.get("ui_lang") or "ko"
+                self.digest_buffer = []
+                msg = f"지난 30분 동안 경고 {cnt}건이 발생했습니다 ({top_item} 등). 대시보드에서 확인하세요."
+                winutil.toast(i18n.tr("PC 모니터 알림 요약", lang), i18n.tr(msg, lang))
 
-    def popup_allowed(self, severity, now=None):
-        """알림 설정: all=모두 · crit=위험만 · off=끄기, mute_until=그때까지 잠시 끄기."""
-        n = self.notify_settings()
-        if n["mute_until"] > (now or time.time()) or n["level"] == "off":
-            return False
-        return n["level"] == "all" or severity == "crit"
 
-    def shutdown(self, reason="사용자가 끔"):
-        """모니터 본체를 정상 종료 (종료 코드 0 → 예약 작업이 '실패 후 다시 시작'을 하지 않음).
-        다음 로그인/부팅 때나 PC 모니터 아이콘을 열면 다시 켜진다."""
-        log.info("종료: %s", reason)
-        self.db.set("stopped_at", time.time())
-        self.stop.set()
 
     # ------------------------------------------------------------------ 장애 감지
     def detect_incident(self):
@@ -101,13 +172,8 @@ class Monitor:
         last_hb = self.db.get("heartbeat")
         boot = psutil.boot_time()
         self.db.set("boot_time", boot)
-        stopped = self.db.get("stopped_at")
-        if stopped:
-            self.db.set("stopped_at", 0)
         if not last_hb or last_hb >= boot:
             return
-        if stopped and stopped >= last_hb:
-            return  # 사용자가 모니터를 끈 뒤라 '멈추기 직전' 기록이 없다
         if self.db.query("SELECT 1 FROM incidents WHERE boot_time=?", (int(boot),)):
             return
         since_ms = int((time.time() - last_hb + 600) * 1000)
@@ -122,35 +188,85 @@ class Monitor:
         if not k41 and not any(e["id"] == 6008 for e in evs):
             return  # 정상 종료/재시작
         bc, kind = "", "갑작스런 꺼짐"
+        deep_cause = None
+        cause_category = "전원/하드웨어"
+        code = 0
         if k41:
             d = k41[-1]["data"]
             code = int(d.get("BugcheckCode", "0") or 0)
             if code:
-                bc, kind = f"0x{code:X}", "블루스크린"
+                if code in BUGCHECK_INFO:
+                    sym, desc = BUGCHECK_INFO[code]
+                    bc = f"0x{code:X} ({sym})"
+                    deep_cause = f"블루스크린 {sym}: {desc}"
+                    cause_category = "블루스크린"
+                else:
+                    bc = f"0x{code:X}"
+                    deep_cause = f"블루스크린 정지 코드: {bc}"
+                    cause_category = "블루스크린"
+                kind = "블루스크린"
             elif d.get("PowerButtonTimestamp", "0") not in ("0", ""):
                 kind = "멈춤 → 전원 버튼 강제 종료"
+                deep_cause = "시스템 응답 없음(프리징)으로 사용자가 전원 버튼을 길게 눌러 강제 종료함"
+                cause_category = "시스템 프리징"
             else:
                 kind = "갑작스런 전원 차단/리셋"
+                deep_cause = "외부 전원 급작 차단 또는 파워서플라이(PSU) 급작 셧다운"
+                cause_category = "전원 차단"
+
+        # 심층 4대 원인(WHEA, 디스크, GPU TDR, 과열) 정밀 검사
+        try:
+            diag_evs = winutil.query_events(
+                "System",
+                f"*[System[TimeCreated[timediff(@SystemTime) <= {since_ms}] and "
+                f"((Provider[@Name='Microsoft-Windows-WHEA-Logger'] and (EventID=17 or EventID=18 or EventID=19 or EventID=47)) or "
+                f"((Provider[@Name='disk' or @Name='stornvme' or @Name='iaStorA' or @Name='volsnap'] or Provider[@Name='ntfs']) and (EventID=7 or EventID=9 or EventID=11 or EventID=15 or EventID=129 or EventID=153)) or "
+                f"(Provider[@Name='Display'] and EventID=4101) or "
+                f"((Provider[@Name='Microsoft-Windows-Kernel-Processor-Power'] or Provider[@Name='Thermal-OpEvent']) and (EventID=86 or EventID=37)))]"
+            )
+            for de in diag_evs:
+                eid = de.get("id")
+                prov = str(de.get("source", "")).lower()
+                if "whea" in prov or eid in (17, 18, 19, 47):
+                    deep_cause = f"하드웨어(RAM/CPU) 결함 감지: WHEA-Logger 오류 (Event {eid}) - 메모리 모듈 및 CPU 전압 점검 필요"
+                    cause_category = "하드웨어 불량"
+                    break
+                elif any(k in prov for k in ("disk", "stornvme", "iastor", "ntfs")) or eid in (7, 9, 11, 15, 129, 153):
+                    deep_cause = f"스토리지/디스크 장애 감지: {prov} 오류 (Event {eid}) - SSD/HDD 케이블 및 배드 블록 점검 권장"
+                    cause_category = "스토리지 장애"
+                    break
+                elif "display" in prov or eid == 4101:
+                    deep_cause = f"GPU 그래픽 드라이버 충돌: 디스플레이 드라이버 응답 없음(TDR, Event 4101) - GPU 드라이버 재설치 권장"
+                    cause_category = "GPU 드라이버 충돌"
+                    break
+                elif "processor-power" in prov or "thermal" in prov or eid in (86, 37):
+                    deep_cause = f"CPU 과열/전원 불량: 서멀 스로틀링 또는 급격한 전압 강하 (Event {eid}) - 쿨러 점검 권장"
+                    cause_category = "과열/전원 불량"
+                    break
+        except Exception:
+            pass
+
         hb = int(last_hb)
         metrics = self.db.query("SELECT * FROM metrics WHERE ts BETWEEN ? AND ? ORDER BY ts", (hb - 300, hb))
         procs = self.db.query("SELECT * FROM procs WHERE ts=(SELECT MAX(ts) FROM procs WHERE ts<=?)", (hb,))
         events = self.db.query("SELECT ts,category,severity,title FROM events WHERE ts BETWEEN ? AND ? ORDER BY ts",
                                (hb - 1800, hb + 600))
-        summary = self._summarize(metrics, procs)
+        summary = self._summarize(metrics, procs, deep_cause)
         import json
         self.db.execute(
             "INSERT INTO incidents(ts,last_heartbeat,boot_time,kind,bugcheck,summary,snapshot) VALUES(?,?,?,?,?,?,?)",
             (int(time.time()), hb, int(boot), kind, bc, summary,
-             json.dumps({"metrics": metrics, "procs": procs, "events": events}, ensure_ascii=False)))
+             json.dumps({"metrics": metrics, "procs": procs, "events": events,
+                         "deep_cause": deep_cause, "cause_category": cause_category}, ensure_ascii=False)))
         when = time.strftime("%m/%d %H:%M:%S", time.localtime(hb))
         self.alert(f"incident:{int(boot)}", "crit", f"직전 비정상 종료 감지: {kind} {bc}".strip(),
                    f"마지막 기록 {when}. {summary}")
-        log.warning("incident: %s %s / %s", kind, bc, summary)
+        log.warning("incident: %s %s / %s (원인: %s)", kind, bc, summary, deep_cause)
 
     @staticmethod
-    def _summarize(metrics, procs):
+    def _summarize(metrics, procs, deep_cause=None):
         if not metrics:
-            return "직전 기록 없음 (모니터가 실행 중이 아니었음)"
+            return f"직전 기록 없음 ({deep_cause or '모니터가 실행 중이 아니었음'})"
         mx = lambda k: max((m[k] or 0) for m in metrics)
         parts = [f"직전 5분 최대 CPU {mx('cpu'):.0f}%", f"메모리 {mx('mem'):.0f}%", f"커밋 {mx('commit_pct'):.0f}%",
                  f"디스크 사용률 {mx('disk_busy'):.0f}%"]
@@ -158,13 +274,15 @@ class Monitor:
         if top:
             parts.append("상위: " + ", ".join(f"{p['name']}({p['cpu']:.0f}%/{p['mem_mb']:.0f}MB)" for p in top))
         hint = []
-        if mx("mem") >= 90 or mx("commit_pct") >= 90:
+        if deep_cause:
+            hint.append(deep_cause)
+        elif mx("mem") >= 90 or mx("commit_pct") >= 90:
             hint.append("메모리 부족 의심")
-        if mx("cpu") >= 95:
+        elif mx("cpu") >= 95:
             hint.append("CPU 과부하")
-        if mx("disk_busy") >= 95:
+        elif mx("disk_busy") >= 95:
             hint.append("디스크 과부하")
-        if not hint:
+        else:
             hint.append("자원 사용은 정상 → 드라이버/하드웨어 쪽 의심")
         return ", ".join(parts) + " → " + ", ".join(hint)
 
@@ -234,10 +352,36 @@ class Monitor:
                 ("commit", m["commit_pct"], config.COMMIT_ALERT_PCT, config.MEM_ALERT_SECS, "가상 메모리(커밋) 부족")):
             self.high[key] = self.high[key] + dt if val >= lim else 0
             if self.high[key] >= secs:
-                top = (self.top_now if key == "cpu" else getattr(self, "mem_top", []))[:3]
-                who = ", ".join(f"{t['name']}({t['cpu']:.0f}%)" if key == "cpu" else f"{t['name']}({t['mem_mb']:.0f}MB)"
-                                for t in top)
-                self.alert(f"thr:{key}", "warn", title, f"{val:.0f}% 상태가 {self.high[key]}초 지속. 상위: {who}")
+                raw_top = self.top_now if key == "cpu" else getattr(self, "mem_top", [])
+                # 프로세스명별 그룹화: 동일 앱(예: claude.exe, chrome.exe) 합산 및 개수 카운트
+                grouped = {}
+                for t in raw_top:
+                    name = t.get("name", "unknown")
+                    c = t.get("cpu", 0.0) if key == "cpu" else t.get("mem_mb", 0.0)
+                    if name not in grouped:
+                        grouped[name] = {"name": name, "val": 0.0, "count": 0}
+                    grouped[name]["val"] += c
+                    grouped[name]["count"] += 1
+                top_sorted = sorted(grouped.values(), key=lambda x: -x["val"])[:3]
+                who_list = []
+                for t in top_sorted:
+                    cnt_str = f"({t['count']}개 합산 " if t["count"] > 1 else "("
+                    val_str = f"{t['val']:.0f}%)" if key == "cpu" else f"{t['val']:.0f}MB)"
+                    who_list.append(f"{t['name']}{cnt_str}{val_str}")
+                who = ", ".join(who_list) if who_list else "세부 정보 없음"
+
+                opt_hint = ""
+                if key in ("mem", "commit"):
+                    opt_hint = " (대시보드에서 [메모리 최적화]를 실행하여 여유 공간을 확보할 수 있습니다)"
+                    try:
+                        from procinfo import optimize_memory
+                        rec = optimize_memory()
+                        if rec.get("reclaimed_mb", 0) > 50:
+                            opt_hint = f" (안전 메모리 최적화로 {rec['reclaimed_mb']:.0f}MB 즉시 회수됨)"
+                    except Exception:
+                        pass
+
+                self.alert(f"thr:{key}", "warn", title, f"{val:.0f}% 상태가 {self.high[key]}초 지속. 상위: {who}.{opt_hint}")
                 self.db.add_event(m["ts"], "resource", "warn", "pcmon", 0, f"{title} {val:.0f}%", {"상위": who})
                 self.high[key] = -config.ALERT_COOLDOWN_SECS  # 바로 다시 기록하지 않도록
 
@@ -295,6 +439,7 @@ class Monitor:
                 self.db.add_metric(m, int(now))
                 self.latest = m
                 self.check_thresholds(m)
+                self.check_digest()
                 if new_exes:
                     self.new_exe_queue.extend(new_exes)
                 if now - last_snap >= config.PROC_SNAPSHOT_INTERVAL:
@@ -390,13 +535,18 @@ class Monitor:
         import dashboard
         threading.Thread(target=dashboard.serve, args=(self,), daemon=True).start()
         threading.Thread(target=self.run_background, daemon=True).start()
+        if not winutil.is_system():
+            try:
+                import tray
+                ico = os.path.join(config.RES_DIR, "pcmon.ico")
+                self.tray = tray.TrayIcon(ico, "PC 모니터 (백그라운드 감시 중)",
+                                          on_open=open_app_window,
+                                          on_exit=self.shutdown)
+                self.tray.start()
+                log.info("시스템 트레이 아이콘 시작됨")
+            except Exception:
+                log.exception("트레이 아이콘 시작 실패")
         self.run_sampler()
-        try:
-            import faulthandler
-            faulthandler.cancel_dump_traceback_later()
-        except Exception:
-            pass
-        log.info("수집 중지됨")
 
 
 URL = f"http://127.0.0.1:{config.HTTP_PORT}/"
@@ -439,9 +589,42 @@ tick();
 </script>"""
 
 
+def activate_existing_window():
+    """이미 열려 있는 'PC 모니터' 앱 창이 있으면 중복 실행하지 않고 맨 앞으로 활성화."""
+    import ctypes
+    user32 = ctypes.windll.user32
+    target_hwnd = [None]
+
+    def cb(hwnd, extra):
+        if user32.IsWindowVisible(hwnd):
+            length = user32.GetWindowTextLengthW(hwnd)
+            if length > 0:
+                buff = ctypes.create_unicode_buffer(length + 1)
+                user32.GetWindowTextW(hwnd, buff, length + 1)
+                val = buff.value.strip().lower()
+                if val.startswith("pc 모니터") or val.startswith("pc monitor"):
+                    target_hwnd[0] = hwnd
+                    return False
+        return True
+
+    WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_int, ctypes.c_int)
+    try:
+        user32.EnumWindows(WNDENUMPROC(cb), 0)
+        if target_hwnd[0]:
+            user32.ShowWindow(target_hwnd[0], 9)  # SW_RESTORE
+            user32.SetForegroundWindow(target_hwnd[0])
+            return True
+    except Exception:
+        pass
+    return False
+
+
 def open_app_window(wait_page=False):
     """주소창 없는 독립 앱 창으로 대시보드를 연다 (Edge/Chrome 앱 모드, 없으면 기본 브라우저).
+    이미 대시보드 창이 열려 있으면 중복으로 띄우지 않고 기존 창을 맨 앞으로 활성화한다.
     wait_page=True 이면 '시작 중' 화면을 먼저 띄우고, 모니터가 준비되면 자동으로 넘어간다."""
+    if not wait_page and activate_existing_window():
+        return
     import subprocess
     import webbrowser
     pf86 = os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")
