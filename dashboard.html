@@ -846,7 +846,7 @@ async function loadSummary(){
   const li=s.last_incident;
   const rk=s.risks||{crit:0,warn:0},secBad=rk.crit;
   window._lastSummary = s;
-  const drvs = s.drives || [];
+  const drvs = (s.drives || []).filter(d => d.drive !== 'F:' && d.total_gb >= 1.0);
   let diskKeyName = '디스크 여유';
   let diskValHtml = '';
   let diskSubHtml = '';
@@ -1348,7 +1348,7 @@ function openTileDetailModal(key){
     subEl.textContent = 'PC에 마운트된 모든 로컬 드라이브 잔여 공간 및 실시간 디스크 활성 시간(Busy Rate)';
     const freeGb = s.disk_free_gb || 0;
     const busyVal = (m.disk_busy || 0);
-    const drvs = s.drives || [];
+    const drvs = (s.drives || []).filter(d => d.drive !== 'F:' && d.total_gb >= 1.0);
 
     const hasLowDisk = drvs.some(d => d.free_gb < 10) || freeGb < 10;
     const hasWarnDisk = drvs.some(d => d.free_gb < 25) || freeGb < 25;

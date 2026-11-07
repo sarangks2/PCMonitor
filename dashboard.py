@@ -275,15 +275,28 @@ def serve(mon):
             counts = db.query("SELECT category, severity, COUNT(*) n FROM events WHERE ts>? GROUP BY 1,2", (now - 86400,))
             drives = []
             try:
+                excluded = set(getattr(config, "EXCLUDE_DRIVES", ("F:",)))
+                db_ex = mon.db.get("excluded_drives") or []
+                if isinstance(db_ex, (list, tuple)):
+                    excluded.update(d.strip().upper() for d in db_ex if d)
+                min_gb = getattr(config, "MIN_DRIVE_TOTAL_GB", 1.0)
+
                 for ptn in psutil.disk_partitions(all=False):
+                    drv = ptn.mountpoint[:2].upper()
+                    if drv in excluded or ptn.mountpoint.upper().startswith("F:"):
+                        continue
                     if ("fixed" in ptn.opts or "rw" in ptn.opts) and not ptn.mountpoint.startswith(("\\\\", "/")):
                         try:
                             du = psutil.disk_usage(ptn.mountpoint)
+                            total_gb = du.total / 1e9
+                            # 시스템 예약(100MB), 복구 파티션 등 1GB 미만 특수 파티션 자동 배제
+                            if total_gb < min_gb:
+                                continue
                             drives.append({
                                 "mount": ptn.mountpoint,
-                                "drive": ptn.mountpoint[:2],
+                                "drive": drv,
                                 "free_gb": round(du.free / 1e9, 1),
-                                "total_gb": round(du.total / 1e9, 1),
+                                "total_gb": round(total_gb, 1),
                                 "used_gb": round((du.total - du.free) / 1e9, 1),
                                 "pct": round(du.percent, 1)
                             })

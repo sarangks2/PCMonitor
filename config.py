@@ -25,6 +25,8 @@ LOG_PATH = os.path.join(DATA_DIR, "pcmon.log")
 TOKEN_PATH = os.path.join(DATA_DIR, "access.token")   # 대시보드 접근 열쇠 (설치한 사용자·관리자만 읽기 가능)
 
 SYSTEM_DRIVE = os.environ.get("SystemDrive", "C:") + "\\"
+EXCLUDE_DRIVES = tuple(d.strip().upper() for d in os.environ.get("PCMON_EXCLUDE_DRIVES", "F:").split(",") if d.strip())
+MIN_DRIVE_TOTAL_GB = 1.0  # 1GB 미만 특수 파티션(시스템 예약 100MB, 복구 파티션 등) 자동 제외
 
 # 대시보드: 이 PC에서만 접속 가능 (외부 노출 안 함). 포트는 PCMON_PORT 로 변경 가능
 HTTP_HOST = "127.0.0.1"
