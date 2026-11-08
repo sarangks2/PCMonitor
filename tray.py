@@ -88,7 +88,7 @@ class NOTIFYICONDATAW(ctypes.Structure):
 
 
 class TrayIcon:
-    def __init__(self, icon_path, tooltip="PC 모니터", on_open=None, on_exit=None):
+    def __init__(self, icon_path, tooltip="PC BlackBox", on_open=None, on_exit=None):
         self.icon_path = icon_path
         self.tooltip = tooltip
         self.on_open = on_open
@@ -123,9 +123,9 @@ class TrayIcon:
 
     def _show_menu(self, hwnd):
         menu = user32.CreatePopupMenu()
-        user32.AppendMenuW(menu, 0, ID_MENU_OPEN, "📊 PC 모니터 대시보드 열기")
+        user32.AppendMenuW(menu, 0, ID_MENU_OPEN, "📊 PC BlackBox 대시보드 열기")
         user32.AppendMenuW(menu, 0x00000800, 0, "")  # 구분선
-        user32.AppendMenuW(menu, 0, ID_MENU_EXIT, "🛑 PC 모니터 완전 종료 (백그라운드 중지)")
+        user32.AppendMenuW(menu, 0, ID_MENU_EXIT, "🛑 PC BlackBox 완전 종료 (백그라운드 중지)")
 
         user32.SetForegroundWindow(hwnd)
         pt = wintypes.POINT()
@@ -139,8 +139,8 @@ class TrayIcon:
         elif cmd == ID_MENU_EXIT:
             res = user32.MessageBoxW(
                 hwnd,
-                "PC 모니터 백그라운드 감시를 완전히 종료할까요?\n\n종료하면 자원 기록, 장애 분석, 인터넷뱅킹 보안 관리가 모두 중단되며 작업 스케줄러 자동 실행도 중단됩니다.",
-                "PC 모니터 완전 종료",
+                "PC BlackBox 백그라운드 감시를 완전히 종료할까요?\n\n종료하면 자원 기록, 장애 분석, 인터넷뱅킹 보안 관리가 모두 중단되며 작업 스케줄러 자동 실행도 중단됩니다.",
+                "PC BlackBox 완전 종료",
                 0x00000004 | 0x00000020 | 0x00040000,  # MB_YESNO | MB_ICONQUESTION | MB_TOPMOST
             )
             if res == 6:  # IDYES

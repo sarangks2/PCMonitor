@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PC 모니터</title>
+<title>PC BlackBox</title>
 <link rel="icon" href="/favicon.ico">
 <style>
 :root{
@@ -53,8 +53,7 @@ h1{font-size:16px;font-weight:700;margin:0;letter-spacing:-0.2px}
 }
 .tray-badge.ok{background:rgba(22,163,74,0.12);color:var(--ok);border-color:rgba(22,163,74,0.25)}
 .tray-badge.wn{background:rgba(217,119,6,0.12);color:var(--warn);border-color:rgba(217,119,6,0.25)}
-.pulse-dot{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;animation:p-ring 1.8s infinite}
-@keyframes p-ring{0%{box-shadow:0 0 0 0 rgba(34,197,94,0.6)}70%{box-shadow:0 0 0 5px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;box-shadow:0 0 6px currentColor;flex-shrink:0}
 
 /* Navigation Tabs */
 nav{
@@ -139,7 +138,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--ch
 .find.crit{border-left-color:var(--crit)}.find.warn{border-left-color:var(--warn)}.find.ok{border-left-color:var(--ok)}.find.info{border-left-color:var(--mut)}
 .find ul{margin:4px 0 0;padding-left:18px;color:var(--mut);font-size:12.5px;word-break:break-all}
 .tag{font-size:11px;color:var(--mut);margin-right:6px}
-.pulse{animation:p 1.2s infinite}@keyframes p{50%{opacity:.35}}
+.pulse{opacity:0.85}
 .acts{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .abtn{border:1px solid var(--crit);color:var(--crit);background:transparent;border-radius:6px;padding:4px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s}
 .abtn:hover{background:rgba(220,38,38,.08)}
@@ -230,7 +229,9 @@ html[lang=en] .tile.click .s:after{content:' · click for details ›'}
 .howto{margin-top:6px;font-size:13px}.howto b{color:var(--fg)}
 .bar{height:8px;background:var(--chip);border-radius:6px;overflow:hidden;margin:6px 0}
 .bar>i{display:block;height:100%;background:var(--cpu);border-radius:6px;transition:width .5s}
-.bar.ind>i{width:35%;animation:ind 1.6s infinite ease-in-out}@keyframes ind{0%{margin-left:-35%}100%{margin-left:100%}}
+.bar.ind>i{width:35%;animation:ind 1.6s infinite ease-in-out;will-change:transform}@keyframes ind{0%{transform:translateX(-100%)}100%{transform:translateX(320%)}}
+/* 백그라운드/최소화 시 모든 애니메이션 일시정지로 브라우저 CPU/GPU 점유율 0% 유지 */
+body.page-hidden *, body.page-hidden *::before, body.page-hidden *::after { animation-play-state: paused !important; }
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;margin:6px 0}.kv span:nth-child(odd){color:var(--mut)}
 .adv{display:inline-block;font-size:11px;padding:0 6px;border-radius:4px;margin-top:2px;font-weight:600}
 .adv.must,.adv.keep{background:var(--chip);color:var(--mut)}
@@ -274,6 +275,7 @@ html[lang=en] .tile.click .s:after{content:' · click for details ›'}
 .cause-badge.hw{background:rgba(239,68,68,0.14);color:var(--crit);border:1px solid rgba(239,68,68,0.3)}
 .cause-badge.disk{background:rgba(245,158,11,0.14);color:var(--warn);border:1px solid rgba(245,158,11,0.3)}
 .cause-badge.gpu{background:rgba(139,92,246,0.14);color:#8b5cf6;border:1px solid rgba(139,92,246,0.3)}
+.cause-badge.usb{background:rgba(14,165,233,0.14);color:#0284c7;border:1px solid rgba(14,165,233,0.3)}
 .cause-badge.pwr{background:rgba(220,38,38,0.15);color:var(--crit);border:1px solid rgba(220,38,38,0.3)}
 .cause-badge.safe{background:rgba(16,185,129,0.14);color:var(--ok);border:1px solid rgba(16,185,129,0.3)}
 
@@ -296,7 +298,7 @@ html[lang=en] .tile.click .s:after{content:' · click for details ›'}
     <div class="brand-icon">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
     </div>
-    <h1>PC 모니터</h1>
+    <h1>PC BlackBox</h1>
     <div id="trayBadge" class="tray-badge" title="백그라운드 감시 상태">
       <span class="pulse-dot"></span>
       <span id="trayBadgeText">트레이 감시 중</span>
@@ -315,7 +317,7 @@ html[lang=en] .tile.click .s:after{content:' · click for details ›'}
   <div class="header-actions">
     <span id="upd"></span>
     <button id="langBtn" class="hbtn" title="Language / 언어">🌐 EN</button>
-    <button id="exitBtn" class="hbtn exit" title="PC 모니터 닫기 / 종료">
+    <button id="exitBtn" class="hbtn exit" title="PC BlackBox 닫기 / 종료">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" x2="12" y1="2" y2="12"/></svg>
       <span>종료</span>
     </button>
@@ -464,7 +466,7 @@ html[lang=en] .tile.click .s:after{content:' · click for details ›'}
 </section>
 
 <section id="about" class="hide">
-  <div class="card" style="margin-bottom:12px"><h2>PC 모니터가 지금 쓰는 자원 <span class="mut" style="font-weight:400;font-size:12px">10초마다 갱신</span></h2>
+  <div class="card" style="margin-bottom:12px"><h2>PC BlackBox가 지금 쓰는 자원 <span class="mut" style="font-weight:400;font-size:12px">10초마다 갱신</span></h2>
     <div class="grid" id="selfTiles" style="margin:0"></div><div id="selfMore" class="mut" style="font-size:12.5px;margin-top:6px"></div></div>
   <div class="row2 eq">
     <div class="card"><h2>작동 원리</h2>
@@ -532,7 +534,7 @@ html[lang=en] .tile.click .s:after{content:' · click for details ›'}
       <span>작업 표시줄 오른쪽 알림 영역에 아이콘 상주 (더블클릭: 화면 열기, 우클릭: 종료 메뉴)</span>
     </div>
     <div class="acts" style="margin-top:10px">
-      <button class="abtn" id="aboutDirectShutdown" data-confirm="PC 모니터 백그라운드 감시를 완전히 종료할까요?\n(종료하면 자원 기록 및 침입 감시가 중단됩니다)">백그라운드 모니터 즉시 종료</button>
+      <button class="abtn" id="aboutDirectShutdown" data-confirm="PC BlackBox 백그라운드 감시를 완전히 종료할까요?\n(종료하면 자원 기록 및 침입 감시가 중단됩니다)">백그라운드 모니터 즉시 종료</button>
     </div>
   </div>
 </section>
@@ -558,7 +560,7 @@ html[lang=en] .tile.click .s:after{content:' · click for details ›'}
 <div id="exitModal" class="modal hide" role="dialog" aria-modal="true">
   <div class="mbox" style="max-width:540px">
     <div class="mhead">
-      <h2 style="margin:0">PC 모니터 종료 및 백그라운드 제어</h2>
+      <h2 style="margin:0">PC BlackBox 종료 및 백그라운드 제어</h2>
       <button class="mclose" id="exitModalClose" aria-label="닫기">✕</button>
     </div>
     <div style="font-size:13.5px;color:var(--mut);margin:8px 0 16px;line-height:1.6">
@@ -646,11 +648,11 @@ html[lang=en] .tile.click .s:after{content:' · click for details ›'}
 <script>
 const $=s=>document.querySelector(s);
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const fmtT=(t,full)=>{const d=new Date(t*1000);const p=x=>String(x).padStart(2,'0');return (full?`${d.getMonth()+1}/${d.getDate()} `:'')+`${p(d.getHours())}:${p(d.getMinutes())}`+(full==='s'?':'+p(d.getSeconds()):'')};
+const fmtT=(t,full)=>{if(!t)return'-';const d=new Date(t*1000);if(isNaN(d.getTime()))return'-';const p=x=>String(x).padStart(2,'0');return (full?`${d.getMonth()+1}/${d.getDate()} `:'')+`${p(d.getHours())}:${p(d.getMinutes())}`+(full==='s'?':'+p(d.getSeconds()):'')};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const sev=s=>`<span class="sev ${s}">${{crit:'위험',warn:'주의',info:'정보'}[s]||s}</span>`;
 const CAT={action:'조치',intrusion:'침입',crash:'장애',hardware:'하드웨어',security:'보안',defender:'백신',persistence:'자동실행',network:'네트워크',process:'프로그램',app:'앱',system:'시스템',resource:'자원',stall:'멈춤'};
-async function j(u){const r=await fetch(u);if(r.status===401){document.body.innerHTML='<div style="padding:40px"><h2>접근 권한이 없습니다</h2><p>PC 모니터 아이콘으로 다시 열어 주세요.</p></div>';throw new Error('401')}return r.json()}
+async function j(u){const r=await fetch(u);if(r.status===401){document.body.innerHTML='<div style="padding:40px"><h2>접근 권한이 없습니다</h2><p>PC BlackBox 아이콘으로 다시 열어 주세요.</p></div>';throw new Error('401')}return r.json()}
 
 /* Non-blocking Toast Notification (모달 팝업 확인창 방지) */
 function showToast(msg, type='ok', duration=3200){
@@ -721,7 +723,8 @@ const PROC_KO_NAMES = {
   'discord.exe': 'Discord 메신저',
   'kakaotalk.exe': '카카오톡',
   'teams.exe': 'Microsoft Teams',
-  'pcmonitor.exe': 'PC 모니터'
+  'pcblackbox.exe': 'PC BlackBox',
+  'pcmonitor.exe': 'PC BlackBox'
 };
 function getKoProcName(name){
   if(!name)return '';
@@ -746,7 +749,7 @@ let tab='ov';
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));
   document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hide',s.id!==b.dataset.t));
-  tab=b.dataset.t;document.title='PC 모니터 · '+b.textContent.trim();
+  tab=b.dataset.t;document.title='PC BlackBox · '+b.textContent.trim();
   if(location.hash!=='#'+tab)history.replaceState(null,'','#'+tab);refresh();
 });
 /* 주소의 #탭이름 으로 바로 열기 (예: #about, #live) */
@@ -1441,6 +1444,9 @@ function openTileDetailModal(key){
       if(text.includes('INPAGE') || text.includes('0X7A') || text.includes('STORE_EXCEPTION') || text.includes('0X77') || text.includes('DISK') || text.includes('0X24')){
         return { cls: 'disk', icon: '💽', label: '디스크 / SSD I/O 오류', desc: 'SSD/HDD 읽기 실패, SATA/NVMe 케이블 접촉 불량, 또는 파일 시스템(NTFS) 손상입니다. 디스크 SMART 점검 및 케이블 재장착이 필요합니다.' };
       }
+      if(text.includes('USB') || text.includes('PNP') || text.includes('EASYSETUP') || text.includes('프린터') || text.includes('장치 드라이버') || text.includes('HTTPTOUSB') || text.includes('USBPRINT')){
+        return { cls: 'usb', icon: '🔌', label: 'USB 장치 / PnP 드라이버 충돌', desc: '프린터 등 외부 USB 장치 핫플러그(연결·분리) 또는 드라이버 설치 중 I/O 교착(Deadlock)으로 인한 시스템 멈춤입니다. 제조사 전용 드라이버 설치, USB 선택적 절전 해제, 또는 Wi-Fi 네트워크 연결을 권장합니다.' };
+      }
       if(text.includes('VIDEO') || text.includes('0X116') || text.includes('0X117') || text.includes('NVLDDMKM') || text.includes('ATIKMPAG') || text.includes('DWM')){
         return { cls: 'gpu', icon: '🎮', label: 'GPU 그래픽 드라이버 충돌', desc: '그래픽 카드 응답 지연(TDR) 또는 GPU 과열로 드라이버가 복구되지 못했습니다. 최신 그래픽 드라이버 클린 설치(DDU)를 권장합니다.' };
       }
@@ -1450,7 +1456,7 @@ function openTileDetailModal(key){
       if(text.includes('WATCHDOG') || text.includes('0X133')){
         return { cls: 'disk', icon: '⏱️', label: '드라이버 / SSD 펌웨어 타임아웃', desc: 'DPC 루틴이 제한 시간을 초과했습니다. SSD 펌웨어 업데이트 및 메인보드 칩셋 드라이버 갱신이 필요합니다.' };
       }
-      return { cls: 'pwr', icon: '⚡', label: '전원 강제 차단 / 심박 정지', desc: '정전, 본체 전원 버튼 강제 끔, 또는 파워서플라이 순간 전압 강하(Power Loss)로 비정상 종료되었습니다.' };
+      return { cls: 'pwr', icon: '⚡', label: '전원 강제 차단 (Power Loss)', desc: '정전, 본체 전원 버튼 강제 끔, 또는 파워서플라이 순간 전압 강하(Power Loss)로 비정상 종료되었습니다.' };
     };
 
     if(li){
@@ -1473,7 +1479,7 @@ function openTileDetailModal(key){
           </div>
 
           <div class="tile-metric-grid">
-            <div class="tile-metric-item"><div class="k">마지막 정상 심박 시각</div><div class="v" style="font-size:13.5px">${fmtT(li.last_heartbeat, true)}</div></div>
+            <div class="tile-metric-item"><div class="k">마지막 정상 동작 기록 시각</div><div class="v" style="font-size:13.5px">${fmtT(li.last_heartbeat, true)}</div></div>
             <div class="tile-metric-item"><div class="k">재부팅 확인 시각</div><div class="v" style="font-size:13.5px">${fmtT(li.boot_time, true)}</div></div>
           </div>
 
@@ -1486,7 +1492,7 @@ function openTileDetailModal(key){
           </div>
         </div>
       `;
-      footTipEl.innerHTML = '💡 PC 모니터는 10초마다 링버퍼에 직전 상태를 기록하여 멈추기 전 원인을 역추적합니다.';
+      footTipEl.innerHTML = '💡 PC BlackBox는 10초마다 링버퍼에 직전 상태를 기록하여 멈추기 전 원인을 역추적합니다.';
     } else {
       bodyEl.innerHTML = `
         <div class="tile-detail-card">
@@ -1500,7 +1506,7 @@ function openTileDetailModal(key){
               <div><span class="ok">✓</span> <b>디스크/SSD I/O</b>: 입출력 타임아웃 없음</div>
               <div><span class="ok">✓</span> <b>GPU 그래픽 서브시스템</b>: TDR 충돌 없음</div>
               <div><span class="ok">✓</span> <b>RAM 메모리 무결성</b>: 페이징 실패 없음</div>
-              <div><span class="ok">✓</span> <b>시스템 심박 링버퍼</b>: 10초 주기 유지 중</div>
+              <div><span class="ok">✓</span> <b>시스템 상태 기록 링버퍼</b>: 10초 주기 유지 중</div>
             </div>
           </div>
           <p style="font-size:12.5px;line-height:1.7;color:var(--mut);margin:0">
@@ -1547,7 +1553,7 @@ function openTileDetailModal(key){
         </ul>
       </div>
     `;
-    footTipEl.innerHTML = '💡 PC 모니터는 사용자의 개인 파일이나 키 입력을 일절 수집하지 않으며, 모든 통계는 내 PC에만 저장됩니다.';
+    footTipEl.innerHTML = '💡 PC BlackBox는 사용자의 개인 파일이나 키 입력을 일절 수집하지 않으며, 모든 통계는 내 PC에만 저장됩니다.';
   }
   
   modal.classList.remove('hide');
@@ -1632,7 +1638,7 @@ function generateAiAnalysis(type, d){
       return {
         verdict: 'safe', verdictIcon: '🟢', verdictText: '안전한 프로그래밍 언어 환경 (Python)',
         summaryHtml: `<b>Python</b>은 데이터 분석, AI 머신러닝, 자동화 스크립트 구동에 사용되는 오픈소스 런타임입니다.<br>
-          현재 본인이 실행한 프로젝트, 개발 도구 또는 로컬 유틸리티(예: PC 모니터 또는 AI 도구)를 정상적으로 실행 중입니다.`,
+          현재 본인이 실행한 프로젝트, 개발 도구 또는 로컬 유틸리티(예: PC BlackBox 또는 AI 도구)를 정상적으로 실행 중입니다.`,
         actionHtml: `<ul>
           <li><b>실행 스크립트 확인:</b> 본인이 에디터(VS Code, PyCharm 등)나 콘솔에서 실행한 작업인지 확인하세요.</li>
           <li><b>자원 점유율 관찰:</b> 장시간 CPU나 메모리를 90% 이상 점유하고 있다면 스크립트의 무한 루프 여부를 확인하세요.</li>
@@ -1815,12 +1821,12 @@ if(btnSpawnTest){
 }
 $('#btnMinimizeTray').onclick=async()=>{
   closeExitModal();
-  await post('/api/tray/balloon',{title:'PC 모니터',msg:'트레이에서 백그라운드 감시가 계속 실행 중입니다.'});
+  await post('/api/tray/balloon',{title:'PC BlackBox',msg:'트레이에서 백그라운드 감시가 계속 실행 중입니다.'});
   window.close();
 };
 async function doShutdown(){
   await post('/api/shutdown');
-  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center"><div><h2>PC 모니터가 종료되었습니다</h2><p class="mut">창을 닫으셔도 됩니다. 다시 실행하려면 바탕화면의 바로가기를 사용하세요.</p></div></div>';
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center"><div><h2>PC BlackBox가 종료되었습니다</h2><p class="mut">창을 닫으셔도 됩니다. 다시 실행하려면 바탕화면의 바로가기를 사용하세요.</p></div></div>';
   setTimeout(()=>window.close(),800);
 }
 $('#btnExitAll').onclick=doShutdown;
@@ -1971,9 +1977,14 @@ $('#quar').onclick=async e=>{const b=e.target.closest('[data-qid]');if(!b)return
 $('#runTrace').onclick=async()=>{await post('/api/trace/run');loadTrace()};
 function goTrace(){document.querySelector('nav button[data-t="trace"]').click()}
 
+let _lastMaintTs = 0;
 async function refresh(){
   try{
-    if(tab==='ov'){await loadSummary();await loadCharts();loadMaint()}
+    if(tab==='ov'){
+      await loadSummary();
+      await loadCharts();
+      if(Date.now() - _lastMaintTs > 60000){ _lastMaintTs = Date.now(); loadMaint() }
+    }
     else if(tab==='live')await loadLive();
     else if(tab==='trace')await loadTrace();
     else if(tab==='about')await loadAbout();
@@ -2001,10 +2012,24 @@ async function initLang(){try{LANG=(await j('/api/settings')).lang||'ko'}catch(e
   document.title=trText(document.title)}
 $('#langBtn').onclick=async()=>{await post('/api/settings',{lang:LANG==='en'?'ko':'en'});location.reload()};
 
-initLang().finally(()=>{loadCloseSettings();j('/api/incidents').then(r=>{incMarks=r.map(x=>x.last_heartbeat)}).finally(()=>{if(location.hash.length>1&&location.hash!=='#ov')openHashTab();else{document.title='PC 모니터 · 대시보드';refresh()}})});
-setInterval(()=>{if(tab==='ov'||tab==='about')refresh()},10000);
-setInterval(()=>{if(tab==='live')refresh()},3000);
-setInterval(()=>{if(tab!=='live')j('/api/live').then(L=>$('#liveDot').className='dot '+L.level).catch(()=>{})},15000);
+initLang().finally(()=>{loadCloseSettings();j('/api/incidents').then(r=>{incMarks=r.map(x=>x.last_heartbeat)}).finally(()=>{if(location.hash.length>1&&location.hash!=='#ov')openHashTab();else{document.title='PC BlackBox · 대시보드';refresh()}})});
+// 리소스 최적화: 창이 최소화되거나 백그라운드일 때 불필요한 네트워크 요청 및 차트/DOM 재렌더링 전면 중단
+let wasHidden = false;
+document.addEventListener('visibilitychange', () => {
+  const hidden = document.hidden;
+  document.body.classList.toggle('page-hidden', hidden);
+  if (!hidden && wasHidden) {
+    wasHidden = false;
+    refresh();
+    j('/api/live').then(L => $('#liveDot').className = 'dot ' + L.level).catch(() => {});
+  } else if (hidden) {
+    wasHidden = true;
+  }
+});
+
+setInterval(()=>{if(!document.hidden && (tab==='ov'||tab==='about'))refresh()},15000);
+setInterval(()=>{if(!document.hidden && tab==='live')refresh()},3000);
+setInterval(()=>{if(!document.hidden && tab!=='live')j('/api/live').then(L=>$('#liveDot').className='dot '+L.level).catch(()=>{})},15000);
 j('/api/live').then(L=>$('#liveDot').className='dot '+L.level).catch(()=>{});
 addEventListener('resize',()=>tab==='ov'&&loadCharts());
 </script>

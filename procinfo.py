@@ -46,8 +46,8 @@ KNOWN = {
     "chrome.exe": ("Google Chrome 브라우저", "앱"), "firefox.exe": ("Firefox 브라우저", "앱"), "whale.exe": ("네이버 웨일 브라우저", "앱"),
     "claude.exe": ("Claude (AI 도우미)", "앱"), "windowsterminal.exe": ("Windows 터미널", "앱"),
     "powershell.exe": ("PowerShell 명령 창/스크립트", "앱"), "pwsh.exe": ("PowerShell 7", "앱"), "cmd.exe": ("명령 프롬프트", "앱"),
-    "python.exe": ("Python 프로그램", "앱"), "pythonw.exe": ("Python 프로그램 (창 없음, PC 모니터 포함)", "앱"),
-    "pcmonitor.exe": ("PC 모니터 (이 프로그램)", "앱"), "code.exe": ("Visual Studio Code", "앱"),
+    "python.exe": ("Python 프로그램", "앱"), "pythonw.exe": ("Python 프로그램 (창 없음, PC BlackBox 포함)", "앱"),
+    "pcblackbox.exe": ("PC BlackBox (이 프로그램)", "앱"), "pcmonitor.exe": ("PC BlackBox (이 프로그램)", "앱"), "code.exe": ("Visual Studio Code", "앱"),
     "onedrive.exe": ("OneDrive 동기화", "앱"), "googledrivefs.exe": ("Google 드라이브 동기화", "앱"),
     "kakaotalk.exe": ("카카오톡", "앱"), "ms-teams.exe": ("Microsoft Teams", "앱"), "teams.exe": ("Microsoft Teams", "앱"),
     "outlook.exe": ("Outlook 메일", "앱"), "winword.exe": ("Word", "앱"), "excel.exe": ("Excel", "앱"), "powerpnt.exe": ("PowerPoint", "앱"),
@@ -64,6 +64,11 @@ KNOWN = {
     "acrord32.exe": ("Adobe Acrobat Reader", "앱"), "acrobat.exe": ("Adobe Acrobat", "앱"),
     "kmplayer.exe": ("KMPlayer 동영상 플레이어", "앱"), "potplayermini64.exe": ("팟플레이어", "앱"),
     "iniclientsvc_x64.exe": ("이니텍 공동인증서 관리 서비스 (뱅킹)", "보안"),
+    "easysetup.app.exe": ("Brother 프린터 Easy Setup 설치 관리자", "설치"),
+    "easysetup.exe": ("Brother 프린터 Easy Setup 설치 관리자", "설치"),
+    "brctrlcntr.exe": ("Brother ControlCenter 프린터 제어", "앱"),
+    "brsvc01a.exe": ("Brother 프린터 상태 감시 서비스", "시스템"),
+    "brstmonw.exe": ("Brother 프린터 상태 모니터", "앱"),
 }
 
 # 권장: (등급, 안내)  등급: must 필수 · keep 그대로 · close 종료 가능 · remove 삭제 가능 · remove_rec 삭제 권장 · check 확인 필요
@@ -76,12 +81,14 @@ ADVICE_TEXT = {
     "check": "출처를 모르면 삭제를 권장합니다",
 }
 ADVICE_BY_NAME = {
-    "pcmonitor.exe": ("keep", "PC 모니터 (이 프로그램)"), "pythonw.exe": ("keep", "PC 모니터일 수 있음 — 그대로 두세요"),
+    "pcblackbox.exe": ("keep", "PC BlackBox (이 프로그램)"), "pcmonitor.exe": ("keep", "PC BlackBox (이 프로그램)"), "pythonw.exe": ("keep", "PC BlackBox일 수 있음 — 그대로 두세요"),
     "claude.exe": ("keep", "지금 사용 중인 Claude"), "windowsterminal.exe": ("keep", "지금 사용 중인 터미널"),
     "microsoft.photos.exe": ("close", "종료해도 됩니다. 계속 뜨면: 설정 > 앱 > 설치된 앱 > 사진 > 고급 옵션 > 백그라운드 앱 권한 '안 함'"),
     "onedrive.exe": ("close", "OneDrive를 안 쓰면 종료하거나 제거해도 됩니다"),
     "googledrivefs.exe": ("keep", "Google 드라이브 동기화 — 쓰는 중이면 그대로 두세요"),
     "msmpeng.exe": ("must", "백신 — 절대 끄지 마세요. 검사 중엔 CPU가 높은 게 정상입니다"),
+    "easysetup.app.exe": ("check", "Brother 프린터 드라이버 설치 도구입니다. USB 연결 시 충돌이 발생할 경우 Wi-Fi 무선 네트워크 설치를 권장합니다"),
+    "easysetup.exe": ("check", "Brother 프린터 드라이버 설치 도구입니다. USB 연결 시 충돌이 발생할 경우 Wi-Fi 무선 네트워크 설치를 권장합니다"),
 }
 
 # 이름 일부로 알아보는 국내 인터넷 뱅킹·공공기관 보안 프로그램

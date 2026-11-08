@@ -20,11 +20,11 @@ from procinfo import PROCINFO
 log = logging.getLogger("pcmon.web")
 HTML_PATH = os.path.join(config.RES_DIR, "dashboard.html")
 ALLOWED_HOSTS = {f"127.0.0.1:{config.HTTP_PORT}", f"localhost:{config.HTTP_PORT}"}
-NO_ACCESS_HTML = """<!doctype html><meta charset="utf-8"><title>PC 모니터</title>
+NO_ACCESS_HTML = """<!doctype html><meta charset="utf-8"><title>PC BlackBox</title>
 <body style="font-family:'Malgun Gothic',sans-serif;padding:40px;background:#f6f7f9;color:#1d2330">
 <h2>접근 권한이 없습니다</h2>
-<p>보안 정보가 들어 있어서 PC 모니터를 설치한 계정(또는 관리자)만 볼 수 있습니다.</p>
-<p>바탕화면이나 시작 메뉴의 <b>PC 모니터</b> 아이콘으로 열어 주세요.</p></body>"""
+<p>보안 정보가 들어 있어서 PC BlackBox를 설치한 계정(또는 관리자)만 볼 수 있습니다.</p>
+<p>바탕화면이나 시작 메뉴의 <b>PC BlackBox</b> 아이콘으로 열어 주세요.</p></body>"""
 
 
 def annotate(rows):
@@ -271,7 +271,7 @@ def serve(mon):
             return mon.rem.quarantine_list()
         if path == "/api/summary":
             import psutil
-            last_inc = db.query("SELECT ts,kind,bugcheck,last_heartbeat FROM incidents ORDER BY ts DESC LIMIT 1")
+            last_inc = db.query("SELECT ts,kind,bugcheck,last_heartbeat,boot_time,summary FROM incidents ORDER BY ts DESC LIMIT 1")
             counts = db.query("SELECT category, severity, COUNT(*) n FROM events WHERE ts>? GROUP BY 1,2", (now - 86400,))
             drives = []
             try:
@@ -519,7 +519,7 @@ def serve(mon):
                     pass
             elif p == "/api/shutdown":
                 threading.Timer(0.3, mon.shutdown).start()
-                res = {"ok": True, "msg": "PC 모니터 백그라운드를 종료합니다"}
+                res = {"ok": True, "msg": "PC BlackBox 백그라운드를 종료합니다"}
             elif p == "/api/ai/explain":
                 name = str(body.get("name") or body.get("target") or "")[:120]
                 path_val = str(body.get("path", ""))[:300]
@@ -527,7 +527,7 @@ def serve(mon):
                 kind = str(body.get("kind") or body.get("type") or "process")[:30]
                 res = ai_explain.explain_item(name=name, path=path_val, details=details, kind=kind)
             elif p == "/api/tray/balloon":
-                title = str(body.get("title", "PC 모니터"))[:60]
+                title = str(body.get("title", "PC BlackBox"))[:60]
                 msg = str(body.get("msg", ""))[:250]
                 if getattr(mon, "tray", None):
                     mon.tray.show_balloon(title, msg)
@@ -539,9 +539,9 @@ def serve(mon):
                 if ca == "exit":
                     threading.Timer(0.3, mon.shutdown).start()
                 elif getattr(mon, "tray", None):
-                    mon.tray.show_balloon("PC 모니터", "백그라운드 감시가 트레이에서 계속 실행 중입니다.")
+                    mon.tray.show_balloon("PC BlackBox", "백그라운드 감시가 트레이에서 계속 실행 중입니다.")
                 else:
-                    winutil.toast("PC 모니터", "백그라운드 감시가 트레이에서 계속 실행 중입니다.")
+                    winutil.toast("PC BlackBox", "백그라운드 감시가 트레이에서 계속 실행 중입니다.")
                 res = {"ok": True}
             elif p == "/api/banking":
                 act = str(body.get("action", ""))

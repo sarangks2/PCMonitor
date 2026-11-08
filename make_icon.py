@@ -1,4 +1,4 @@
-"""PCMonitor.exe 아이콘 생성 (모니터 화면 + 심박 그래프)."""
+"""PCMonitor.exe 아이콘 생성 (모니터 화면 + 상태 그래프)."""
 import sys
 from PIL import Image, ImageDraw
 

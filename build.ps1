@@ -21,12 +21,12 @@ VSVersionInfo(
   kids=[
     StringFileInfo([StringTable(u'041204B0', [
       StringStruct(u'CompanyName', u'sarangks2 (github.com/sarangks2/PCMonitor)'),
-      StringStruct(u'FileDescription', u'PC Monitor - local PC/server health and security monitor'),
+      StringStruct(u'FileDescription', u'PC BlackBox - local PC/server health, crash diagnostic and security monitor'),
       StringStruct(u'FileVersion', u'$ver'),
-      StringStruct(u'InternalName', u'PCMonitor'),
+      StringStruct(u'InternalName', u'PCBlackBox'),
       StringStruct(u'LegalCopyright', u'sarangks2'),
       StringStruct(u'OriginalFilename', u'PCMonitor.exe'),
-      StringStruct(u'ProductName', u'PC Monitor'),
+      StringStruct(u'ProductName', u'PC BlackBox'),
       StringStruct(u'ProductVersion', u'$ver')])]),
     VarFileInfo([VarStruct(u'Translation', [1042, 1200])])
   ]
@@ -41,6 +41,7 @@ if ($LASTEXITCODE -ne 0) { throw "PyInstaller 실패" }
 # 설치·제거 스크립트를 함께 넣어 zip 으로 묶기 (zip 안: PCMonitor\PCMonitor.exe, PCMonitor\_internal\..., 스크립트)
 $out = Join-Path $here 'dist\PCMonitor'
 foreach ($f in 'Install.cmd', 'install.ps1', 'Uninstall.cmd', 'uninstall.ps1', 'README.md') { Copy-Item $f $out -Force }
+Copy-Item (Join-Path $out 'PCMonitor.exe') (Join-Path $out 'PCBlackBox.exe') -Force
 $zip = Join-Path $here 'dist\PCMonitor.zip'
 Remove-Item $zip -ErrorAction SilentlyContinue
 # Compress-Archive(PowerShell 5.1)는 경로를 '\' 로 저장해 일부 압축 프로그램에서 폴더가 깨지므로 파이썬으로 묶는다

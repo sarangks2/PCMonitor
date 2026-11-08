@@ -228,7 +228,7 @@ _aumid_checked = False
 
 
 def ensure_aumid():
-    r"""HKCU\Software\Classes\AppUserModelId\PCMonitor 등록 (알림 센터에 'PC 모니터' 및 아이콘 표시)."""
+    r"""HKCU\Software\Classes\AppUserModelId\PCMonitor 등록 (알림 센터에 'PC BlackBox' 및 아이콘 표시)."""
     global _aumid_checked
     if _aumid_checked:
         return
@@ -246,22 +246,22 @@ def ensure_aumid():
         # 1. AppUserModelId 레지스트리 등록
         key_path = r"Software\Classes\AppUserModelId\PCMonitor"
         with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
-            winreg.SetValueEx(key, "DisplayName", 0, winreg.REG_SZ, "PC 모니터")
+            winreg.SetValueEx(key, "DisplayName", 0, winreg.REG_SZ, "PC BlackBox")
             if os.path.isfile(icon):
                 winreg.SetValueEx(key, "IconUri", 0, winreg.REG_SZ, icon)
             winreg.SetValueEx(key, "IconBackgroundColor", 0, winreg.REG_SZ, "FF0078D7")
 
-        # 2. pythonw.exe 및 python.exe FriendlyAppName 을 'PC 모니터'로 통일 (OS 폴백 대비)
+        # 2. pythonw.exe 및 python.exe FriendlyAppName 을 'PC BlackBox'로 통일 (OS 폴백 대비)
         for app in ("pythonw.exe", "python.exe"):
             try:
                 with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, rf"Software\Classes\Applications\{app}", 0, winreg.KEY_SET_VALUE) as k:
-                    winreg.SetValueEx(k, "FriendlyAppName", 0, winreg.REG_SZ, "PC 모니터")
+                    winreg.SetValueEx(k, "FriendlyAppName", 0, winreg.REG_SZ, "PC BlackBox")
             except Exception:
                 pass
 
         # 3. 시작 메뉴에 AUMID 바인딩된 바로가기 확보 (윈도우 셸 인덱싱)
         programs = os.path.join(os.environ.get("APPDATA", ""), r"Microsoft\Windows\Start Menu\Programs")
-        lnk_path = os.path.join(programs, "PC 모니터.lnk")
+        lnk_path = os.path.join(programs, "PC BlackBox.lnk")
         if os.path.isdir(programs) and not os.path.isfile(lnk_path):
             try:
                 sc_script = (
@@ -269,7 +269,7 @@ def ensure_aumid():
                     f"$s=$ws.CreateShortcut('{lnk_path}');"
                     f"$s.TargetPath='{os.path.join(config.BASE_DIR, 'launcher.bat')}';"
                     f"$s.WorkingDirectory='{config.BASE_DIR}';"
-                    f"$s.Description='PC 모니터';"
+                    f"$s.Description='PC BlackBox';"
                     f"$s.IconLocation='{icon},0';"
                     f"$s.Save();"
                 )

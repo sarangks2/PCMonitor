@@ -1,8 +1,10 @@
-"""PC 모니터 설정값. 필요하면 여기 숫자만 바꾸면 된다."""
+"""PC BlackBox (PC 블랙박스) 설정값. 필요하면 여기 숫자만 바꾸면 된다."""
 import os
 import sys
 
-VERSION = "1.4.0"
+APP_NAME = "PC BlackBox"
+APP_NAME_KO = "PC 블랙박스"
+VERSION = "1.5.0"
 GITHUB_URL = "https://github.com/sarangks2/PCMonitor"   # 저장소 주소 (정보 화면에 표시)
 
 if getattr(sys, "frozen", False):

@@ -83,7 +83,7 @@ class Monitor:
         self.tray = None
 
     def shutdown(self):
-        log.info("PC 모니터 백그라운드 종료 요청")
+        log.info("PC BlackBox 백그라운드 종료 요청")
         self.stop.set()
         try:
             # 작업 스케줄러 자동 재시작 방지 (작업 즉시 종료)
@@ -98,7 +98,7 @@ class Monitor:
             except Exception:
                 pass
         try:
-            self.db.add_event(time.time(), "system", "info", "pcmon", 0, "사용자 요청으로 PC 모니터 백그라운드 감시 종료", "")
+            self.db.add_event(time.time(), "system", "info", "pcmon", 0, "사용자 요청으로 PC BlackBox 백그라운드 감시 종료", "")
         except Exception:
             pass
         threading.Timer(0.3, lambda: os._exit(0)).start()
@@ -162,7 +162,7 @@ class Monitor:
                 lang = self.db.get("ui_lang") or "ko"
                 self.digest_buffer = []
                 msg = f"지난 30분 동안 경고 {cnt}건이 발생했습니다 ({top_item} 등). 대시보드에서 확인하세요."
-                winutil.toast(i18n.tr("PC 모니터 알림 요약", lang), i18n.tr(msg, lang))
+                winutil.toast(i18n.tr("PC BlackBox 알림 요약", lang), i18n.tr(msg, lang))
 
 
 
@@ -214,7 +214,7 @@ class Monitor:
                 deep_cause = "외부 전원 급작 차단 또는 파워서플라이(PSU) 급작 셧다운"
                 cause_category = "전원 차단"
 
-        # 심층 4대 원인(WHEA, 디스크, GPU TDR, 과열) 정밀 검사
+        # 심층 5대 원인(WHEA, 디스크, GPU TDR, 과열, USB/PnP 드라이버) 정밀 검사
         try:
             diag_evs = winutil.query_events(
                 "System",
@@ -222,11 +222,15 @@ class Monitor:
                 f"((Provider[@Name='Microsoft-Windows-WHEA-Logger'] and (EventID=17 or EventID=18 or EventID=19 or EventID=47)) or "
                 f"((Provider[@Name='disk' or @Name='stornvme' or @Name='iaStorA' or @Name='volsnap'] or Provider[@Name='ntfs']) and (EventID=7 or EventID=9 or EventID=11 or EventID=15 or EventID=129 or EventID=153)) or "
                 f"(Provider[@Name='Display'] and EventID=4101) or "
-                f"((Provider[@Name='Microsoft-Windows-Kernel-Processor-Power'] or Provider[@Name='Thermal-OpEvent']) and (EventID=86 or EventID=37)))]"
+                f"((Provider[@Name='Microsoft-Windows-Kernel-Processor-Power'] or Provider[@Name='Thermal-OpEvent']) and (EventID=86 or EventID=37)) or "
+                f"((Provider[@Name='Microsoft-Windows-Kernel-PnP'] and (EventID=219 or EventID=400 or EventID=411)) or "
+                f"(Provider[@Name='Microsoft-Windows-DeviceAssociationService'] and (EventID=3508 or EventID=3509)) or "
+                f"(Provider[@Name='Microsoft-Windows-DriverFrameworks-UserMode'] and (EventID=10110 or EventID=10111)) or "
+                f"Provider[@Name='usbprint' or @Name='usbehci' or @Name='USB-USBHUB3' or @Name='USB-USBXHCI']))]"
             )
             for de in diag_evs:
                 eid = de.get("id")
-                prov = str(de.get("source", "")).lower()
+                prov = str(de.get("provider") or de.get("source", "")).lower()
                 if "whea" in prov or eid in (17, 18, 19, 47):
                     deep_cause = f"하드웨어(RAM/CPU) 결함 감지: WHEA-Logger 오류 (Event {eid}) - 메모리 모듈 및 CPU 전압 점검 필요"
                     cause_category = "하드웨어 불량"
@@ -243,6 +247,10 @@ class Monitor:
                     deep_cause = f"CPU 과열/전원 불량: 서멀 스로틀링 또는 급격한 전압 강하 (Event {eid}) - 쿨러 점검 권장"
                     cause_category = "과열/전원 불량"
                     break
+                elif any(k in prov for k in ("pnp", "deviceassociation", "driverframeworks", "usb")) or eid in (219, 400, 411, 3508, 3509, 10110, 10111):
+                    deep_cause = f"USB/PnP 장치 드라이버 충돌 감지: {prov} (Event {eid}) - 장치 연결·분리 또는 드라이버 교착(Deadlock) 의심"
+                    cause_category = "USB/장치 드라이버 충돌"
+                    break
         except Exception:
             pass
 
@@ -251,6 +259,14 @@ class Monitor:
         procs = self.db.query("SELECT * FROM procs WHERE ts=(SELECT MAX(ts) FROM procs WHERE ts<=?)", (hb,))
         events = self.db.query("SELECT ts,category,severity,title FROM events WHERE ts BETWEEN ? AND ? ORDER BY ts",
                                (hb - 1800, hb + 600))
+
+        # 직전 실행 중이던 드라이버/장치 설치 프로그램 검사 (프린터 등 드라이버 설치 중 멈춤 감지)
+        setup_kws = ("easysetup", "setup.exe", "drvsetup", "pnputil", "devicesetupmanager", "printersetup")
+        found_setup = [p.get("name") for p in procs if any(k in str(p.get("name", "")).lower() for k in setup_kws)]
+        if found_setup and cause_category in ("전원 차단", "시스템 프리징", "전원/하드웨어"):
+            deep_cause = f"USB/PnP 장치 드라이버 설치 충돌: {found_setup[0]} 실행 중 시스템 멈춤 - USB 연결·분리 또는 드라이버 교착(Deadlock) 의심"
+            cause_category = "USB/장치 드라이버 충돌"
+
         summary = self._summarize(metrics, procs, deep_cause)
         import json
         self.db.execute(
@@ -539,7 +555,7 @@ class Monitor:
             try:
                 import tray
                 ico = os.path.join(config.RES_DIR, "pcmon.ico")
-                self.tray = tray.TrayIcon(ico, "PC 모니터 (백그라운드 감시 중)",
+                self.tray = tray.TrayIcon(ico, "PC BlackBox (백그라운드 감시 중)",
                                           on_open=open_app_window,
                                           on_exit=self.shutdown)
                 self.tray.start()
@@ -571,12 +587,12 @@ def _monitor_process_exists():
     return ctypes.windll.kernel32.GetLastError() == 5  # 접근 거부 = 존재함
 
 
-LOADING_HTML = """<!doctype html><meta charset="utf-8"><title>PC 모니터</title>
+LOADING_HTML = """<!doctype html><meta charset="utf-8"><title>PC BlackBox</title>
 <style>body{font-family:'Segoe UI','Malgun Gothic',sans-serif;background:#f6f7f9;color:#1d2330;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
 @media(prefers-color-scheme:dark){body{background:#0f1218;color:#e6e9ef}}.b{text-align:center;max-width:460px;padding:20px}
 .s{width:36px;height:36px;border:4px solid #8884;border-top-color:#2f6fde;border-radius:50%;animation:r 1s linear infinite;margin:0 auto 16px}
 @keyframes r{to{transform:rotate(360deg)}}.m{color:#667085;font-size:13px;line-height:1.6}</style>
-<div class="b"><div class="s"></div><h3 style="margin:0 0 8px">PC 모니터를 시작하는 중…</h3>
+<div class="b"><div class="s"></div><h3 style="margin:0 0 8px">PC BlackBox를 시작하는 중…</h3>
 <div class="m" id="m">준비되면 자동으로 화면이 열립니다.</div></div>
 <script>
 const go="__URL__",t0=Date.now();
@@ -590,7 +606,7 @@ tick();
 
 
 def activate_existing_window():
-    """이미 열려 있는 'PC 모니터' 앱 창이 있으면 중복 실행하지 않고 맨 앞으로 활성화."""
+    """이미 열려 있는 'PC BlackBox' 앱 창이 있으면 중복 실행하지 않고 맨 앞으로 활성화."""
     import ctypes
     user32 = ctypes.windll.user32
     target_hwnd = [None]
@@ -602,7 +618,7 @@ def activate_existing_window():
                 buff = ctypes.create_unicode_buffer(length + 1)
                 user32.GetWindowTextW(hwnd, buff, length + 1)
                 val = buff.value.strip().lower()
-                if val.startswith("pc 모니터") or val.startswith("pc monitor"):
+                if val.startswith("pc blackbox") or val.startswith("pc 블랙박스") or val.startswith("pc 모니터") or val.startswith("pc monitor"):
                     target_hwnd[0] = hwnd
                     return False
         return True
@@ -646,11 +662,17 @@ def open_app_window(wait_page=False):
         with open(page, "w", encoding="utf-8") as f:
             f.write(LOADING_HTML.replace("__URL__", url).replace("__PING__", URL + "api/ping"))
         url = "file:///" + page.replace("\\", "/")
+    si = subprocess.STARTUPINFO()
+    si.lpDesktop = r"WinSta0\Default"
     for c in cands:
         if c and os.path.exists(c):
+            # 브라우저(Edge/Chrome) 불필요한 백그라운드 네트워킹/확장/동기화 끄고 창 닫힐 때 프로세스 완전 종료
             subprocess.Popen([c, f"--app={url}", f"--user-data-dir={profile}", "--window-size=1320,900",
-                              "--no-first-run", "--no-default-browser-check", "--disable-sync"],
-                             creationflags=winutil.CREATE_NO_WINDOW)
+                              "--no-first-run", "--no-default-browser-check", "--disable-sync",
+                              "--disable-background-networking", "--disable-background-mode",
+                              "--disable-component-update", "--disable-extensions",
+                              "--disable-features=Translate,OptimizationHints,MediaRouter"],
+                             creationflags=winutil.CREATE_NO_WINDOW, startupinfo=si)
             return
     webbrowser.open(url)
 

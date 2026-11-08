@@ -37,6 +37,7 @@ VENDOR_PROFILES = {
     "iniline": ("CrossEX 인터넷뱅킹 웹 확장 모듈", "caution", "웹 브라우저와 비표준 보안 프로그램을 연결해 주는 뱅킹용 에이전트입니다."),
     "raon": ("TouchEn 보안 솔루션 (라온시큐어)", "caution", "키보드 보안 및 공인인증서 처리를 담당하는 금융 프로그램입니다."),
     "initech": ("INISAFE 공인인증 / 전자인증", "caution", "전자서명 및 금융 인증서 처리를 수행하는 보안 소프트웨어입니다."),
+    "brother": ("Brother 프린터/복합기 소프트웨어", "safe", "Brother 프린터 드라이버, 상태 모니터 또는 Easy Setup 설치 관리자입니다. USB 연결 시 Windows PnP 충돌이나 절전 모드 I/O 교착이 의심될 경우 제조사 정식 드라이버 설치 또는 Wi-Fi 네트워크 연결을 권장합니다."),
 }
 
 
